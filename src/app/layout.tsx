@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { deploymentConfig } from "@/lib/deployment-config";
 
 export const metadata: Metadata = {
   title: "Project ASC Admin",
   description: "University of Pretoria Academic Success Coach content administration workspace",
 };
+
+// Validate deployment environment
+deploymentConfig.validateDeployment();
 
 export default function RootLayout({
   children,
@@ -17,3 +21,4 @@ export default function RootLayout({
     </html>
   );
 }
+

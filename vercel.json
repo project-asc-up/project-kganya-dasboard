@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "env": [
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET"
+  ],
+  "previewDeploymentBlocker": {
+    "enabled": false
+  },
+  "productionDeploymentBlocker": {
+    "enabled": true,
+    "description": "Preview deployments only - Production deployments are disabled"
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": false,
+      "v0/projectascup-4372-46a4e311": true
+    }
+  }
+}
