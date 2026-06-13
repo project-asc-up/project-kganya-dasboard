@@ -20,7 +20,6 @@ export default function ImportsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Phase 4"
         title="Imports and sync notes"
         description="Reference the supported seed files and the editorial workflow used to keep the admin data current."
       />

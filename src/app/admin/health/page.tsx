@@ -93,14 +93,8 @@ export default async function HealthPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Phase 4"
-        title="Health and sync"
-        description="Monitor record counts, freshness signals, and revalidation status for the admin workspace."
-        action={
-          <form action={refreshHealthDashboard}>
-            <ActionButton>Refresh dashboard</ActionButton>
-          </form>
-        }
+        title="Analytics"
+        description="Monitor database consistency and data quality across all content types."
       />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">

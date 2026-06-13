@@ -43,7 +43,7 @@ export default async function AdminHomePage() {
         ].map((item, index) => (
           <article
             key={item.label}
-            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-5 shadow-[0_12px_40px_rgba(0,32,80,0.05)] hover-lift animate-slide-up"
+            className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 animate-slide-up"
             style={{
               "--animation-delay": `${index * 50}ms`,
             } as React.CSSProperties}
@@ -61,7 +61,7 @@ export default async function AdminHomePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-6 shadow-[0_12px_40px_rgba(0,32,80,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(0,32,80,0.08)] animate-slide-up"
+            className="rounded-lg border border-[color:var(--color-border)] bg-white p-6 transition animate-slide-up"
             style={{
               "--animation-delay": `${200 + index * 50}ms`,
             } as React.CSSProperties}

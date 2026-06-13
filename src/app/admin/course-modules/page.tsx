@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput } from "@/components/admin-form";
-import { createCourseModule } from "@/lib/admin-actions";
+import { ActionButton, Field, PageHeader, Section, TextInput } from "@/components/admin-form";
+import { CreateCourseModuleModal } from "@/components/create-course-module-modal";
 import { getCourseModulePage, getProgrammeRows } from "@/lib/admin-queries";
 
 function safeString(value: string | null | undefined) {
@@ -27,9 +27,9 @@ export default async function CourseModulesPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Phase 3"
         title="Course Modules"
         description="Manage curriculum modules at scale with programme links, year ordering, and source tracking."
+        action={<CreateCourseModuleModal programmes={programmes} />}
       />
 
       <Section title="Search modules" description="Filter the large curriculum dataset before editing.">
@@ -39,67 +39,6 @@ export default async function CourseModulesPage({
           </Field>
           <div className="flex items-end">
             <ActionButton type="submit">Search</ActionButton>
-          </div>
-        </form>
-      </Section>
-
-      <Section title="Create module" description="Add a module row for a specific programme and year.">
-        <form action={createCourseModule} className="grid gap-5 md:grid-cols-2">
-          <Field label="Programme">
-            <Select name="programmeId" required defaultValue="">
-              <option value="" disabled>
-                Select programme
-              </option>
-              {programmes.map((programme) => (
-                <option key={programme.id} value={programme.id}>
-                  {programme.programmeCode} - {programme.programmeName}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Faculty code">
-            <TextInput name="facultyCode" placeholder="EBIT" />
-          </Field>
-          <Field label="Source faculty code">
-            <TextInput name="sourceFacultyCode" placeholder="EBIT" />
-          </Field>
-          <Field label="Programme code">
-            <TextInput name="programmeCode" required />
-          </Field>
-          <Field label="Programme name">
-            <TextInput name="programmeName" />
-          </Field>
-          <Field label="Year level raw">
-            <TextInput name="yearLevelRaw" required placeholder="01" />
-          </Field>
-          <Field label="Year level sort">
-            <TextInput name="yearLevelSort" type="number" min="0" />
-          </Field>
-          <Field label="Module code">
-            <TextInput name="moduleCode" required placeholder="COS 110" />
-          </Field>
-          <Field label="Module name">
-            <TextInput name="moduleName" />
-          </Field>
-          <Field label="Module type">
-            <TextInput name="moduleType" required placeholder="Core" />
-          </Field>
-          <Field label="Module units">
-            <TextInput name="moduleUnits" type="number" min="0" required />
-          </Field>
-          <Field label="Source file">
-            <TextInput name="sourceFile" />
-          </Field>
-          <Field label="Last verified">
-            <TextInput name="lastVerified" type="date" />
-          </Field>
-          <div className="md:col-span-2">
-            <Field label="Notes">
-              <TextArea name="notes" />
-            </Field>
-          </div>
-          <div className="md:col-span-2 flex justify-end">
-            <ActionButton>Create module</ActionButton>
           </div>
         </form>
       </Section>
