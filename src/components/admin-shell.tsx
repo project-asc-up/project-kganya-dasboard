@@ -4,18 +4,19 @@ import { AdminNavLink } from "@/components/admin-nav-link";
 type NavItem = {
   label: string;
   href: string;
+  icon?: string;
 };
 
 const navItems: NavItem[] = [
-  { label: "Overview", href: "/admin" },
-  { label: "Faculties", href: "/admin/faculties" },
-  { label: "ASC Coaches", href: "/admin/coaches" },
-  { label: "Programmes", href: "/admin/programmes" },
-  { label: "Course Modules", href: "/admin/course-modules" },
-  { label: "Resources", href: "/admin/resources" },
-  { label: "FAQs", href: "/admin/faqs" },
-  { label: "Health", href: "/admin/health" },
-  { label: "Imports", href: "/admin/imports" },
+  { label: "Overview", href: "/admin", icon: "📊" },
+  { label: "Faculties", href: "/admin/faculties", icon: "🏫" },
+  { label: "ASC Coaches", href: "/admin/coaches", icon: "👥" },
+  { label: "Programmes", href: "/admin/programmes", icon: "📚" },
+  { label: "Course Modules", href: "/admin/course-modules", icon: "📖" },
+  { label: "Resources", href: "/admin/resources", icon: "🔗" },
+  { label: "FAQs", href: "/admin/faqs", icon: "❓" },
+  { label: "Analytics", href: "/admin/health", icon: "📈" },
+  { label: "Imports", href: "/admin/imports", icon: "📤" },
 ];
 
 export function AdminShell({
@@ -59,8 +60,8 @@ export function AdminShell({
             <ul className="space-y-1">
               {navItems.map((item) => (
                 <li key={item.label}>
-                  <AdminNavLink href={item.href}>
-                    <span>{item.label}</span>
+                  <AdminNavLink href={item.href} icon={item.icon}>
+                    {item.label}
                   </AdminNavLink>
                 </li>
               ))}
@@ -86,12 +87,6 @@ export function AdminShell({
                   className="hidden rounded-full border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[color:var(--color-primary)] transition-smooth hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-focus-ring)] sm:inline-flex"
                 >
                   Search
-                </button>
-                <button
-                  type="button"
-                  className="rounded-full bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition-smooth hover:bg-[color:var(--color-hover)] hover-lift focus-visible:ring-2 focus-visible:ring-[color:var(--color-focus-ring)]"
-                >
-                  Phase 5 Live
                 </button>
               </div>
             </div>

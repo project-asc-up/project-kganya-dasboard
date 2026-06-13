@@ -93,7 +93,7 @@ export default async function HealthPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Health Check"
+        title="Analytics"
         description="Monitor database consistency and data quality across all content types."
       />
 
