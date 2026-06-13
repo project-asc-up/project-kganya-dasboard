@@ -34,10 +34,11 @@ export function AdminShell({
       </a>
 
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        <aside className="hidden w-72 shrink-0 border-r border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] lg:flex lg:flex-col">
-          <div className="border-b border-[color:var(--color-border)] px-6 py-6">
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 flex-shrink-0 rounded-lg bg-white shadow-[0_2px_8px_rgba(0,32,80,0.08)] flex items-center justify-center overflow-hidden">
+        <aside className="hidden w-72 shrink-0 border-r border-[color:var(--color-border)] bg-gradient-to-b from-[color:var(--color-bg-light)] to-white lg:flex lg:flex-col">
+          <div className="border-b border-[color:var(--color-border)] px-6 py-6 bg-gradient-to-br from-white to-[color:var(--color-bg-light)] relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--color-primary)]/5 to-[color:var(--color-accent-ochre)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="h-14 w-14 flex-shrink-0 rounded-lg bg-white shadow-[0_4px_12px_rgba(0,32,80,0.12)] flex items-center justify-center overflow-hidden hover-lift">
                 <Image
                   src="/up-logo.png"
                   alt="University of Pretoria logo"
@@ -48,10 +49,11 @@ export function AdminShell({
                 />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg font-semibold tracking-tight text-[color:var(--color-primary-dark)]">
+                <h1 className="text-lg font-bold tracking-tight text-[color:var(--color-primary)] flex items-center gap-2">
+                  <span className="w-1 h-5 bg-gradient-to-b from-[color:var(--color-accent-ochre)] to-transparent rounded-full"></span>
                   Project ASC
                 </h1>
-                <p className="text-xs text-[color:var(--color-text-muted)]">Admin Portal</p>
+                <p className="text-xs text-[color:var(--color-text-muted)] leading-tight mt-0.5">University of Pretoria Bot Knowledge Portal</p>
               </div>
             </div>
           </div>
@@ -73,36 +75,31 @@ export function AdminShell({
             </ul>
           </nav>
 
-          <div className="border-t border-[color:var(--color-border)] px-6 py-5 text-sm">
-            <p className="font-semibold text-[color:var(--color-primary-dark)]">Phase-driven rollout</p>
-            <p className="mt-1 leading-6 text-[color:var(--color-text-muted)]">
-              Build the shell first, then add CRUD screens on top of the same layout and form patterns.
-            </p>
+          <div className="border-t border-[color:var(--color-border)] px-6 py-5 text-sm bg-gradient-to-br from-[color:var(--color-primary)]/5 to-[color:var(--color-accent-ochre)]/5 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[color:var(--color-accent-ochre)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-1 rounded-full bg-[color:var(--color-accent-ochre)]"></div>
+                <p className="font-bold text-[color:var(--color-primary)]">Phase-driven rollout</p>
+              </div>
+              <p className="mt-2 leading-6 text-[color:var(--color-text-muted)]">
+                Build the shell first, then add CRUD screens on top of the same layout and form patterns.
+              </p>
+            </div>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="border-b border-[color:var(--color-border)] bg-white/85 backdrop-blur transition-smooth">
-            <div className="flex items-center justify-between gap-4 px-5 py-4 sm:px-8">
-              <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-gradient-to-br from-[color:var(--color-bg-light)] to-white p-2 transition-smooth hover:shadow-md">
-                  <Image
-                    src="/up-logo.png"
-                    alt="University of Pretoria logo"
-                    width={132}
-                    height={132}
-                    className="h-10 w-auto object-contain"
-                    priority
-                  />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--color-text-muted)]">
-                    Make today matter
-                  </p>
-                  <p className="text-sm text-[color:var(--color-text-muted)]">
-                    Admin management system
-                  </p>
-                </div>
+          <header className="border-b border-[color:var(--color-border)] bg-gradient-to-r from-white via-[color:var(--color-bg-light)] to-white backdrop-blur-sm sticky top-0 z-40 transition-smooth">
+            <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-8">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[color:var(--color-accent-ochre)] flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-[color:var(--color-accent-ochre)]"></span>
+                  Make today matter
+                </p>
+                <h2 className="mt-1.5 text-xl font-bold text-[color:var(--color-primary)] tracking-tight">
+                  Admin Management System
+                </h2>
               </div>
 
               <div className="flex items-center gap-3">
