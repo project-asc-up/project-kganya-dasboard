@@ -1,0 +1,97 @@
+import { notFound } from "next/navigation";
+
+import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput } from "@/components/admin-form";
+import { deleteFaq, updateFaq } from "@/lib/admin-actions";
+import { getFacultyOptions, getFaqById } from "@/lib/admin-queries";
+
+function formatDate(value: Date | null) {
+  return value ? value.toISOString().slice(0, 10) : "";
+}
+
+const categoryOptions = [
+  "Coach Referral",
+  "Study Tips",
+  "Registration",
+  "Stress Management",
+  "General UP",
+];
+
+export default async function FaqDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const [faq, faculties] = await Promise.all([getFaqById(id), getFacultyOptions()]);
+
+  if (!faq) {
+    notFound();
+  }
+
+  const updateAction = updateFaq.bind(null, faq.id);
+  const deleteAction = deleteFaq.bind(null, faq.id);
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="FAQ detail"
+        title={faq.question}
+        description={`${faq.category} | ${faq.faculty ? `${faq.faculty.code} - ${faq.faculty.name}` : "General"}`}
+        action={
+          <form action={deleteAction}>
+            <ActionButton tone="danger">Delete FAQ</ActionButton>
+          </form>
+        }
+      />
+
+      <Section title="Edit FAQ" description="Keep the question, answer, and priority aligned with the source.">
+        <form action={updateAction} className="grid gap-5 md:grid-cols-2">
+          <Field label="Faculty">
+            <Select name="facultyId" defaultValue={faq.facultyId ?? ""}>
+              <option value="">General</option>
+              {faculties.map((faculty) => (
+                <option key={faculty.id} value={faculty.id}>
+                  {faculty.name} ({faculty.code})
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Category">
+            <Select name="category" required defaultValue={faq.category}>
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Question">
+            <TextInput name="question" defaultValue={faq.question} required />
+          </Field>
+          <Field label="Priority">
+            <TextInput name="priority" type="number" min="0" defaultValue={faq.priority ?? ""} />
+          </Field>
+          <div className="md:col-span-2">
+            <Field label="Answer">
+              <TextArea name="answer" defaultValue={faq.answer} required />
+            </Field>
+          </div>
+          <Field label="Source URL">
+            <TextInput name="sourceUrl" type="url" defaultValue={faq.sourceUrl ?? ""} />
+          </Field>
+          <Field label="Last verified">
+            <TextInput name="lastVerified" type="date" defaultValue={formatDate(faq.lastVerified)} />
+          </Field>
+          <div className="md:col-span-2">
+            <Field label="Notes">
+              <TextArea name="notes" defaultValue={faq.notes ?? ""} />
+            </Field>
+          </div>
+          <div className="md:col-span-2 flex justify-end">
+            <ActionButton>Save changes</ActionButton>
+          </div>
+        </form>
+      </Section>
+    </div>
+  );
+}
