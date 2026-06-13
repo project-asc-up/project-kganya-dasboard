@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { PrismaNeon } from "@prisma/adapter-neon";
@@ -9,8 +10,41 @@ import { CoachLevel } from "../src/generated/prisma/enums";
 
 type CsvRow = Record<string, string>;
 
-const repoRoot = path.resolve(process.cwd(), "..");
+const repoRoot = process.cwd();
 const docsDir = path.join(repoRoot, "docs");
+const envFiles = [path.join(repoRoot, ".env.local"), path.join(repoRoot, ".env")];
+
+function loadEnvFile(filePath: string) {
+  if (!existsSync(filePath)) return;
+
+  const content = readFileSync(filePath, "utf8");
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const cleaned = line.startsWith("export ") ? line.slice(7).trim() : line;
+    const separatorIndex = cleaned.indexOf("=");
+    if (separatorIndex === -1) continue;
+
+    const key = cleaned.slice(0, separatorIndex).trim();
+    let value = cleaned.slice(separatorIndex + 1).trim();
+
+    if (!key || process.env[key] !== undefined) continue;
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[key] = value;
+  }
+}
+
+for (const filePath of envFiles) {
+  loadEnvFile(filePath);
+}
 
 function createPrismaClient() {
   const connectionString = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
@@ -33,11 +67,15 @@ function csvPath(filename: string) {
 }
 
 async function readCsv(filename: string) {
-  const content = await readFile(csvPath(filename), "utf8");
+  const content = (await readFile(csvPath(filename), "utf8"))
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
   return parse(content, {
     columns: true,
     skip_empty_lines: true,
     bom: true,
+    trim: true,
+    relax_quotes: true,
   }) as CsvRow[];
 }
 
@@ -69,6 +107,14 @@ function requiredInt(value: string | undefined, fallback: number) {
 
 function buildSeedKey(parts: Array<string | null | undefined>) {
   return parts.map((part) => nullableString(part) ?? "general").join("::");
+}
+
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
 }
 
 function parseCoachLevel(value?: string): CoachLevel {
@@ -234,49 +280,52 @@ async function main() {
     ]),
   );
 
+  const moduleCreates: Array<{
+    programmeId: string;
+    facultyCode: string | null;
+    sourceFacultyCode: string | null;
+    programmeCode: string;
+    programmeName: string | null;
+    yearLevelRaw: string;
+    yearLevelSort: number | null;
+    moduleCode: string;
+    moduleName: string | null;
+    moduleType: string;
+    moduleUnits: number;
+    sourceFile: string | null;
+    lastVerified: Date | null;
+    notes: string | null;
+  }> = [];
+
   for (const row of moduleRows) {
     const programmeId = programmeIdByCode.get(row.programme_code);
     if (!programmeId) {
       throw new Error(`Missing programme for module row: ${row.programme_code} ${row.module_code}`);
     }
 
-    await prisma.courseModule.upsert({
-      where: {
-        programmeId_yearLevelRaw_moduleCode_moduleType_moduleUnits: {
-          programmeId,
-          yearLevelRaw: requiredString(row.year_level_raw, "UNSPECIFIED"),
-          moduleCode: row.module_code,
-          moduleType: requiredString(row.module_type, "Unknown"),
-          moduleUnits: requiredInt(row.module_units, 0),
-        },
-      },
-      update: {
-        facultyCode: nullableString(row.faculty_code),
-        sourceFacultyCode: nullableString(row.source_faculty_code),
-        programmeCode: row.programme_code,
-        programmeName: nullableString(row.programme_name),
-        yearLevelSort: nullableInt(row.year_level_sort),
-        moduleName: nullableString(row.module_name),
-        sourceFile: nullableString(row.source_file),
-        lastVerified: nullableDate(row.last_verified),
-        notes: nullableString(row.notes),
-      },
-      create: {
-        programmeId,
-        facultyCode: nullableString(row.faculty_code),
-        sourceFacultyCode: nullableString(row.source_faculty_code),
-        programmeCode: row.programme_code,
-        programmeName: nullableString(row.programme_name),
-        yearLevelRaw: requiredString(row.year_level_raw, "UNSPECIFIED"),
-        yearLevelSort: nullableInt(row.year_level_sort),
-        moduleCode: row.module_code,
-        moduleName: nullableString(row.module_name),
-        moduleType: requiredString(row.module_type, "Unknown"),
-        moduleUnits: requiredInt(row.module_units, 0),
-        sourceFile: nullableString(row.source_file),
-        lastVerified: nullableDate(row.last_verified),
-        notes: nullableString(row.notes),
-      },
+    moduleCreates.push({
+      programmeId,
+      facultyCode: nullableString(row.faculty_code),
+      sourceFacultyCode: nullableString(row.source_faculty_code),
+      programmeCode: row.programme_code,
+      programmeName: nullableString(row.programme_name),
+      yearLevelRaw: requiredString(row.year_level_raw, "UNSPECIFIED"),
+      yearLevelSort: nullableInt(row.year_level_sort),
+      moduleCode: row.module_code,
+      moduleName: nullableString(row.module_name),
+      moduleType: requiredString(row.module_type, "Unknown"),
+      moduleUnits: requiredInt(row.module_units, 0),
+      sourceFile: nullableString(row.source_file),
+      lastVerified: nullableDate(row.last_verified),
+      notes: nullableString(row.notes),
+    });
+  }
+
+  await prisma.courseModule.deleteMany();
+  for (const batch of chunkArray(moduleCreates, 1000)) {
+    await prisma.courseModule.createMany({
+      data: batch,
+      skipDuplicates: true,
     });
   }
 
@@ -300,10 +349,10 @@ async function main() {
       },
       create: {
         seedKey,
-        facultyId,
         category: row.category,
-        title: row.title,
+        facultyId,
         description: nullableString(row.description),
+        title: row.title,
         url: row.url,
         sourceUrl: nullableString(row.source_url),
         lastVerified: nullableDate(row.last_verified),

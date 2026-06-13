@@ -18,7 +18,7 @@ Deployable Next.js app root for the Project ASC MVP.
 
 ## Vercel setup
 
-Use `chatbot/` as the Vercel project root.
+Use the repository root as the Vercel project root.
 
 Required environment variables:
 
@@ -73,9 +73,9 @@ Expected success shape:
 
 The seed importer reads:
 
-- `../docs/seed-faculties.csv`
-- `../docs/seed-asc-coaches.csv`
-- `../docs/seed-programmes.csv`
-- `../docs/seed-course-modules.csv`
-- `../docs/seed-resources.csv`
-- `../docs/seed-faqs.csv`
+- `docs/seed-faculties.csv`
+- `docs/seed-asc-coaches.csv`
+- `docs/seed-programmes.csv`
+- `docs/seed-course-modules.csv`
+- `docs/seed-resources.csv`
+- `docs/seed-faqs.csv`

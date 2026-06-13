@@ -8,7 +8,7 @@ const seedCounts = [
 ];
 
 const nextSteps = [
-  "Link this `chatbot/` directory as the Vercel project root.",
+  "Link this project root as the Vercel project root.",
   "Install or connect a Neon Postgres database in Vercel.",
   "Set `DATABASE_URL` to the pooled Neon connection string.",
   "Set `DIRECT_URL` to the direct non-pooled Neon connection string.",
@@ -44,7 +44,7 @@ export default function Home() {
                   Prisma 7 + Neon adapter
                 </span>
                 <span className="rounded-full bg-slate-100 px-4 py-2 font-medium">
-                  Vercel-ready subdirectory root
+                  Vercel-ready project root
                 </span>
               </div>
             </div>
