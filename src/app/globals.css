@@ -119,6 +119,11 @@ textarea {
   animation: modalSlideOut 0.2s ease-in;
 }
 
+/* Stagger animations */
+[style*="--animation-delay"] {
+  animation-delay: var(--animation-delay);
+}
+
 /* Smooth transitions */
 .transition-smooth {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);

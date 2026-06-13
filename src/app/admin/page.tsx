@@ -33,17 +33,20 @@ export default async function AdminHomePage() {
         description="Use this workspace to keep the core support content accurate, linked, and ready for the bot."
       />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5 animate-slide-up">
         {[
           { label: "Faculties", value: counts.faculties },
           { label: "ASC Coaches", value: counts.coaches },
           { label: "Programmes", value: counts.programmes },
           { label: "Resources", value: counts.resources },
           { label: "FAQs", value: counts.faqs },
-        ].map((item) => (
+        ].map((item, index) => (
           <article
             key={item.label}
-            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-5 shadow-[0_12px_40px_rgba(0,32,80,0.05)]"
+            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-5 shadow-[0_12px_40px_rgba(0,32,80,0.05)] hover-lift animate-slide-up"
+            style={{
+              "--animation-delay": `${index * 50}ms`,
+            } as React.CSSProperties}
           >
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
               {item.label}
@@ -53,12 +56,15 @@ export default async function AdminHomePage() {
         ))}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {shortcuts.map((item) => (
+      <section className="grid gap-4 lg:grid-cols-3 animate-slide-up">
+        {shortcuts.map((item, index) => (
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-6 shadow-[0_12px_40px_rgba(0,32,80,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(0,32,80,0.08)]"
+            className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-6 shadow-[0_12px_40px_rgba(0,32,80,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_50px_rgba(0,32,80,0.08)] animate-slide-up"
+            style={{
+              "--animation-delay": `${200 + index * 50}ms`,
+            } as React.CSSProperties}
           >
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[color:var(--color-accent-ochre)]">
               Quick access

@@ -72,7 +72,7 @@ export function Field({
 }
 
 const inputClass =
-  "w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm outline-none transition-smooth placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-primary)] focus:ring-2 focus:ring-[color:var(--color-focus-ring)]/25 focus:shadow-md";
+  "w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm outline-none transition-smooth placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-primary)] focus:ring-2 focus:ring-[color:var(--color-focus-ring)]/25 focus:shadow-md hover:border-[color:var(--color-primary)]/50 hover:shadow-[0_2px_12px_rgba(0,59,122,0.08)]";
 
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputClass} ${props.className ?? ""}`.trim()} />;
