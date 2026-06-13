@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { PageHeader, Section } from "@/components/admin-form";
+import { ActionButton, Field, PageHeader, Section, TextInput } from "@/components/admin-form";
 import { CreateCourseModuleModal } from "@/components/create-course-module-modal";
 import { getCourseModulePage, getProgrammeRows } from "@/lib/admin-queries";
 
