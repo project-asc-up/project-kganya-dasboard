@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CoachLevel {
+  UNDERGRADUATE
+  POSTGRADUATE
+  BOTH
+  UNKNOWN
+}
+
+model Faculty {
+  id              String       @id @default(uuid()) @db.Uuid
+  name            String
+  code            String       @unique
+  codeStatus      String       @map("code_status")
+  officialPageUrl String?      @map("official_page_url")
+  supportPageUrl  String?      @map("support_page_url")
+  sourceUrl       String?      @map("source_url")
+  lastVerified    DateTime?    @map("last_verified") @db.Date
+  notes           String?
+  aliases         String?
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  ascCoaches      AscCoach[]
+  programmes      Programme[]
+  resources       Resource[]
+  faqs            Faq[]
+
+  @@map("faculties")
+}
+
+model AscCoach {
+  id                 String      @id @default(uuid()) @db.Uuid
+  facultyId          String      @map("faculty_id") @db.Uuid
+  name               String
+  titleRole          String?     @map("title_role")
+  email              String
+  phone              String?
+  cell               String?
+  officeLocation     String?     @map("office_location")
+  building           String?
+  appointmentLink    String?     @map("appointment_link")
+  level              CoachLevel  @default(UNKNOWN)
+  cluster            String?
+  responsibilities   String?
+  isActive           Boolean     @default(true) @map("is_active")
+  sourceUrl          String?     @map("source_url")
+  lastVerified       DateTime?   @map("last_verified") @db.Date
+  verificationStatus String?     @map("verification_status")
+  notes              String?
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  faculty            Faculty     @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+
+  @@unique([facultyId, email])
+  @@index([facultyId])
+  @@index([email])
+  @@map("asc_coaches")
+}
+
+model Programme {
+  id                String         @id @default(uuid()) @db.Uuid
+  facultyId         String         @map("faculty_id") @db.Uuid
+  sourceFacultyCode String?        @map("source_faculty_code")
+  programmeCode     String         @unique @map("programme_code")
+  programmeName     String         @map("programme_name")
+  degreeName        String?        @map("degree_name")
+  academicLevel     String?        @map("academic_level")
+  qualificationType String?        @map("qualification_type")
+  programmeCredits  Int?           @map("programme_credits")
+  durationYears     Int?           @map("duration_years")
+  yearLevels        String?        @map("year_levels")
+  sourceFile        String?        @map("source_file")
+  lastVerified      DateTime?      @map("last_verified") @db.Date
+  notes             String?
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  faculty           Faculty        @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  courseModules     CourseModule[]
+
+  @@index([facultyId])
+  @@index([programmeName])
+  @@map("programmes")
+}
+
+model CourseModule {
+  id                String    @id @default(uuid()) @db.Uuid
+  programmeId       String    @map("programme_id") @db.Uuid
+  facultyCode       String?   @map("faculty_code")
+  sourceFacultyCode String?   @map("source_faculty_code")
+  programmeCode     String    @map("programme_code")
+  programmeName     String?   @map("programme_name")
+  yearLevelRaw      String    @map("year_level_raw")
+  yearLevelSort     Int?      @map("year_level_sort")
+  moduleCode        String    @map("module_code")
+  moduleName        String?   @map("module_name")
+  moduleType        String    @map("module_type")
+  moduleUnits       Int       @map("module_units")
+  sourceFile        String?   @map("source_file")
+  lastVerified      DateTime? @map("last_verified") @db.Date
+  notes             String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  programme         Programme @relation(fields: [programmeId], references: [id], onDelete: Cascade)
+
+  @@unique([programmeId, yearLevelRaw, moduleCode, moduleType, moduleUnits])
+  @@index([programmeId])
+  @@index([programmeCode])
+  @@index([yearLevelSort])
+  @@index([moduleCode])
+  @@map("courses_modules")
+}
+
+model Resource {
+  id           String    @id @default(uuid()) @db.Uuid
+  seedKey      String    @unique @map("seed_key")
+  facultyId    String?   @map("faculty_id") @db.Uuid
+  category     String
+  title        String
+  description  String?
+  url          String
+  sourceUrl    String?   @map("source_url")
+  lastVerified DateTime? @map("last_verified") @db.Date
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  faculty      Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+
+  @@index([facultyId])
+  @@index([category])
+  @@map("resources")
+}
+
+model Faq {
+  id           String    @id @default(uuid()) @db.Uuid
+  seedKey      String    @unique @map("seed_key")
+  facultyId    String?   @map("faculty_id") @db.Uuid
+  question     String
+  answer       String
+  category     String
+  priority     Int?
+  sourceUrl    String?   @map("source_url")
+  lastVerified DateTime? @map("last_verified") @db.Date
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  faculty      Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+
+  @@index([facultyId])
+  @@index([category])
+  @@index([priority])
+  @@map("faqs")
+}
