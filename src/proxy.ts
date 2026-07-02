@@ -1,31 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
-  const isProduction =
-    process.env.NODE_ENV === "production" &&
-    !process.env.VERCEL_URL?.includes("localhost") &&
-    !process.env.VERCEL_URL?.includes("preview");
+import { AUTH_SESSION_COOKIE, getAuthSessionSecret, verifyAuthSessionToken } from "@/lib/auth-session";
 
-  const isMainBranch = process.env.VERCEL_GIT_COMMIT_REF === "main";
+export async function proxy(request: NextRequest) {
+  const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
+  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin");
 
-  if (isProduction || isMainBranch) {
-    console.error("[DEPLOYMENT GUARD] Attempted access in restricted environment:", {
-      nodeEnv: process.env.NODE_ENV,
-      vercelUrl: process.env.VERCEL_URL,
-      gitBranch: process.env.VERCEL_GIT_COMMIT_REF,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  if (isProduction && isMainBranch) {
-    return NextResponse.json(
-      {
-        error: "Access denied",
-        message: "This deployment is restricted to preview environments only.",
-      },
-      { status: 503 },
+  if (isAdminPage || isAdminApi) {
+    const session = await verifyAuthSessionToken(
+      request.cookies.get(AUTH_SESSION_COOKIE)?.value,
+      { secret: getAuthSessionSecret() },
     );
+
+    if (!session) {
+      if (isAdminApi) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/";
+      loginUrl.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   const requestHeaders = new Headers(request.headers);
@@ -40,6 +37,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next|favicon.ico).*)",
+    "/admin/:path*",
+    "/api/admin/:path*",
   ],
 };

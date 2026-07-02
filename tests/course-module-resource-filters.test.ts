@@ -6,6 +6,7 @@ import { join } from "node:path";
 import {
   buildCourseModuleFacultyOptions,
   buildCourseModuleProgrammeOptions,
+  buildCourseModuleSearchSuggestions,
 } from "@/lib/course-module-filters";
 import {
   buildResourceFacultyOptions,
@@ -65,6 +66,52 @@ test("course module programme options cascade by faculty", () => {
 
   const allProgrammes = buildCourseModuleProgrammeOptions(programmes, "all");
   assert.equal(allProgrammes.length, 3);
+});
+
+test("course module search suggestions cover module and programme fields", () => {
+  const suggestions = buildCourseModuleSearchSuggestions(
+    [
+      {
+        id: "mod-1",
+        moduleCode: "VKK 120",
+        moduleName: "Veterinary Anatomy",
+        programmeCode: "BVSC",
+        programmeName: "Bachelor of Veterinary Science",
+        programme: {
+          faculty: { id: "vet", name: "Faculty of Veterinary Sciences", code: "VET" },
+        },
+      },
+      {
+        id: "mod-2",
+        moduleCode: "OBS 114",
+        moduleName: "Business Management",
+        programmeCode: "BCom",
+        programmeName: "Bachelor of Commerce",
+        programme: {
+          faculty: { id: "ems", name: "Faculty of Economic and Management Sciences", code: "EMS" },
+        },
+      },
+    ],
+    "veterinary",
+  );
+
+  assert.deepEqual(
+    suggestions.slice(0, 2).map((suggestion) => suggestion.id),
+    ["module-name:mod-1", "programme-name:mod-1"],
+  );
+  assert.deepEqual(
+    suggestions.map((suggestion) => suggestion.badge),
+    ["Module name", "Programme name", "Programme code", "Module code"],
+  );
+  assert.equal(suggestions[0].value, "Veterinary Anatomy");
+});
+
+test("course module filter UI uses live autocomplete suggestions", () => {
+  const source = readSourceFile("src/components/course-module-filters.tsx");
+
+  assert.match(source, /LiveSearchInput/);
+  assert.match(source, /course-module-suggestions/);
+  assert.match(source, /onSelectSuggestion/);
 });
 
 test("resource faculty filtering keeps all resources for all faculties", () => {

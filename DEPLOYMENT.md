@@ -1,103 +1,53 @@
 # Project ASC - Deployment Configuration
 
-## Deployment Environment Restrictions
+## Deployment Flow
 
-This project is configured to **only deploy to preview environments** and is **strictly blocked from production deployments**.
+This project is configured for the standard GitHub-to-Vercel flow:
 
-### Configuration Overview
+- Pushes to `main` are allowed to create production deployments.
+- Pushes to non-main branches are allowed to create preview deployments.
+- The Next.js runtime reports deployment environment details but does not block production `main`.
 
-#### 1. **Vercel Configuration** (`vercel.json`)
-- Production deployments are blocked with `productionDeploymentBlocker` enabled
-- Deployment is enabled only for the `v0/projectascup-4372-46a4e311` branch
-- Main branch deployments are disabled
+## Configuration Overview
 
-#### 2. **Build Configuration** (`next.config.ts`)
-- Runtime environment checks prevent production builds
-- Warnings logged for restricted deployments
+### Vercel Configuration
 
-#### 3. **Middleware** (`src/middleware.ts`)
-- Validates request environment at runtime
-- Blocks requests from production main branch deployments
-- Returns 503 Service Unavailable for blocked deployments
+`vercel.json` enables deployments from `main` and does not block preview or production deployments.
 
-#### 4. **Deployment Config** (`src/lib/deployment-config.ts`)
-- Centralized deployment environment checks
-- Provides utilities for environment validation
-- Logs deployment status on application startup
+### Runtime Configuration
 
-#### 5. **Root Layout** (`src/app/layout.tsx`)
-- Validates deployment environment on application load
-- Throws error if deployed to production main branch
+`src/lib/deployment-config.ts` centralizes environment reporting for build and runtime logs.
 
-### Environment Variables
+### Proxy
 
-The following environment variables are checked:
-- `NODE_ENV` - Application environment (development, production)
-- `VERCEL_ENV` - Vercel environment (preview, production)
-- `VERCEL_URL` - Deployment URL
-- `VERCEL_GIT_COMMIT_REF` - Git branch name
+`src/proxy.ts` forwards the current pathname to server components for active navigation state. It does not block deployments.
 
-### Allowed Deployments
+## Environment Variables
 
-✓ **Allowed:**
-- Local development (`NODE_ENV=development`)
-- Preview deployments (any branch except main)
-- `VERCEL_ENV=preview` deployments
+The deployment helpers read these Vercel-provided variables when available:
 
-✗ **Blocked:**
-- Production deployments from main branch
-- `NODE_ENV=production` on main branch
-- Direct production deployments
+- `NODE_ENV`
+- `VERCEL_ENV`
+- `VERCEL_URL`
+- `VERCEL_GIT_COMMIT_REF`
 
-### Deployment Instructions
+## Deploying Changes
 
-#### To Deploy to Preview:
-```bash
-git checkout v0/projectascup-4372-46a4e311
-git push origin v0/projectascup-4372-46a4e311
-# Preview deployment will be created automatically
-```
+To publish changes to the hosted app:
 
-#### To Merge to Main (Read-Only):
 ```bash
 git checkout main
 git pull origin main
-# Main branch is for reference only - no production deployments
+git push origin main
 ```
 
-### Testing Deployment Configuration
+Vercel should then build and deploy the latest `main` commit automatically.
 
-Run locally:
-```bash
-npm run dev
-```
+## Troubleshooting
 
-Check deployment status:
-```bash
-npm run build
-```
+If GitHub shows the latest commit but the app has not updated:
 
-View deployment logs:
-- Navigate to Vercel Dashboard
-- Check build logs for deployment status messages
-
-### Emergency Override
-
-If you need to temporarily override restrictions for testing:
-1. Set `VERCEL_BYPASS_DEPLOY_LOCK=true` (not recommended)
-2. Contact team lead for approval
-3. Document the reason and duration
-
-### Troubleshooting
-
-**Error: "Production deployments are disabled"**
-- Ensure you're on the `v0/projectascup-4372-46a4e311` branch
-- Check that `VERCEL_GIT_COMMIT_REF` is not `main`
-
-**Error: "Access denied" (503 Service Unavailable)**
-- The application is running on production main branch
-- Deploy to preview branch instead
-
-**Build Fails with Deployment Warning**
-- Check `NODE_ENV` is not set to `production`
-- Verify `VERCEL_URL` contains "preview" or "localhost"
+1. Check the Vercel deployment for the latest `main` commit.
+2. Confirm the deployment completed successfully.
+3. Hard-refresh the browser or open the deployment URL directly.
+4. Check build logs for environment variable or database connection failures.

@@ -1,9 +1,8 @@
 /**
  * Environment Deployment Guards
  * 
- * This file ensures that the application only deploys to preview environments
- * and never to production. It provides utilities for checking and validating
- * the current deployment environment.
+ * This file centralizes deployment environment reporting. GitHub pushes to the
+ * production branch should be deployable so the hosted app receives updates.
  */
 
 export const deploymentConfig = {
@@ -35,14 +34,7 @@ export const deploymentConfig = {
   },
 
   // Check if deployment is allowed
-  isDeploymentAllowed: () => {
-    const branch = process.env.VERCEL_GIT_COMMIT_REF || "";
-    const isMainBranch = branch === "main";
-    const isPreviewOnly = !isMainBranch;
-
-    // Only allow non-main branches (preview deployments)
-    return isPreviewOnly || deploymentConfig.isDevelopment();
-  },
+  isDeploymentAllowed: () => true,
 
   // Get deployment status
   getDeploymentStatus: () => {
@@ -56,7 +48,7 @@ export const deploymentConfig = {
       branch,
       message: isAllowed
         ? `Deployment allowed: ${environment} environment on branch '${branch}'`
-        : `Deployment blocked: main branch deployments are disabled. Only preview deployments are allowed.`,
+        : `Deployment blocked for ${environment} environment on branch '${branch}'`,
     };
   },
 
@@ -73,9 +65,7 @@ export const deploymentConfig = {
   // Validate deployment (throw if not allowed)
   validateDeployment: () => {
     if (!deploymentConfig.isDeploymentAllowed()) {
-      throw new Error(
-        "Production deployments are disabled. Only preview deployments are allowed."
-      );
+      throw new Error("Deployment is disabled for this environment.");
     }
   },
 };

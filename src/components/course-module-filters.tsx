@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { ActionButton, Field, Select, TextInput } from "@/components/admin-form";
+import { ActionButton, Field, Select } from "@/components/admin-form";
+import { LiveSearchInput } from "@/components/live-search-input";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
   buildCourseModuleFacultyOptions,
   buildCourseModuleProgrammeOptions,
   type CourseModuleProgrammeOption,
 } from "@/lib/course-module-filters";
+import type { SearchSuggestion } from "@/lib/search-suggestions";
 
 function buildUrl(pathname: string, params: URLSearchParams) {
   const query = params.toString();
@@ -107,6 +109,33 @@ export function CourseModuleFilters({
     });
   }
 
+  const loadSuggestions = useCallback(
+    async (value: string) => {
+      const params = new URLSearchParams({ q: value });
+
+      if (currentFacultyId && currentFacultyId !== "all") {
+        params.set("facultyId", currentFacultyId);
+      }
+
+      if (programmeId && programmeId !== "all") {
+        params.set("programmeId", programmeId);
+      }
+
+      const response = await fetch(`/api/admin/course-module-suggestions?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) return [];
+
+      const payload = (await response.json()) as { suggestions?: SearchSuggestion[] };
+      return payload.suggestions ?? [];
+    },
+    [currentFacultyId, programmeId],
+  );
+
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_repeat(2,minmax(0,0.7fr))_auto]">
       <div className="space-y-2">
@@ -121,10 +150,17 @@ export function CourseModuleFilters({
           }}
           className="space-y-3"
         >
-          <TextInput
+          <LiveSearchInput
             value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
+            onValueChange={setSearchText}
+            suggestionsLoader={loadSuggestions}
+            onSelectSuggestion={(suggestion) => {
+              setSearchText(suggestion.value);
+              updateParams({ q: suggestion.value });
+            }}
             placeholder="Search modules"
+            ariaLabel="Search modules by module code, module name, programme code, or programme name"
+            inputClassName="pr-4"
           />
           <div className="flex items-center gap-2">
             <ActionButton type="submit" disabled={isPending}>

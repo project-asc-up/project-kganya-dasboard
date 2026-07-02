@@ -10,13 +10,11 @@
     "enabled": false
   },
   "productionDeploymentBlocker": {
-    "enabled": true,
-    "description": "Preview deployments only - Production deployments are disabled"
+    "enabled": false
   },
   "git": {
     "deploymentEnabled": {
-      "main": false,
-      "v0/projectascup-4372-46a4e311": true
+      "main": true
     }
   }
 }
