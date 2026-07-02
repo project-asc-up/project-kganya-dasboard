@@ -24,6 +24,19 @@ type CoachRow = CoachSearchRecord & {
   verificationStatus: string | null;
 };
 
+type CoachStatsInput = Pick<CoachRow, "isActive" | "verificationStatus" | "phone" | "cell">;
+
+export function getCoachDirectoryStats(coaches: CoachStatsInput[]) {
+  const active = coaches.filter((coach) => coach.isActive).length;
+  const inactive = coaches.length - active;
+  const verified = coaches.filter((coach) =>
+    normaliseStatus(coach.verificationStatus).includes("verified"),
+  ).length;
+  const withPhone = coaches.filter((coach) => Boolean(coach.phone || coach.cell)).length;
+
+  return { active, inactive, verified, withPhone };
+}
+
 function normaliseStatus(value: string | null) {
   return value?.trim().toLowerCase() ?? "";
 }
@@ -62,23 +75,27 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
     [coaches],
   );
 
+  const facultyScopedCoaches = useMemo(
+    () =>
+      indexedCoaches.filter(
+        (coach) => facultyFilter === "all" || coach.faculty.id === facultyFilter,
+      ),
+    [facultyFilter, indexedCoaches],
+  );
+
   const visibleCoaches = useMemo(
     () =>
-      indexedCoaches.filter((coach) => {
+      facultyScopedCoaches.filter((coach) => {
         const status = normaliseStatus(coach.verificationStatus);
-        const matchesStatus =
+        return (
           statusFilter === "all" ||
           (statusFilter === "active" && coach.isActive) ||
           (statusFilter === "inactive" && !coach.isActive) ||
           (statusFilter === "verified" && status.includes("verified")) ||
-          (statusFilter === "needs-review" && !status.includes("verified"));
-
-        const matchesFaculty =
-          facultyFilter === "all" || coach.faculty.id === facultyFilter;
-
-        return matchesStatus && matchesFaculty;
+          (statusFilter === "needs-review" && !status.includes("verified"))
+        );
       }),
-    [facultyFilter, indexedCoaches, statusFilter],
+    [facultyScopedCoaches, statusFilter],
   );
 
   const grouped = useMemo(() => {
@@ -121,16 +138,10 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
     [query, visibleCoaches],
   );
 
-  const stats = useMemo(() => {
-    const active = coaches.filter((coach) => coach.isActive).length;
-    const inactive = coaches.length - active;
-    const verified = coaches.filter((coach) =>
-      normaliseStatus(coach.verificationStatus).includes("verified"),
-    ).length;
-    const withPhone = coaches.filter((coach) => Boolean(coach.phone || coach.cell)).length;
-
-    return { active, inactive, verified, withPhone };
-  }, [coaches]);
+  const stats = useMemo(
+    () => getCoachDirectoryStats(facultyScopedCoaches),
+    [facultyScopedCoaches],
+  );
 
   return (
     <div className="space-y-4">
@@ -225,6 +236,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                   <button
                     key={item.key}
                     type="button"
+                    aria-pressed={statusFilter === item.key}
                     onClick={() => setStatusFilter(item.key)}
                     className={cn(
                       "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
@@ -244,6 +256,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
         <div className="flex gap-2 overflow-x-auto pb-1">
           <button
             type="button"
+            aria-pressed={facultyFilter === "all"}
             onClick={() => setFacultyFilter("all")}
             className={cn(
               "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
@@ -258,6 +271,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
             <button
               key={faculty.id}
               type="button"
+              aria-pressed={facultyFilter === faculty.id}
               onClick={() => setFacultyFilter(faculty.id)}
               className={cn(
                 "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",

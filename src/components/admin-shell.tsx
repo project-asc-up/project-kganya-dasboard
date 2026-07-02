@@ -75,7 +75,7 @@ export async function AdminShell({
       </a>
 
       <div className="flex min-h-screen w-full">
-        <AdminSidebarNav pathname={pathname} />
+        <AdminSidebarNav initialPathname={pathname} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex min-h-16 items-center gap-4 border-b border-[var(--color-border)] bg-[var(--color-surface-overlay)] px-5 py-3 backdrop-blur-sm sm:px-8">

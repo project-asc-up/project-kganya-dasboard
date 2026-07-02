@@ -1,9 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BarChart3, BookOpen, HelpCircle, Link as LinkIcon, Settings, Users, BookMarked, Upload, Home } from "lucide-react";
 
-import { isAdminNavItemActive, type AdminNavItem } from "@/lib/admin-nav";
+import { isAdminNavItemActive, normalizeAdminPathname, type AdminNavItem } from "@/lib/admin-nav";
 
 const navItems: Array<AdminNavItem & { icon?: ReactNode }> = [
   { label: "Overview", href: "/admin", icon: <Home size={18} /> },
@@ -17,7 +20,10 @@ const navItems: Array<AdminNavItem & { icon?: ReactNode }> = [
   { label: "Imports", href: "/admin/imports", icon: <Upload size={18} /> },
 ];
 
-export function AdminSidebarNav({ pathname }: { pathname: string }) {
+export function AdminSidebarNav({ initialPathname = "/admin" }: { initialPathname?: string }) {
+  const pathname = usePathname();
+  const currentPathname = normalizeAdminPathname(pathname ?? initialPathname);
+
   return (
     <aside className="hidden w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] lg:flex lg:flex-col">
       <div className="border-b border-[var(--color-border)] px-5 py-5">
@@ -47,7 +53,7 @@ export function AdminSidebarNav({ pathname }: { pathname: string }) {
       <nav className="flex-1 overflow-y-auto px-2.5 py-4" aria-label="Primary">
         <ul className="space-y-0.5">
           {navItems.map((item) => {
-            const isActive = isAdminNavItemActive(item.href, pathname);
+            const isActive = isAdminNavItemActive(item.href, currentPathname);
 
             return (
               <li key={item.href}>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { CoachLevel } from "@/generated/prisma/enums";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
+import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
 import { getPrismaClient } from "@/lib/prisma";
 
 function textValue(formData: FormData, key: string) {
@@ -58,10 +59,6 @@ async function facultyCodeForId(prisma: ReturnType<typeof getPrismaClient>, facu
 async function facultyIdOrNull(formData: FormData) {
   const raw = textValue(formData, "facultyId");
   return raw && raw.length > 0 ? raw : null;
-}
-
-function seedPart(value: string | null | undefined) {
-  return value && value.trim().length > 0 ? value.trim() : "general";
 }
 
 function redirectTo(entity: string, id?: string) {
@@ -314,7 +311,14 @@ export async function createResource(formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
-  const seedKey = `resource::${seedPart(facultyCode)}::${seedPart(title)}`;
+  const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title);
+  const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
+    const existing = await prisma.resource.findUnique({
+      where: { seedKey: candidate },
+      select: { id: true },
+    });
+    return Boolean(existing);
+  });
 
   const resource = await prisma.resource.create({
     data: {
@@ -339,7 +343,14 @@ export async function updateResource(id: string, formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
-  const seedKey = `resource::${seedPart(facultyCode)}::${seedPart(title)}`;
+  const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title);
+  const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
+    const existing = await prisma.resource.findUnique({
+      where: { seedKey: candidate },
+      select: { id: true },
+    });
+    return Boolean(existing && existing.id !== id);
+  });
 
   await prisma.resource.update({
     where: { id },
@@ -372,7 +383,14 @@ export async function createFaq(formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const question = requiredText(formData, "question");
-  const seedKey = `faq::${seedPart(facultyCode)}::${seedPart(question)}`;
+  const baseSeedKey = buildAdminSeedKey("faq", facultyCode, question);
+  const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
+    const existing = await prisma.faq.findUnique({
+      where: { seedKey: candidate },
+      select: { id: true },
+    });
+    return Boolean(existing);
+  });
 
   const faq = await prisma.faq.create({
     data: {
@@ -397,7 +415,14 @@ export async function updateFaq(id: string, formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const question = requiredText(formData, "question");
-  const seedKey = `faq::${seedPart(facultyCode)}::${seedPart(question)}`;
+  const baseSeedKey = buildAdminSeedKey("faq", facultyCode, question);
+  const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
+    const existing = await prisma.faq.findUnique({
+      where: { seedKey: candidate },
+      select: { id: true },
+    });
+    return Boolean(existing && existing.id !== id);
+  });
 
   await prisma.faq.update({
     where: { id },
