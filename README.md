@@ -29,6 +29,10 @@ Required environment variables:
 - `DIRECT_URL`
   - Direct non-pooled Neon connection string used by Prisma CLI commands when using Neon.
   - For local/self-hosted PostgreSQL, you can point this at the same local database URL.
+- `BETTER_AUTH_SECRET`
+  - Strong random secret used to sign login sessions.
+- `ADMIN_PASSWORD`
+  - Optional. Required only if you want to sign in with the built-in `admin` account.
 
 ## Local commands
 
@@ -37,6 +41,8 @@ npm install
 npm run db:generate
 npm run dev
 ```
+
+For local development, copy `.env.example` to `.env`, fill in the database URLs, and set `BETTER_AUTH_SECRET`.
 
 Once a database is connected:
 

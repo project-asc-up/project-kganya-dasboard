@@ -83,7 +83,7 @@ export default function Home() {
                   Sign in to continue
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Use your UP username or the Supa administrator account.
+                  Use your university ID or administrator credentials.
                 </p>
               </div>
 
