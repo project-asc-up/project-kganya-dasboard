@@ -12,6 +12,7 @@ import {
 import { updateFaculty } from "@/lib/admin-actions";
 import { getFacultyById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
+import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
@@ -23,13 +24,17 @@ export default async function FacultyDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const faculty = await getFacultyById(id);
+  const [faculty, authz] = await Promise.all([
+    getFacultyById(id),
+    getCurrentAuthorization(),
+  ]);
 
   if (!faculty) {
     notFound();
   }
 
   const updateAction = updateFaculty.bind(null, faculty.id);
+  const canUpdate = canAccess(authz, "faculty:update");
 
   return (
     <div className="space-y-8">
@@ -39,6 +44,7 @@ export default async function FacultyDetailPage({
         description={`Code ${faculty.code} | ${faculty._count.ascCoaches} coaches | ${faculty._count.programmes} programmes`}
       />
 
+      {canUpdate ? (
       <Section title="Edit faculty" description="Update the master record and keep source data current.">
         <form action={updateAction} className="grid gap-5 md:grid-cols-2">
           <Field label="Faculty name">
@@ -79,6 +85,11 @@ export default async function FacultyDetailPage({
           </div>
         </form>
       </Section>
+      ) : (
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 text-sm leading-6 text-[var(--color-text-muted)]">
+          You can view this faculty record, but you do not have permission to edit it.
+        </section>
+      )}
 
       <section className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] p-5 text-sm leading-6 text-[color:var(--color-text-muted)]">
         Faculty deletion is intentionally not exposed in the UI because linked coaches and programmes use

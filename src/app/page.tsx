@@ -1,6 +1,6 @@
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
-
-import { LoginForm } from "@/components/login-form";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -83,12 +83,80 @@ export default function Home() {
                   Sign in to continue
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Use your university ID or administrator credentials.
+                  Use Clerk to sign in or create an account.
                 </p>
               </div>
 
               <div className="px-6 py-6 sm:px-8">
-                <LoginForm />
+                <Show when="signed-out">
+                  <div className="space-y-5">
+                    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
+                      <p className="text-sm font-semibold text-[var(--color-text)]">
+                        Clerk authentication is enabled
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+                        Sign in with your registered account, or create one to
+                        access the Academic Success Coaches workspace.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <SignInButton
+                        mode="modal"
+                        fallbackRedirectUrl="/admin"
+                        forceRedirectUrl="/admin"
+                      >
+                        <button
+                          type="button"
+                          className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-[var(--color-brand-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
+                        >
+                          Sign In
+                        </button>
+                      </SignInButton>
+
+                      <SignUpButton
+                        mode="modal"
+                        fallbackRedirectUrl="/admin"
+                        forceRedirectUrl="/admin"
+                      >
+                        <button
+                          type="button"
+                          className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-brand)] shadow-[var(--shadow-sm)] transition hover:border-[var(--color-brand)] hover:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
+                        >
+                          Create an Account
+                        </button>
+                      </SignUpButton>
+                    </div>
+
+                    <p className="text-xs leading-5 text-[var(--color-text-muted)]">
+                      Account verification and password security are handled by
+                      Clerk before protected admin pages are opened.
+                    </p>
+                  </div>
+                </Show>
+
+                <Show when="signed-in">
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--color-text)]">
+                          You are signed in
+                        </p>
+                        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                          Your Clerk session is active.
+                        </p>
+                      </div>
+                      <UserButton />
+                    </div>
+
+                    <Link
+                      href="/admin"
+                      className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-[var(--color-brand-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
+                    >
+                      Open Admin Workspace
+                    </Link>
+                  </div>
+                </Show>
               </div>
             </div>
           </div>

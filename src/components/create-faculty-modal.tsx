@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Modal } from '@/components/modal';
-import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
+import { Field, TextInput, TextArea, Select, CreateButton } from '@/components/admin-form';
 import { createFaculty } from '@/lib/admin-actions';
 
 export function CreateFacultyModal() {

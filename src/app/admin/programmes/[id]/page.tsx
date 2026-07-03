@@ -4,6 +4,7 @@ import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput }
 import { deleteProgramme, updateProgramme } from "@/lib/admin-actions";
 import { getFacultyOptions, getProgrammeById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
+import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
@@ -15,7 +16,11 @@ export default async function ProgrammeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [programme, faculties] = await Promise.all([getProgrammeById(id), getFacultyOptions()]);
+  const [programme, faculties, authz] = await Promise.all([
+    getProgrammeById(id),
+    getFacultyOptions(),
+    getCurrentAuthorization(),
+  ]);
 
   if (!programme) {
     notFound();
@@ -23,6 +28,8 @@ export default async function ProgrammeDetailPage({
 
   const updateAction = updateProgramme.bind(null, programme.id);
   const deleteAction = deleteProgramme.bind(null, programme.id);
+  const canUpdate = canAccess(authz, "programme:update");
+  const canDelete = canAccess(authz, "programme:delete");
 
   return (
     <div className="space-y-8">
@@ -30,13 +37,14 @@ export default async function ProgrammeDetailPage({
         eyebrow="Programme detail"
         title={programme.programmeName}
         description={`${programme.programmeCode} | ${programme.faculty.code} | ${displayFacultyName(programme.faculty.name)}`}
-        action={
+        action={canDelete ? (
           <form action={deleteAction}>
             <ActionButton tone="danger">Delete programme</ActionButton>
           </form>
-        }
+        ) : null}
       />
 
+      {canUpdate ? (
       <Section title="Edit programme" description="Keep programme metadata and curriculum provenance up to date.">
         <form action={updateAction} className="grid gap-5 md:grid-cols-2">
           <Field label="Faculty">
@@ -96,6 +104,11 @@ export default async function ProgrammeDetailPage({
           </div>
         </form>
       </Section>
+      ) : (
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 text-sm leading-6 text-[var(--color-text-muted)]">
+          You can view this programme record, but you do not have permission to edit it.
+        </section>
+      )}
 
       <Section title="Linked modules" description="Module records grouped under this programme.">
         <div className="space-y-3">

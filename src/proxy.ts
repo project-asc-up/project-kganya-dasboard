@@ -1,28 +1,20 @@
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-import { AUTH_SESSION_COOKIE, getAuthSessionSecret, verifyAuthSessionToken } from "@/lib/auth-session";
+const isProtectedRoute = createRouteMatcher([
+  "/admin(.*)",
+  "/api/admin(.*)",
+]);
 
-export async function proxy(request: NextRequest) {
-  const isAdminPage = request.nextUrl.pathname.startsWith("/admin");
-  const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin");
+export const proxy = clerkMiddleware(async (auth, request) => {
+  if (isProtectedRoute(request)) {
+    const signInUrl = new URL("/sign-in", request.url).toString();
+    const unauthorizedUrl = new URL("/", request.url).toString();
 
-  if (isAdminPage || isAdminApi) {
-    const session = await verifyAuthSessionToken(
-      request.cookies.get(AUTH_SESSION_COOKIE)?.value,
-      { secret: getAuthSessionSecret() },
-    );
-
-    if (!session) {
-      if (isAdminApi) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/";
-      loginUrl.searchParams.set("next", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    await auth.protect({
+      unauthenticatedUrl: signInUrl,
+      unauthorizedUrl,
+    });
   }
 
   const requestHeaders = new Headers(request.headers);
@@ -33,11 +25,12 @@ export async function proxy(request: NextRequest) {
       headers: requestHeaders,
     },
   });
-}
+});
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/api/admin/:path*",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+    "/__clerk/:path*",
   ],
 };

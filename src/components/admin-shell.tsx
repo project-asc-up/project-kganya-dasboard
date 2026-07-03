@@ -1,9 +1,11 @@
 import { headers } from "next/headers";
 import { AppBreadcrumbs, type Crumb } from "@/components/app-breadcrumbs";
 import { AdminBackButton } from "@/components/admin-back-button";
+import { AdminProfileMenu } from "@/components/admin-profile-menu";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 import { SearchBar } from "@/components/search-bar";
 import { normalizeAdminPathname } from "@/lib/admin-nav";
+import { getCurrentAuthorization } from "@/lib/rbac";
 
 /**
  * Resolves the segment path inside `/admin` to a list of breadcrumb
@@ -25,7 +27,9 @@ function buildCrumbs(pathname: string): Crumb[] {
     faqs: "FAQs",
     health: "Analytics",
     imports: "Imports",
+    profile: "Profile",
     search: "Search",
+    users: "User Access",
   };
 
   const segments = pathname.split("/").filter(Boolean);
@@ -64,6 +68,7 @@ export async function AdminShell({
     headerStore.get("x-pathname") || headerStore.get("x-invoke-path") || "/admin",
   );
   const crumbs = buildCrumbs(pathname);
+  const authz = await getCurrentAuthorization();
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-text)]">
@@ -75,7 +80,10 @@ export async function AdminShell({
       </a>
 
       <div className="flex min-h-screen w-full">
-        <AdminSidebarNav initialPathname={pathname} />
+        <AdminSidebarNav
+          initialPathname={pathname}
+          canManageUsers={authz?.isSuperAdmin ?? false}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex min-h-16 items-center gap-4 border-b border-[var(--color-border)] bg-[var(--color-surface-overlay)] px-5 py-3 backdrop-blur-sm sm:px-8">
@@ -85,6 +93,7 @@ export async function AdminShell({
             <div className="flex items-center gap-3">
               <AdminBackButton />
               <SearchBar />
+              <AdminProfileMenu />
             </div>
           </header>
 

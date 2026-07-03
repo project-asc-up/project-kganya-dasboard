@@ -4,6 +4,7 @@ import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput }
 import { deleteResource, updateResource } from "@/lib/admin-actions";
 import { getFacultyOptions, getResourceById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
+import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
@@ -15,7 +16,11 @@ export default async function ResourceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [resource, faculties] = await Promise.all([getResourceById(id), getFacultyOptions()]);
+  const [resource, faculties, authz] = await Promise.all([
+    getResourceById(id),
+    getFacultyOptions(),
+    getCurrentAuthorization(),
+  ]);
 
   if (!resource) {
     notFound();
@@ -23,6 +28,8 @@ export default async function ResourceDetailPage({
 
   const updateAction = updateResource.bind(null, resource.id);
   const deleteAction = deleteResource.bind(null, resource.id);
+  const canUpdate = canAccess(authz, "resource:update");
+  const canDelete = canAccess(authz, "resource:delete");
 
   return (
     <div className="space-y-8">
@@ -30,13 +37,14 @@ export default async function ResourceDetailPage({
         eyebrow="Resource detail"
         title={resource.title}
         description={`${resource.category} | ${resource.faculty ? `${resource.faculty.code} - ${displayFacultyName(resource.faculty.name)}` : "General"}`}
-        action={
+        action={canDelete ? (
           <form action={deleteAction}>
             <ActionButton tone="danger">Delete resource</ActionButton>
           </form>
-        }
+        ) : null}
       />
 
+      {canUpdate ? (
       <Section title="Edit resource" description="Keep the support resource linked and verified.">
         <form action={updateAction} className="grid gap-5 md:grid-cols-2">
           <Field label="Faculty">
@@ -77,6 +85,11 @@ export default async function ResourceDetailPage({
           </div>
         </form>
       </Section>
+      ) : (
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 text-sm leading-6 text-[var(--color-text-muted)]">
+          You can view this resource, but you do not have permission to edit it.
+        </section>
+      )}
     </div>
   );
 }

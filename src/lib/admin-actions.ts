@@ -7,6 +7,7 @@ import { CoachLevel } from "@/generated/prisma/enums";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
 import { getPrismaClient } from "@/lib/prisma";
+import { requirePermission } from "@/lib/rbac";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -78,6 +79,7 @@ function redirectTo(entity: string, id?: string) {
 }
 
 export async function createFaculty(formData: FormData) {
+  await requirePermission("faculty:create");
   const prisma = getPrismaClient();
   const faculty = await prisma.faculty.create({
     data: {
@@ -98,6 +100,7 @@ export async function createFaculty(formData: FormData) {
 }
 
 export async function updateFaculty(id: string, formData: FormData) {
+  await requirePermission("faculty:update");
   const prisma = getPrismaClient();
   await prisma.faculty.update({
     where: { id },
@@ -119,6 +122,7 @@ export async function updateFaculty(id: string, formData: FormData) {
 }
 
 export async function deleteFaculty(id: string) {
+  await requirePermission("faculty:delete");
   const prisma = getPrismaClient();
   await prisma.faculty.delete({ where: { id } });
   redirectTo("faculties");
@@ -126,6 +130,7 @@ export async function deleteFaculty(id: string) {
 }
 
 export async function createCoach(formData: FormData) {
+  await requirePermission("coach:create");
   const prisma = getPrismaClient();
   const facultyId = requiredText(formData, "facultyId");
   const coach = await prisma.ascCoach.create({
@@ -155,6 +160,7 @@ export async function createCoach(formData: FormData) {
 }
 
 export async function updateCoach(id: string, formData: FormData) {
+  await requirePermission("coach:update");
   const prisma = getPrismaClient();
   const facultyId = requiredText(formData, "facultyId");
   await prisma.ascCoach.update({
@@ -185,6 +191,7 @@ export async function updateCoach(id: string, formData: FormData) {
 }
 
 export async function deleteCoach(id: string) {
+  await requirePermission("coach:delete");
   const prisma = getPrismaClient();
   await prisma.ascCoach.delete({ where: { id } });
   redirectTo("coaches");
@@ -192,6 +199,7 @@ export async function deleteCoach(id: string) {
 }
 
 export async function createProgramme(formData: FormData) {
+  await requirePermission("programme:create");
   const prisma = getPrismaClient();
   const programme = await prisma.programme.create({
     data: {
@@ -216,6 +224,7 @@ export async function createProgramme(formData: FormData) {
 }
 
 export async function updateProgramme(id: string, formData: FormData) {
+  await requirePermission("programme:update");
   const prisma = getPrismaClient();
   await prisma.programme.update({
     where: { id },
@@ -241,6 +250,7 @@ export async function updateProgramme(id: string, formData: FormData) {
 }
 
 export async function deleteProgramme(id: string) {
+  await requirePermission("programme:delete");
   const prisma = getPrismaClient();
   await prisma.programme.delete({ where: { id } });
   redirectTo("programmes");
@@ -248,6 +258,7 @@ export async function deleteProgramme(id: string) {
 }
 
 export async function createCourseModule(formData: FormData) {
+  await requirePermission("course-module:create");
   const prisma = getPrismaClient();
   const programmeId = requiredText(formData, "programmeId");
   const courseModule = await prisma.courseModule.create({
@@ -274,6 +285,7 @@ export async function createCourseModule(formData: FormData) {
 }
 
 export async function updateCourseModule(id: string, formData: FormData) {
+  await requirePermission("course-module:update");
   const prisma = getPrismaClient();
   await prisma.courseModule.update({
     where: { id },
@@ -300,6 +312,7 @@ export async function updateCourseModule(id: string, formData: FormData) {
 }
 
 export async function deleteCourseModule(id: string) {
+  await requirePermission("course-module:delete");
   const prisma = getPrismaClient();
   await prisma.courseModule.delete({ where: { id } });
   redirectTo("course-modules");
@@ -307,6 +320,7 @@ export async function deleteCourseModule(id: string) {
 }
 
 export async function createResource(formData: FormData) {
+  await requirePermission("resource:create");
   const prisma = getPrismaClient();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
@@ -339,6 +353,7 @@ export async function createResource(formData: FormData) {
 }
 
 export async function updateResource(id: string, formData: FormData) {
+  await requirePermission("resource:update");
   const prisma = getPrismaClient();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
@@ -372,6 +387,7 @@ export async function updateResource(id: string, formData: FormData) {
 }
 
 export async function deleteResource(id: string) {
+  await requirePermission("resource:delete");
   const prisma = getPrismaClient();
   await prisma.resource.delete({ where: { id } });
   redirectTo("resources");
@@ -379,6 +395,7 @@ export async function deleteResource(id: string) {
 }
 
 export async function createFaq(formData: FormData) {
+  await requirePermission("faq:create");
   const prisma = getPrismaClient();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
@@ -411,6 +428,7 @@ export async function createFaq(formData: FormData) {
 }
 
 export async function updateFaq(id: string, formData: FormData) {
+  await requirePermission("faq:update");
   const prisma = getPrismaClient();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
@@ -444,6 +462,7 @@ export async function updateFaq(id: string, formData: FormData) {
 }
 
 export async function deleteFaq(id: string) {
+  await requirePermission("faq:delete");
   const prisma = getPrismaClient();
   await prisma.faq.delete({ where: { id } });
   redirectTo("faqs");
@@ -451,6 +470,7 @@ export async function deleteFaq(id: string) {
 }
 
 export async function refreshHealthDashboard() {
+  await requirePermission("system:refresh");
   revalidatePath("/admin");
   revalidatePath("/admin/health");
   revalidateTag(ADMIN_CACHE_TAGS.overview, "max");

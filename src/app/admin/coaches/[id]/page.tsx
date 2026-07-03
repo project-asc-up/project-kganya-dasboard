@@ -12,6 +12,7 @@ import {
 import { deleteCoach, updateCoach } from "@/lib/admin-actions";
 import { getFacultyOptions, getCoachById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
+import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
@@ -23,7 +24,11 @@ export default async function CoachDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [coach, faculties] = await Promise.all([getCoachById(id), getFacultyOptions()]);
+  const [coach, faculties, authz] = await Promise.all([
+    getCoachById(id),
+    getFacultyOptions(),
+    getCurrentAuthorization(),
+  ]);
 
   if (!coach) {
     notFound();
@@ -31,6 +36,8 @@ export default async function CoachDetailPage({
 
   const updateAction = updateCoach.bind(null, coach.id);
   const deleteAction = deleteCoach.bind(null, coach.id);
+  const canUpdate = canAccess(authz, "coach:update");
+  const canDelete = canAccess(authz, "coach:delete");
 
   return (
     <div className="space-y-8">
@@ -38,13 +45,14 @@ export default async function CoachDetailPage({
         eyebrow="Coach detail"
         title={coach.name}
         description={`${coach.faculty.code} | ${displayFacultyName(coach.faculty.name)} | ${coach.email}`}
-        action={
+        action={canDelete ? (
           <form action={deleteAction}>
             <ActionButton tone="danger">Delete coach</ActionButton>
           </form>
-        }
+        ) : null}
       />
 
+      {canUpdate ? (
       <Section title="Edit coach" description="Update contact, role, level, and verification details.">
         <form action={updateAction} className="grid gap-5 md:grid-cols-2">
           <Field label="Faculty">
@@ -124,6 +132,17 @@ export default async function CoachDetailPage({
           </div>
         </form>
       </Section>
+      ) : (
+        <ReadOnlyNotice />
+      )}
     </div>
+  );
+}
+
+function ReadOnlyNotice() {
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 text-sm leading-6 text-[var(--color-text-muted)]">
+      You can view this coach record, but you do not have permission to edit it.
+    </section>
   );
 }

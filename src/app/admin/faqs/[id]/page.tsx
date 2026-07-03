@@ -4,6 +4,7 @@ import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput }
 import { deleteFaq, updateFaq } from "@/lib/admin-actions";
 import { getFacultyOptions, getFaqById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
+import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
@@ -23,7 +24,11 @@ export default async function FaqDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [faq, faculties] = await Promise.all([getFaqById(id), getFacultyOptions()]);
+  const [faq, faculties, authz] = await Promise.all([
+    getFaqById(id),
+    getFacultyOptions(),
+    getCurrentAuthorization(),
+  ]);
 
   if (!faq) {
     notFound();
@@ -31,6 +36,8 @@ export default async function FaqDetailPage({
 
   const updateAction = updateFaq.bind(null, faq.id);
   const deleteAction = deleteFaq.bind(null, faq.id);
+  const canUpdate = canAccess(authz, "faq:update");
+  const canDelete = canAccess(authz, "faq:delete");
 
   return (
     <div className="space-y-8">
@@ -38,13 +45,14 @@ export default async function FaqDetailPage({
         eyebrow="FAQ detail"
         title={faq.question}
         description={`${faq.category} | ${faq.faculty ? `${faq.faculty.code} - ${displayFacultyName(faq.faculty.name)}` : "General"}`}
-        action={
+        action={canDelete ? (
           <form action={deleteAction}>
             <ActionButton tone="danger">Delete FAQ</ActionButton>
           </form>
-        }
+        ) : null}
       />
 
+      {canUpdate ? (
       <Section title="Edit FAQ" description="Keep the question, answer, and priority aligned with the source.">
         <form action={updateAction} className="grid gap-5 md:grid-cols-2">
           <Field label="Faculty">
@@ -93,6 +101,11 @@ export default async function FaqDetailPage({
           </div>
         </form>
       </Section>
+      ) : (
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 text-sm leading-6 text-[var(--color-text-muted)]">
+          You can view this FAQ, but you do not have permission to edit it.
+        </section>
+      )}
     </div>
   );
 }
