@@ -16,7 +16,7 @@ test("RBAC uses Clerk metadata, bootstrap super admins, and explicit permissions
   assert.match(source, /publicMetadata\?\.role/);
   assert.match(source, /publicMetadata\?\.permissions/);
   assert.match(source, /updateUserMetadata/);
-  assert.match(source, /targetUserId === authz\.userId && role !== "super_admin"/);
+  assert.match(source, /targetUserId === authz\.userId/);
   assert.match(source, /if \(role === "super_admin"\) return \[\.\.\.RBAC_PERMISSIONS\]/);
   assert.doesNotMatch(source, /DEFAULT_ADMIN_PERMISSIONS/);
 });
@@ -69,4 +69,44 @@ test("Clerk profile page uses a catch-all route for nested profile screens", () 
     existsSync(join(root, "src/app/admin/profile/[[...user-profile]]/page.tsx")),
     true,
   );
+});
+
+test("super admin user management supports search, pagination, confirmations, and notifications", () => {
+  const page = readSource("src/app/admin/users/page.tsx");
+  const editorExists = existsSync(join(root, "src/components/user-access-editor.tsx"));
+
+  assert.equal(editorExists, true);
+  assert.match(page, /searchParams/);
+  assert.match(page, /getManagedUserPage/);
+  assert.match(page, /query/);
+  assert.match(page, /page/);
+  assert.match(page, /selectedUserId/);
+  assert.match(page, /UserAccessEditor/);
+
+  const editor = readSource("src/components/user-access-editor.tsx");
+  assert.match(editor, /useActionState/);
+  assert.match(editor, /useFormStatus/);
+  assert.match(editor, /confirm\(/);
+  assert.match(editor, /Super Admin/);
+  assert.match(editor, /success/);
+  assert.match(editor, /error/);
+});
+
+test("role updates are audited and prevent users from editing their own access", () => {
+  const rbac = readSource("src/lib/rbac.ts");
+  const action = readSource("src/lib/user-management-actions.ts");
+  const schema = readSource("prisma/schema.prisma");
+
+  assert.match(rbac, /getManagedUserPage/);
+  assert.match(rbac, /getManagedUserDetail/);
+  assert.match(rbac, /actorUserId/);
+  assert.match(rbac, /targetUserId === authz\.userId/);
+  assert.match(rbac, /userAccessAuditLog\.create/);
+  assert.match(rbac, /previousPermissions/);
+  assert.match(rbac, /newPermissions/);
+  assert.match(action, /type UserAccessActionState/);
+  assert.match(action, /return\s+\{\s+status: "success"/);
+  assert.match(action, /return\s+\{\s+status: "error"/);
+  assert.match(schema, /model UserAccessAuditLog/);
+  assert.match(schema, /@@map\("user_access_audit_logs"\)/);
 });

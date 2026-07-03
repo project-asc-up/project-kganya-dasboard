@@ -1,12 +1,41 @@
-import { PageHeader, Section, Select } from "@/components/admin-form";
-import { updateUserAccess } from "@/lib/user-management-actions";
+import Link from "next/link";
+
+import { PageHeader, Section, TextInput } from "@/components/admin-form";
+import { UserAccessEditor } from "@/components/user-access-editor";
 import {
-  getManagedUsers,
+  getManagedUserPage,
+  PERMISSION_GROUPS,
   PERMISSION_LABELS,
-  RBAC_PERMISSIONS,
   RBAC_ROLES,
   ROLE_LABELS,
 } from "@/lib/rbac";
+
+type UserManagementSearchParams = Promise<{
+  q?: string | string[];
+  page?: string | string[];
+  user?: string | string[];
+}>;
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function pageHref({
+  query,
+  page,
+  selectedUserId,
+}: {
+  query: string;
+  page: number;
+  selectedUserId?: string | null;
+}) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (page > 1) params.set("page", String(page));
+  if (selectedUserId) params.set("user", selectedUserId);
+  const suffix = params.toString();
+  return suffix ? `/admin/users?${suffix}` : "/admin/users";
+}
 
 function formatDate(value: number | null | undefined) {
   if (!value) return "Never";
@@ -16,97 +45,166 @@ function formatDate(value: number | null | undefined) {
   }).format(new Date(value));
 }
 
-export default async function UserManagementPage() {
-  const users = await getManagedUsers();
+export default async function UserManagementPage({
+  searchParams,
+}: {
+  searchParams: UserManagementSearchParams;
+}) {
+  const params = await searchParams;
+  const query = firstParam(params.q)?.trim() ?? "";
+  const page = Number(firstParam(params.page) ?? "1");
+  const selectedUserId = firstParam(params.user);
+  const userPage = await getManagedUserPage({
+    query,
+    page: Number.isFinite(page) ? page : 1,
+    selectedUserId,
+  });
+  const roleOptions = RBAC_ROLES.map((role) => ({
+    value: role,
+    label: ROLE_LABELS[role],
+  }));
+  const permissionGroups = PERMISSION_GROUPS.map((group) => ({
+    label: group.label,
+    permissions: [...group.permissions],
+  }));
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Super Admin"
         title="User access management"
-        description="Grant or revoke platform roles and content-management permissions for Clerk-authenticated users."
+        description="Search registered Clerk users, review profile details, and grant or revoke roles and permissions with an audit trail."
       />
 
       <Section
-        title="Role and permission assignments"
-        description="Super Admins always have unrestricted access. Admins and Users can only create, edit, or delete content when explicit permissions are assigned."
+        title="Find a user"
+        description="Search by name, email address, or username. Results are loaded server-side for scalability."
       >
-        <div className="space-y-4">
-          {users.map((user) => (
-            <form
-              key={user.id}
-              action={updateUserAccess}
-              className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-card)]"
+        <form className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]" action="/admin/users">
+          <TextInput
+            type="search"
+            name="q"
+            defaultValue={userPage.query}
+            placeholder="Search by name, email, or username..."
+          />
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2"
+          >
+            Search users
+          </button>
+        </form>
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-text-muted)]">
+          <span>
+            Showing page {userPage.page} of {userPage.totalPages} for {userPage.totalCount} user
+            {userPage.totalCount === 1 ? "" : "s"}.
+          </span>
+          {userPage.query ? (
+            <Link
+              href="/admin/users"
+              className="font-semibold text-[var(--color-brand)] transition hover:text-[var(--color-brand-strong)]"
             >
-              <input type="hidden" name="userId" value={user.id} />
+              Clear search
+            </Link>
+          ) : null}
+        </div>
 
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_16rem]">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                      {user.name}
-                    </h2>
-                    <span className="rounded-full bg-[var(--color-brand-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-brand-soft-foreground)]">
-                      {user.roleLabel}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                    {user.email ?? "No primary email"} | Created {formatDate(user.createdAt)} | Last sign-in{" "}
-                    {formatDate(user.lastSignInAt)}
-                  </p>
-                </div>
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
+          <div className="space-y-3">
+            {userPage.users.length > 0 ? (
+              userPage.users.map((user) => {
+                const href = pageHref({
+                  query: userPage.query,
+                  page: userPage.page,
+                  selectedUserId: user.id,
+                });
+                const isSelected = userPage.selectedUser?.id === user.id;
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold text-[var(--color-text)]">
-                    Role
-                  </span>
-                  <Select name="role" defaultValue={user.role}>
-                    {RBAC_ROLES.map((role) => (
-                      <option key={role} value={role}>
-                        {ROLE_LABELS[role]}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
+                return (
+                  <Link
+                    key={user.id}
+                    href={href}
+                    aria-current={isSelected ? "true" : undefined}
+                    className={[
+                      "block rounded-2xl border p-4 transition",
+                      isSelected
+                        ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)]"
+                        : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-brand)]",
+                    ].join(" ")}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-semibold text-[var(--color-text)]">{user.name}</h2>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[var(--color-brand-soft-foreground)]">
+                        {user.roleLabel}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-sm text-[var(--color-text-muted)]">
+                      {user.email ?? user.username ?? user.id}
+                    </p>
+                    <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                      Last sign-in: {formatDate(user.lastSignInAt)}
+                    </p>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-sm text-[var(--color-text-muted)]">
+                No users matched this search.
               </div>
+            )}
 
-              <fieldset className="mt-5">
-                <legend className="text-sm font-semibold text-[var(--color-text)]">
-                  Explicit permissions
-                </legend>
-                <p className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
-                  Admins and Users only receive the permissions selected here. Super Admins do not need explicit permissions.
-                </p>
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <Link
+                href={pageHref({
+                  query: userPage.query,
+                  page: Math.max(userPage.page - 1, 1),
+                  selectedUserId: userPage.selectedUser?.id,
+                })}
+                aria-disabled={!userPage.hasPreviousPage}
+                className={[
+                  "rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold transition",
+                  userPage.hasPreviousPage
+                    ? "text-[var(--color-brand)] hover:border-[var(--color-brand)]"
+                    : "pointer-events-none text-[var(--color-text-muted)] opacity-50",
+                ].join(" ")}
+              >
+                Previous
+              </Link>
+              <Link
+                href={pageHref({
+                  query: userPage.query,
+                  page: userPage.page + 1,
+                  selectedUserId: userPage.selectedUser?.id,
+                })}
+                aria-disabled={!userPage.hasNextPage}
+                className={[
+                  "rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold transition",
+                  userPage.hasNextPage
+                    ? "text-[var(--color-brand)] hover:border-[var(--color-brand)]"
+                    : "pointer-events-none text-[var(--color-text-muted)] opacity-50",
+                ].join(" ")}
+              >
+                Next
+              </Link>
+            </div>
+          </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {RBAC_PERMISSIONS.map((permission) => (
-                    <label
-                      key={permission}
-                      className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text)]"
-                    >
-                      <input
-                        type="checkbox"
-                        name="permissions"
-                        value={permission}
-                        defaultChecked={user.permissions.includes(permission)}
-                        className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
-                      />
-                      {PERMISSION_LABELS[permission]}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-
-              <div className="mt-5 flex justify-end">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-full bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2"
-                >
-                  Save access
-                </button>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-card)]">
+            {userPage.selectedUser ? (
+              <UserAccessEditor
+                key={userPage.selectedUser.id}
+                user={userPage.selectedUser}
+                roles={roleOptions}
+                permissionGroups={permissionGroups}
+                permissionLabels={PERMISSION_LABELS}
+              />
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-sm leading-6 text-[var(--color-text-muted)]">
+                Search for a registered user, then select a result to manage their role and permissions.
               </div>
-            </form>
-          ))}
+            )}
+          </div>
         </div>
       </Section>
     </div>

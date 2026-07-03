@@ -178,3 +178,21 @@ model AuthUser {
   @@index([createdAt])
   @@map("auth_users")
 }
+
+model UserAccessAuditLog {
+  id                  String   @id @default(uuid()) @db.Uuid
+  actorUserId          String   @map("actor_user_id")
+  actorEmail           String?  @map("actor_email")
+  targetUserId         String   @map("target_user_id")
+  targetEmail          String?  @map("target_email")
+  previousRole         String   @map("previous_role")
+  newRole              String   @map("new_role")
+  previousPermissions  Json     @map("previous_permissions")
+  newPermissions       Json     @map("new_permissions")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([actorUserId])
+  @@index([targetUserId])
+  @@index([createdAt])
+  @@map("user_access_audit_logs")
+}
