@@ -1,4 +1,4 @@
-import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { SignInButton, Show, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -82,24 +82,11 @@ export default function Home() {
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--color-text)]">
                   Sign in to continue
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                  Use Clerk to sign in or create an account.
-                </p>
               </div>
 
               <div className="px-6 py-6 sm:px-8">
                 <Show when="signed-out">
                   <div className="space-y-5">
-                    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4">
-                      <p className="text-sm font-semibold text-[var(--color-text)]">
-                        Clerk authentication is enabled
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-                        Sign in with your registered account, or create one to
-                        access the Academic Success Coaches workspace.
-                      </p>
-                    </div>
-
                     <div className="grid gap-3">
                       <SignInButton
                         mode="modal"
@@ -113,25 +100,7 @@ export default function Home() {
                           Sign In
                         </button>
                       </SignInButton>
-
-                      <SignUpButton
-                        mode="modal"
-                        fallbackRedirectUrl="/admin"
-                        forceRedirectUrl="/admin"
-                      >
-                        <button
-                          type="button"
-                          className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-semibold text-[var(--color-brand)] shadow-[var(--shadow-sm)] transition hover:border-[var(--color-brand)] hover:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
-                        >
-                          Create an Account
-                        </button>
-                      </SignUpButton>
                     </div>
-
-                    <p className="text-xs leading-5 text-[var(--color-text-muted)]">
-                      Account verification and password security are handled by
-                      Clerk before protected admin pages are opened.
-                    </p>
                   </div>
                 </Show>
 

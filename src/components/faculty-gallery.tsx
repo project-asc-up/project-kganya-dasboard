@@ -125,7 +125,7 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
       <div className="space-y-4">
         <Card className="border-[color:var(--color-border)]/80 bg-[var(--color-surface-raised)]">
           <CardBody className="space-y-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-5">
               <div className="space-y-1">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                   Faculty atlas
@@ -138,24 +138,39 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                 </p>
               </div>
 
-              <MetricGrid className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-                <MetricCard compact label="Visible" value={visibleCount} detail="Matching faculties." className="bg-[var(--color-surface)]" />
+              <MetricGrid className="faculty-directory-metrics grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:[grid-template-columns:repeat(4,minmax(11rem,1fr))]">
+                <MetricCard
+                  compact
+                  label="Visible"
+                  value={visibleCount}
+                  detail="Matching faculties."
+                  className="min-h-[9rem] bg-[var(--color-surface)] p-5"
+                  labelClassName="whitespace-normal break-normal leading-5"
+                  valueClassName="whitespace-nowrap text-[clamp(2.25rem,4.2vw,3.35rem)]"
+                  detailClassName="text-sm leading-5"
+                />
                 <MetricCard
                   compact
                   label="Verified"
                   value={faculties.filter((faculty) => faculty.codeStatus.toLowerCase().includes("verified")).length}
                   detail="Status is verified."
-                  className="bg-[var(--color-surface)]"
+                  className="min-h-[9rem] bg-[var(--color-surface)] p-5"
+                  labelClassName="whitespace-normal break-normal leading-5"
+                  valueClassName="whitespace-nowrap text-[clamp(2.25rem,4.2vw,3.35rem)]"
+                  detailClassName="text-sm leading-5"
                 />
                 <MetricCard
                   compact
-                  label="Need review"
+                  label="Needs review"
                   value={faculties.filter((faculty) => {
                     const normalized = faculty.codeStatus.toLowerCase();
                     return normalized.includes("review") || normalized.includes("pending");
                   }).length}
                   detail="Status needs attention."
-                  className="bg-[var(--color-surface)]"
+                  className="min-h-[9rem] bg-[var(--color-surface)] p-5"
+                  labelClassName="whitespace-normal break-normal leading-5"
+                  valueClassName="whitespace-nowrap text-[clamp(2.25rem,4.2vw,3.35rem)]"
+                  detailClassName="text-sm leading-5"
                 />
                 <MetricCard
                   compact
@@ -166,7 +181,10 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                     0,
                   )}
                   detail="Linked content total."
-                  className="bg-[var(--color-surface)]"
+                  className="min-h-[9rem] bg-[var(--color-surface)] p-5"
+                  labelClassName="whitespace-normal break-normal leading-5"
+                  valueClassName="whitespace-nowrap text-[clamp(2.25rem,4.2vw,3.35rem)]"
+                  detailClassName="text-sm leading-5"
                 />
               </MetricGrid>
             </div>

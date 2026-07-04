@@ -51,7 +51,7 @@ export function MetricCard({
 
       <div
         className={cn(
-          "mt-3 min-w-0 break-words font-semibold tracking-tight text-[color:var(--color-primary-dark)]",
+          "mt-3 min-w-0 whitespace-nowrap break-normal font-semibold tracking-tight text-[color:var(--color-primary-dark)]",
           "text-[clamp(1.5rem,3.4vw,2.625rem)] leading-none tabular-nums",
           compact && "text-[clamp(1.15rem,2.5vw,1.875rem)]",
           valueClassName,

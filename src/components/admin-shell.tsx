@@ -3,6 +3,7 @@ import { AppBreadcrumbs, type Crumb } from "@/components/app-breadcrumbs";
 import { AdminBackButton } from "@/components/admin-back-button";
 import { AdminProfileMenu } from "@/components/admin-profile-menu";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
+import { SessionTimeoutGuard } from "@/components/session-timeout-guard";
 import { SearchBar } from "@/components/search-bar";
 import { normalizeAdminPathname } from "@/lib/admin-nav";
 import { getCurrentAuthorization } from "@/lib/rbac";
@@ -72,6 +73,7 @@ export async function AdminShell({
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-text)]">
+      <SessionTimeoutGuard />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-[var(--color-surface-raised)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--color-brand)] focus:shadow-lg"

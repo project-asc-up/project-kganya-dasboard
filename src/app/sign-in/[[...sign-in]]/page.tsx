@@ -63,7 +63,6 @@ export default function SignInPage() {
               <SignIn
                 fallbackRedirectUrl="/admin"
                 forceRedirectUrl="/admin"
-                signUpUrl="/sign-up"
               />
             </div>
           </section>

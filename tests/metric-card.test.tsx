@@ -20,9 +20,20 @@ test("MetricCard renders overflow-safe, balanced markup", () => {
   );
 
   assert.match(html, /break-words/);
+  assert.match(html, /whitespace-nowrap/);
   assert.match(html, /tabular-nums/);
   assert.match(html, /Meta/);
   assert.match(html, /rounded-\[1\.5rem\]/);
+});
+
+test("FacultyGallery uses a full-width responsive metric layout", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/faculty-gallery.tsx"), "utf8");
+
+  assert.match(source, /faculty-directory-metrics/);
+  assert.match(source, /lg:grid-cols-4/);
+  assert.match(source, /minmax\(11rem,1fr\)/);
+  assert.match(source, /valueClassName="whitespace-nowrap/);
+  assert.match(source, /labelClassName="whitespace-normal/);
 });
 
 test("CoachDirectory removes the search tips panel", () => {

@@ -112,6 +112,10 @@ test("course module filter UI uses live autocomplete suggestions", () => {
   assert.match(source, /LiveSearchInput/);
   assert.match(source, /course-module-suggestions/);
   assert.match(source, /onSelectSuggestion/);
+  assert.match(source, /md:grid-cols-2/);
+  assert.match(source, /md:col-span-2 xl:col-span-1/);
+  assert.match(source, /sm:flex-row/);
+  assert.match(source, /sm:w-auto/);
 });
 
 test("resource faculty filtering keeps all resources for all faculties", () => {

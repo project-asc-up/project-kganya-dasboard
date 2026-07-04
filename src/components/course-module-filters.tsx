@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { ActionButton, Field, Select } from "@/components/admin-form";
+import { ActionButton, Select } from "@/components/admin-form";
 import { LiveSearchInput } from "@/components/live-search-input";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
@@ -137,32 +137,36 @@ export function CourseModuleFilters({
   );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_repeat(2,minmax(0,0.7fr))_auto]">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
+    <div className="grid items-end gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_auto]">
+      <div className="space-y-2 md:col-span-2 xl:col-span-1">
+        <div className="space-y-1">
           <span className="text-sm font-semibold text-[color:var(--color-primary-dark)]">Search modules</span>
-          <span className="text-xs text-[color:var(--color-text-muted)]">Module code, module name, programme code, or programme name</span>
+          <p className="text-xs text-[color:var(--color-text-muted)]">
+            Module code, module name, programme code, or programme name
+          </p>
         </div>
         <form
           onSubmit={(event) => {
             event.preventDefault();
             updateParams({ q: searchText });
           }}
-          className="space-y-3"
+          className="flex flex-col gap-3 sm:flex-row sm:items-center"
         >
-          <LiveSearchInput
-            value={searchText}
-            onValueChange={setSearchText}
-            suggestionsLoader={loadSuggestions}
-            onSelectSuggestion={(suggestion) => {
-              setSearchText(suggestion.value);
-              updateParams({ q: suggestion.value });
-            }}
-            placeholder="Search modules"
-            ariaLabel="Search modules by module code, module name, programme code, or programme name"
-            inputClassName="pr-4"
-          />
-          <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <LiveSearchInput
+              value={searchText}
+              onValueChange={setSearchText}
+              suggestionsLoader={loadSuggestions}
+              onSelectSuggestion={(suggestion) => {
+                setSearchText(suggestion.value);
+                updateParams({ q: suggestion.value });
+              }}
+              placeholder="Search modules"
+              ariaLabel="Search modules by module code, module name, programme code, or programme name"
+              inputClassName="pr-4"
+            />
+          </div>
+          <div className="flex items-center gap-2 sm:shrink-0">
             <ActionButton type="submit" disabled={isPending}>
               Search
             </ActionButton>
@@ -170,7 +174,11 @@ export function CourseModuleFilters({
         </form>
       </div>
 
-      <Field label="Faculty" hint="All or a specific faculty">
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <span className="text-sm font-semibold text-[color:var(--color-primary-dark)]">Faculty</span>
+          <p className="text-xs text-[color:var(--color-text-muted)]">All or a specific faculty</p>
+        </div>
         <Select
           value={currentFacultyId}
           onChange={(event) => handleFacultyChange(event.target.value)}
@@ -182,9 +190,13 @@ export function CourseModuleFilters({
             </option>
           ))}
         </Select>
-      </Field>
+      </div>
 
-      <Field label="Programme" hint="Updated from the faculty selection">
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <span className="text-sm font-semibold text-[color:var(--color-primary-dark)]">Programme</span>
+          <p className="text-xs text-[color:var(--color-text-muted)]">Updated from the faculty selection</p>
+        </div>
         <Select
           value={programmeId && programmeId !== "all" ? programmeId : "all"}
           onChange={(event) => handleProgrammeChange(event.target.value)}
@@ -196,16 +208,16 @@ export function CourseModuleFilters({
             </option>
           ))}
         </Select>
-      </Field>
+      </div>
 
-      <div className="flex items-end">
+      <div className="flex items-end md:col-span-2 xl:col-span-1 xl:justify-end">
         <button
           type="button"
           onClick={() => {
             const params = new URLSearchParams();
             router.replace(buildUrl(pathname, params), { scroll: false });
           }}
-          className="rounded-full border border-[color:var(--color-border)] px-4 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+          className="w-full rounded-full border border-[color:var(--color-border)] px-4 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)] sm:w-auto"
         >
           Reset all
         </button>
