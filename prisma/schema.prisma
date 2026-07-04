@@ -196,3 +196,14 @@ model UserAccessAuditLog {
   @@index([createdAt])
   @@map("user_access_audit_logs")
 }
+
+model RoleTabAccess {
+  id        String   @id @default(uuid()) @db.Uuid
+  role      String   // "admin" or "user"
+  tab       String   // e.g. "/admin/faculties"
+  isAllowed Boolean  @default(true) @map("is_allowed")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([role, tab])
+  @@map("role_tab_access")
+}

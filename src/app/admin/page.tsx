@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { PageHeader } from "@/components/admin-form";
+import { PageHeader, Section } from "@/components/admin-form";
+import { TabAccessEditor } from "@/components/tab-access-editor";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { getHealthOverview } from "@/lib/admin-queries";
+import { getAllowedTabsForRole } from "@/lib/tab-access";
+import { getCurrentAuthorization } from "@/lib/rbac";
 
 const shortcuts = [
   {
@@ -24,12 +27,17 @@ const shortcuts = [
 ];
 
 export default async function AdminHomePage() {
+  const authz = await getCurrentAuthorization();
+  const canManageTabAccess = authz && (authz.role === "admin" || authz.role === "super_admin");
+  const adminAllowed = canManageTabAccess ? await getAllowedTabsForRole("admin") : [];
+  const userAllowed = canManageTabAccess ? await getAllowedTabsForRole("user") : [];
+
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Overview"
         title="Academic Success Coaches admin dashboard"
-        description="Use this workspace to keep the core support content accurate, linked, and ready for the bot."
+        description="Use this workspace to keep the core support content accurate, linked, and ready for the bot. Administrators can also configure role-based tab access from here."
       />
 
       <Suspense fallback={<AdminMetricsFallback />}>
@@ -54,6 +62,15 @@ export default async function AdminHomePage() {
           </Link>
         ))}
       </section>
+
+      {canManageTabAccess ? (
+        <Section
+          title="Role-based access control"
+          description="Select which tabs are visible and accessible to Users and Admins. Super Admins always retain unrestricted access and do not require manual configuration."
+        >
+          <TabAccessEditor adminAllowed={adminAllowed} userAllowed={userAllowed} />
+        </Section>
+      ) : null}
     </div>
   );
 }

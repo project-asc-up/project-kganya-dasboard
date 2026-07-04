@@ -1,8 +1,17 @@
 import { SignIn } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function SignInPage() {
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { getCurrentAuthorization } from "@/lib/rbac";
+
+export default async function SignInPage() {
+  const authz = await getCurrentAuthorization();
+  if (authz) {
+    redirect("/admin");
+  }
+
   return (
     <main className="min-h-screen bg-[var(--color-surface)] px-5 py-10 text-[var(--color-text)]">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-5xl items-center justify-center">
@@ -60,10 +69,19 @@ export default function SignInPage() {
                 </div>
               </div>
 
-              <SignIn
-                fallbackRedirectUrl="/admin"
-                forceRedirectUrl="/admin"
-              />
+              <div className="space-y-6">
+                <GoogleSignInButton />
+
+                <div className="relative flex items-center gap-4">
+                  <span className="h-px flex-1 bg-[var(--color-border)]" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                    or use your Clerk account
+                  </span>
+                  <span className="h-px flex-1 bg-[var(--color-border)]" />
+                </div>
+
+                <SignIn fallbackRedirectUrl="/admin" forceRedirectUrl="/admin" />
+              </div>
             </div>
           </section>
         </div>

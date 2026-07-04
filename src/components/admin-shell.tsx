@@ -1,12 +1,13 @@
 import { headers } from "next/headers";
+import { ShieldAlert } from "lucide-react";
 import { AppBreadcrumbs, type Crumb } from "@/components/app-breadcrumbs";
-import { AdminBackButton } from "@/components/admin-back-button";
 import { AdminProfileMenu } from "@/components/admin-profile-menu";
 import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
 import { SessionTimeoutGuard } from "@/components/session-timeout-guard";
 import { SearchBar } from "@/components/search-bar";
 import { normalizeAdminPathname } from "@/lib/admin-nav";
 import { getCurrentAuthorization } from "@/lib/rbac";
+import { getAllowedTabsForRole, isPathAllowed } from "@/lib/tab-access";
 
 /**
  * Resolves the segment path inside `/admin` to a list of breadcrumb
@@ -70,6 +71,9 @@ export async function AdminShell({
   );
   const crumbs = buildCrumbs(pathname);
   const authz = await getCurrentAuthorization();
+  const isSuperAdmin = authz?.isSuperAdmin ?? false;
+  const allowedTabs = isSuperAdmin ? undefined : await getAllowedTabsForRole(authz?.role ?? "user");
+  const isAllowed = isSuperAdmin || isPathAllowed(pathname, allowedTabs);
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-text)]">
@@ -85,6 +89,7 @@ export async function AdminShell({
         <AdminSidebarNav
           initialPathname={pathname}
           canManageUsers={authz?.isSuperAdmin ?? false}
+          allowedTabs={allowedTabs}
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -93,7 +98,6 @@ export async function AdminShell({
               <AppBreadcrumbs crumbs={crumbs} />
             </div>
             <div className="flex items-center gap-3">
-              <AdminBackButton />
               <SearchBar />
               <AdminProfileMenu />
             </div>
@@ -103,7 +107,27 @@ export async function AdminShell({
             id="main-content"
             className="flex-1 px-5 py-6 sm:px-8 lg:px-10"
           >
-            {children}
+            {isAllowed ? (
+              children
+            ) : (
+              <div className="mx-auto max-w-md py-12 text-center">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-4">
+                  <ShieldAlert size={24} />
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text)]">Access Denied</h1>
+                <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                  You do not have permission to access the "{crumbs[crumbs.length - 1]?.label ?? "requested"}" tab. Please contact your system administrator.
+                </p>
+                <div className="mt-6">
+                  <a
+                    href="/admin"
+                    className="inline-flex items-center justify-center rounded-full bg-[var(--color-brand)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-strong)]"
+                  >
+                    Go to Overview
+                  </a>
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>

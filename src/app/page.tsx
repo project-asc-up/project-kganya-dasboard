@@ -1,4 +1,4 @@
-import { SignInButton, Show, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -88,18 +88,12 @@ export default function Home() {
                 <Show when="signed-out">
                   <div className="space-y-5">
                     <div className="grid gap-3">
-                      <SignInButton
-                        mode="modal"
-                        fallbackRedirectUrl="/admin"
-                        forceRedirectUrl="/admin"
+                      <Link
+                        href="/sign-in"
+                        className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-[var(--color-brand-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
                       >
-                        <button
-                          type="button"
-                          className="inline-flex min-h-12 w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-sm)] transition hover:bg-[var(--color-brand-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)]"
-                        >
-                          Sign In
-                        </button>
-                      </SignInButton>
+                        Sign In
+                      </Link>
                     </div>
                   </div>
                 </Show>

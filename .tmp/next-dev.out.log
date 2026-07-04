@@ -1,136 +1,119 @@
 
 > academic-success-coaches-next@0.1.0 dev
-> next dev -p 3000
+> next dev
 
 ▲ Next.js 16.2.9 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.179:3000
 - Environments: .env.local, .env
-✓ Ready in 5.5s
-○ Compiling proxy ...
+✓ Ready in 4.7s
 
 Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
 The data collected is used to inform Clerk's product roadmap.
 To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
 
-○ Compiling / ...
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET / 200 in 23.2s (next.js: 17.8s, proxy.ts: 2.4s, application-code: 3.0s)
- GET / 200 in 621ms (next.js: 69ms, proxy.ts: 54ms, application-code: 499ms)
- GET /api/health 200 in 6.7s (next.js: 3.1s, proxy.ts: 50ms, application-code: 3.5s)
+ GET / 200 in 2.6s (next.js: 515ms, proxy.ts: 911ms, application-code: 1134ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /sign-in 200 in 9.4s (next.js: 8.8s, proxy.ts: 43ms, application-code: 546ms)
- GET / 200 in 482ms (next.js: 43ms, proxy.ts: 45ms, application-code: 393ms)
- GET /api/health 200 in 2.9s (next.js: 24ms, proxy.ts: 37ms, application-code: 2.9s)
- GET /sign-in 200 in 625ms (next.js: 83ms, proxy.ts: 47ms, application-code: 495ms)
+ GET /sign-in 200 in 5.3s (next.js: 3.4s, proxy.ts: 1523ms, application-code: 449ms)
+ GET / 200 in 4.2s (next.js: 31ms, proxy.ts: 3.8s, application-code: 294ms)
+ GET / 200 in 3.4s (next.js: 22ms, proxy.ts: 3.1s, application-code: 277ms)
+○ Compiling /_error ...
+ GET / 500 in 2.2s (next.js: 1063ms, proxy.ts: 267ms, application-code: 872ms)
+ GET /sign-in 500 in 2.3s (next.js: 1366ms, proxy.ts: 39ms, application-code: 865ms)
+ GET / 500 in 11.1s (next.js: 6.7s, proxy.ts: 3.4s, application-code: 926ms)
+ GET / 500 in 3.6s (next.js: 49ms, proxy.ts: 3.5s, application-code: 50ms)
+ GET / 500 in 3.4s (next.js: 92ms, proxy.ts: 3.2s, application-code: 44ms)
+✓ Compiled in 513ms
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET / 200 in 643ms (next.js: 62ms, proxy.ts: 84ms, application-code: 496ms)
-○ Compiling /admin ...
- GET /admin 200 in 27.7s (next.js: 13.6s, proxy.ts: 116ms, application-code: 14.0s)
-✓ Compiled in 1307ms
+ GET / 200 in 6.5s (next.js: 618ms, proxy.ts: 3.4s, application-code: 2.4s)
+ GET /sign-in 200 in 3.9s (next.js: 159ms, proxy.ts: 3.6s, application-code: 183ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /admin 200 in 5.8s (next.js: 934ms, proxy.ts: 3.3s, application-code: 1512ms)
- GET /admin 200 in 545ms (next.js: 106ms, proxy.ts: 45ms, application-code: 394ms)
+ GET /sign-in/SignIn_clerk_catchall_check_1783159191719 200 in 3.3s (next.js: 44ms, proxy.ts: 2.9s, application-code: 353ms)
+ GET /sign-in 200 in 2.9s (next.js: 51ms, proxy.ts: 2.8s, application-code: 51ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 3.6s (next.js: 100ms, proxy.ts: 2.9s, application-code: 591ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in/SignIn_clerk_catchall_check_1783159248638 200 in 4.4s (next.js: 113ms, proxy.ts: 3.7s, application-code: 616ms)
+ GET /sign-in 200 in 3.0s (next.js: 44ms, proxy.ts: 2.9s, application-code: 69ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET / 200 in 3.0s (next.js: 24ms, proxy.ts: 2.4s, application-code: 495ms)
+ GET /sign-in 200 in 3.0s (next.js: 59ms, proxy.ts: 2.8s, application-code: 142ms)
+ GET /sign-in/SignIn_clerk_catchall_check_1783159266295 200 in 2.7s (next.js: 50ms, proxy.ts: 2.4s, application-code: 299ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 3.6s (next.js: 71ms, proxy.ts: 3.5s, application-code: 91ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET / 200 in 231ms (next.js: 27ms, proxy.ts: 33ms, application-code: 171ms)
+ GET /sign-in 200 in 455ms (next.js: 227ms, proxy.ts: 30ms, application-code: 198ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+✓ Compiled in 1014ms
+✓ Compiled in 1968ms
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 5.5s (next.js: 518ms, proxy.ts: 4.0s, application-code: 961ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 2.9s (next.js: 39ms, proxy.ts: 2.6s, application-code: 338ms)
+ GET /sign-in 200 in 3.1s (next.js: 64ms, proxy.ts: 2.8s, application-code: 257ms)
+ GET /sign-in 200 in 3.9s (next.js: 101ms, proxy.ts: 3.5s, application-code: 321ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 3.0s (next.js: 49ms, proxy.ts: 2.8s, application-code: 191ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in/SignIn_clerk_catchall_check_1783159490610 200 in 6.5s (next.js: 190ms, proxy.ts: 3.1s, application-code: 3.2s)
+✓ Compiled in 184ms
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 4.7s (next.js: 662ms, proxy.ts: 3.5s, application-code: 535ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+✓ Compiled in 370ms
+ GET /sign-in 200 in 2.7s (next.js: 52ms, proxy.ts: 2.4s, application-code: 201ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+✓ Compiled in 476ms
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 5.8s (next.js: 529ms, proxy.ts: 4.4s, application-code: 785ms)
+✓ Compiled in 852ms
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in 200 in 6.0s (next.js: 710ms, proxy.ts: 3.4s, application-code: 1855ms)
+ GET /sign-in 200 in 4.0s (next.js: 64ms, proxy.ts: 2.6s, application-code: 1346ms)
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET /sign-in/SignIn_clerk_catchall_check_1783160038062 200 in 3.9s (next.js: 90ms, proxy.ts: 3.4s, application-code: 448ms)
 ✓ Compiled in 321ms
+ GET /sign-in 200 in 3.7s (next.js: 392ms, proxy.ts: 3.3s, application-code: 73ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /admin 200 in 4.4s (next.js: 714ms, proxy.ts: 2.5s, application-code: 1194ms)
- GET /admin 200 in 491ms (next.js: 32ms, proxy.ts: 47ms, application-code: 411ms)
-✓ Compiled in 2.2s
+ GET /sign-in 200 in 3.2s (next.js: 115ms, proxy.ts: 2.9s, application-code: 173ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /admin 200 in 11.6s (next.js: 1414ms, proxy.ts: 2.6s, application-code: 7.6s)
- GET /admin 200 in 3.1s (next.js: 1320ms, proxy.ts: 1448ms, application-code: 376ms)
- GET /admin 200 in 4.1s (next.js: 96ms, proxy.ts: 137ms, application-code: 3.8s)
- GET /admin 200 in 3.2s (next.js: 747ms, proxy.ts: 1438ms, application-code: 992ms)
- GET /admin 200 in 3.2s (next.js: 264ms, proxy.ts: 1439ms, application-code: 1491ms)
- GET /admin 200 in 11.2s (next.js: 2.5s, proxy.ts: 1690ms, application-code: 7.1s)
-✓ Compiled in 1306ms
+✓ Compiled in 385ms
+ GET /sign-in 200 in 4.0s (next.js: 137ms, proxy.ts: 3.5s, application-code: 338ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /admin 200 in 5.3s (next.js: 1144ms, proxy.ts: 2.3s, application-code: 1843ms)
-✓ Compiled in 365ms
- GET /admin 200 in 1101ms (next.js: 72ms, proxy.ts: 156ms, application-code: 873ms)
+✓ Compiled in 346ms
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- POST /admin 200 in 5.9s (next.js: 199ms, proxy.ts: 1300ms, application-code: 4.4s)
-  └─ ƒ invalidateCacheAction() in 36ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
- GET /sign-in 200 in 3.2s (next.js: 1670ms, proxy.ts: 64ms, application-code: 1420ms)
+ GET /sign-in 200 in 5.2s (next.js: 622ms, proxy.ts: 4.0s, application-code: 542ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET /sign-in 200 in 5.0s (next.js: 1774ms, proxy.ts: 891ms, application-code: 2.3s)
- GET /sign-in/SignIn_clerk_catchall_check_1783153517947 200 in 5.0s (next.js: 497ms, proxy.ts: 862ms, application-code: 3.6s)
- GET /admin 200 in 1337ms (next.js: 31ms, proxy.ts: 54ms, application-code: 1252ms)
-○ Compiling /admin/course-modules ...
- GET /admin/course-modules 200 in 11.0s (next.js: 6.1s, proxy.ts: 182ms, application-code: 4.7s)
-○ Compiling /admin/faculties ...
- GET /admin/faculties 200 in 5.7s (next.js: 4.8s, proxy.ts: 97ms, application-code: 829ms)
- GET /admin/course-modules 200 in 1824ms (next.js: 41ms, proxy.ts: 42ms, application-code: 1742ms)
+✓ Compiled in 295ms
+ GET /sign-in 200 in 2.5s (next.js: 37ms, proxy.ts: 2.3s, application-code: 160ms)
 ✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
   Environment: development | Branch: unknown
- GET / 200 in 2.0s (next.js: 747ms, proxy.ts: 39ms, application-code: 1215ms)
- POST /admin/course-modules 200 in 3.3s (next.js: 69ms, proxy.ts: 150ms, application-code: 3.0s)
-  └─ ƒ invalidateCacheAction() in 8ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
- GET / 200 in 300ms (next.js: 31ms, proxy.ts: 41ms, application-code: 229ms)
- GET /admin 200 in 1416ms (next.js: 32ms, proxy.ts: 46ms, application-code: 1337ms)
- GET /admin/course-modules 200 in 1761ms (next.js: 32ms, proxy.ts: 79ms, application-code: 1650ms)
- GET / 200 in 274ms (next.js: 21ms, proxy.ts: 34ms, application-code: 218ms)
- GET / 200 in 387ms (next.js: 38ms, proxy.ts: 65ms, application-code: 283ms)
- POST /admin/course-modules 200 in 2.9s (next.js: 31ms, proxy.ts: 64ms, application-code: 2.8s)
-  └─ ƒ invalidateCacheAction() in 8ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
- GET /admin 200 in 3.0s (next.js: 34ms, proxy.ts: 70ms, application-code: 2.9s)
-○ Compiling /admin/users ...
- GET /admin/users 200 in 11.2s (next.js: 7.0s, proxy.ts: 27ms, application-code: 4.2s)
- GET /admin 200 in 325ms (next.js: 45ms, proxy.ts: 100ms, application-code: 181ms)
-✓ Compiled in 797ms
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin 200 in 4.9s (next.js: 1338ms, proxy.ts: 2.8s, application-code: 734ms)
-✓ Compiled in 168ms
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin 200 in 3.4s (next.js: 822ms, proxy.ts: 1787ms, application-code: 827ms)
- GET /admin 200 in 236ms (next.js: 18ms, proxy.ts: 22ms, application-code: 195ms)
- GET /sign-in 200 in 429ms (next.js: 186ms, proxy.ts: 26ms, application-code: 217ms)
- POST /admin 200 in 2.6s (next.js: 40ms, proxy.ts: 92ms, application-code: 2.4s)
-  └─ ƒ invalidateCacheAction() in 20ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /sign-in 200 in 2.7s (next.js: 2.3s, proxy.ts: 109ms, application-code: 250ms)
- GET /sign-in/SignIn_clerk_catchall_check_1783154362579 200 in 2.7s (next.js: 121ms, proxy.ts: 92ms, application-code: 2.5s)
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin 200 in 2.2s (next.js: 42ms, proxy.ts: 93ms, application-code: 2.1s)
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin/course-modules 200 in 3.2s (next.js: 890ms, proxy.ts: 58ms, application-code: 2.2s)
- GET /admin 200 in 204ms (next.js: 27ms, proxy.ts: 39ms, application-code: 139ms)
- GET /admin/faculties 200 in 954ms (next.js: 152ms, proxy.ts: 43ms, application-code: 759ms)
-○ Compiling /admin/coaches ...
- GET /admin/coaches 200 in 10.6s (next.js: 7.3s, proxy.ts: 35ms, application-code: 3.2s)
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET / 200 in 1863ms (next.js: 1023ms, proxy.ts: 39ms, application-code: 801ms)
- POST /admin/coaches 200 in 2.9s (next.js: 42ms, proxy.ts: 90ms, application-code: 2.8s)
-  └─ ƒ invalidateCacheAction() in 9ms node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js
- GET / 200 in 260ms (next.js: 16ms, proxy.ts: 99ms, application-code: 145ms)
- GET / 200 in 1266ms (next.js: 22ms, proxy.ts: 34ms, application-code: 1209ms)
- GET /admin 200 in 1339ms (next.js: 26ms, proxy.ts: 41ms, application-code: 1271ms)
- GET /admin/users 200 in 1534ms (next.js: 123ms, proxy.ts: 35ms, application-code: 1376ms)
-○ Compiling /admin/resources ...
- GET /admin/resources 200 in 6.8s (next.js: 3.5s, proxy.ts: 25ms, application-code: 3.3s)
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin/resources/1b9a4769-a33a-4a80-a5b9-69ac271b0e02 200 in 10.4s (next.js: 7.2s, proxy.ts: 30ms, application-code: 3.1s)
- POST /admin/resources 303 in 14.5s (next.js: 25ms, proxy.ts: 30ms, application-code: 14.5s)
-  └─ ƒ createResource({}) in 3911ms src/lib/admin-actions.ts
-✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
-  Environment: development | Branch: unknown
- GET /admin/resources 200 in 2.9s (next.js: 31ms, proxy.ts: 44ms, application-code: 2.8s)
- POST /admin/resources/1b9a4769-a33a-4a80-a5b9-69ac271b0e02 303 in 4.1s (next.js: 85ms, proxy.ts: 49ms, application-code: 4.0s)
-  └─ ƒ deleteResource("1b9a4769-a33a-4a80-a5b9-69ac271b0e02") in 1034ms src/lib/admin-actions.ts
- GET /admin/coaches 200 in 852ms (next.js: 26ms, proxy.ts: 37ms, application-code: 789ms)

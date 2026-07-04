@@ -23,15 +23,22 @@ const navItems: Array<AdminNavItem & { icon?: ReactNode }> = [
 export function AdminSidebarNav({
   initialPathname = "/admin",
   canManageUsers = false,
+  allowedTabs,
 }: {
   initialPathname?: string;
   canManageUsers?: boolean;
+  allowedTabs?: string[];
 }) {
   const pathname = usePathname();
   const currentPathname = normalizeAdminPathname(pathname ?? initialPathname);
-  const visibleNavItems = canManageUsers
-    ? [...navItems, { label: "Admin", href: "/admin/users", icon: <ShieldCheck size={18} /> }]
+
+  const filteredNavItems = allowedTabs
+    ? navItems.filter((item) => allowedTabs.includes(item.href))
     : navItems;
+
+  const visibleNavItems = canManageUsers
+    ? [...filteredNavItems, { label: "Admin", href: "/admin/users", icon: <ShieldCheck size={18} /> }]
+    : filteredNavItems;
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] lg:flex lg:flex-col">
