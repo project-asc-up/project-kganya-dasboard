@@ -1,0 +1,68 @@
+
+> academic-success-coaches-next@0.1.0 dev
+> next dev -p 3000
+
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.179:3000
+- Environments: .env.local, .env
+✓ Ready in 2.6s
+
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+
+✓ [DEPLOYMENT] Deployment allowed: development environment on branch 'unknown'
+  Environment: development | Branch: unknown
+ GET / 200 in 4.2s (next.js: 800ms, proxy.ts: 1356ms, application-code: 2.1s)
+ GET / 200 in 2.4s (next.js: 32ms, proxy.ts: 2.1s, application-code: 348ms)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477:13)
+○ Compiling /admin ...
+(node:19304) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477:13)
+ GET /admin 200 in 13.2s (next.js: 4.5s, proxy.ts: 40ms, application-code: 8.7s)
+ GET /admin/users 200 in 4.3s (next.js: 2.3s, proxy.ts: 49ms, application-code: 1871ms)
+⨯ Error: A "use server" file can only export async functions, found object.
+Read more: https://nextjs.org/docs/messages/invalid-use-server-value
+    at <unknown> (C:\Users\mambo\OneDrive - University of Pretoria\Project ASC\.next\dev\server\chunks\ssr\src_lib_user-management-actions_ts_1bwihhf._.js:44:239)
+    at module evaluation (C:\Users\mambo\OneDrive - University of Pretoria\Project ASC\.next\dev\server\chunks\ssr\src_lib_user-management-actions_ts_1bwihhf._.js:5:30)
+    at <unknown> (.next-internal\server\app\admin\users\page\actions.js (server actions loader):8:1)
+    at <unknown> (C:\Users\mambo\OneDrive - University of Pretoria\Project ASC\.next\dev\server\chunks\ssr\_01qyfl0._.js:6406:757)
+    at module evaluation (C:\Users\mambo\OneDrive - University of Pretoria\Project ASC\.next\dev\server\chunks\ssr\_01qyfl0._.js:6390:30)
+   6 | export {syncKeylessConfigAction as '40a68bcb94146c6cc9ed8ecfa962147974f4eef315'} from 'ACT...
+   7 | export {deleteKeylessAction as '00e96df2fb7bce811b3171937d901136b5a29b0a88'} from 'ACTIONS...
+>  8 | export {initialUserAccessActionState as '7ff77f557defb0f3e486a5685d85ecc1b8afd39e5e'} from...
+     | ^
+   9 | export {updateUserAccess as '60bc0c1b0c8deed44aa387a11494092fc2d047a62e'} from 'ACTIONS_MO...
+  10 | {
+  digest: '3134065548@E352'
+}
+ POST /admin/users 500 in 1949ms (next.js: 37ms, proxy.ts: 111ms, application-code: 1801ms)
+[browser] ⨯ unhandledRejection: Error: A "use server" file can only export async functions, found object.
+Read more: https://nextjs.org/docs/messages/invalid-use-server-value
+    at <anonymous> (about://React/Server/C:%5CUsers%5Cmambo%5COneDrive%20-%20University%20of%20Pretoria%5CProject%20ASC%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Csrc_lib_user-management-actions_ts_1bwihhf._.js?232:44:239)
+    at module evaluation (about://React/Server/C:%5CUsers%5Cmambo%5COneDrive%20-%20University%20of%20Pretoria%5CProject%20ASC%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5Csrc_lib_user-management-actions_ts_1bwihhf._.js?233:5:30)
+    at <anonymous> (.next-internal\server\app\admin\users\page\actions.js (server actions loader):8:1)
+    at <anonymous> (about://React/Server/C:%5CUsers%5Cmambo%5COneDrive%20-%20University%20of%20Pretoria%5CProject%20ASC%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5C_01qyfl0._.js?235:6406:757)
+    at module evaluation (about://React/Server/C:%5CUsers%5Cmambo%5COneDrive%20-%20University%20of%20Pretoria%5CProject%20ASC%5C.next%5Cdev%5Cserver%5Cchunks%5Cssr%5C_01qyfl0._.js?236:6390:30)
+    at resolveErrorDev (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:1919:105)
+    at processFullStringRow (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2502:221)
+    at progress (file://C:/Users/mambo/OneDrive - University of Pretoria/Project ASC/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_164kp-6._.js:2689:13)
+   6 | export {syncKeylessConfigAction as '40a68bcb94146c6cc9ed8ecfa962147974f4eef315'} from 'ACT...
+   7 | export {deleteKeylessAction as '00e96df2fb7bce811b3171937d901136b5a29b0a88'} from 'ACTIONS...
+>  8 | export {initialUserAccessActionState as '7ff77f557defb0f3e486a5685d85ecc1b8afd39e5e'} from...
+     | ^
+   9 | export {updateUserAccess as '60bc0c1b0c8deed44aa387a11494092fc2d047a62e'} from 'ACTIONS_MO...
+  10 |
+ GET /admin 200 in 5.4s (next.js: 27ms, proxy.ts: 40ms, application-code: 5.3s)
+^C^C

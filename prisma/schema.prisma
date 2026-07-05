@@ -207,3 +207,14 @@ model RoleTabAccess {
   @@unique([role, tab])
   @@map("role_tab_access")
 }
+
+model UserTabAccess {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") // Clerk User ID
+  tab       String   // e.g. "/admin/faculties"
+  isAllowed Boolean  @map("is_allowed")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, tab])
+  @@map("user_tab_access")
+}

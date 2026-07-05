@@ -10,11 +10,6 @@ export type TabAccessActionState = {
   message: string;
 };
 
-export const initialTabAccessActionState: TabAccessActionState = {
-  status: "idle",
-  message: "",
-};
-
 export async function saveTabAccessAction(
   _previousState: TabAccessActionState,
   formData: FormData,

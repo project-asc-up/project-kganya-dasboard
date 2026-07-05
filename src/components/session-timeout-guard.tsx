@@ -8,6 +8,7 @@ const CHECK_INTERVAL_MS = 10 * 1000;
 const ACTIVITY_SYNC_WINDOW_MS = 1000;
 const LAST_ACTIVITY_KEY = "asc:last-activity-at";
 const LOGOUT_SIGNAL_KEY = "asc:logout-signal-at";
+const BACKEND_PING_INTERVAL_MS = 60 * 1000; // 1 minute
 
 function parseTimestamp(value: string | null) {
   if (!value) return null;
@@ -45,6 +46,7 @@ export function SessionTimeoutGuard() {
   const { isSignedIn, sessionId } = useAuth();
   const lastActivityRef = useRef(0);
   const lastSyncedRef = useRef(0);
+  const lastBackendPingRef = useRef(0);
   const loggingOutRef = useRef(false);
 
   useEffect(() => {
@@ -57,6 +59,11 @@ export function SessionTimeoutGuard() {
       if (now - lastSyncedRef.current >= ACTIVITY_SYNC_WINDOW_MS) {
         writeLastActivity(now);
         lastSyncedRef.current = now;
+      }
+
+      if (now - lastBackendPingRef.current >= BACKEND_PING_INTERVAL_MS) {
+        lastBackendPingRef.current = now;
+        fetch("/api/admin/ping").catch(() => {});
       }
     };
 

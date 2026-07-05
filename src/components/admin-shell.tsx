@@ -7,7 +7,7 @@ import { SessionTimeoutGuard } from "@/components/session-timeout-guard";
 import { SearchBar } from "@/components/search-bar";
 import { normalizeAdminPathname } from "@/lib/admin-nav";
 import { getCurrentAuthorization } from "@/lib/rbac";
-import { getAllowedTabsForRole, isPathAllowed } from "@/lib/tab-access";
+import { getAllowedTabsForUser, isPathAllowed } from "@/lib/tab-access";
 
 /**
  * Resolves the segment path inside `/admin` to a list of breadcrumb
@@ -71,9 +71,10 @@ export async function AdminShell({
   );
   const crumbs = buildCrumbs(pathname);
   const authz = await getCurrentAuthorization();
-  const isSuperAdmin = authz?.isSuperAdmin ?? false;
-  const allowedTabs = isSuperAdmin ? undefined : await getAllowedTabsForRole(authz?.role ?? "user");
-  const isAllowed = isSuperAdmin || isPathAllowed(pathname, allowedTabs);
+  const allowedTabs = authz
+    ? await getAllowedTabsForUser(authz.userId, authz.role)
+    : [];
+  const isAllowed = isPathAllowed(pathname, allowedTabs);
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-text)]">

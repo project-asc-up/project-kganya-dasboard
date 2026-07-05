@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { saveTabAccessAction, initialTabAccessActionState } from "@/lib/tab-access-actions";
+import { saveTabAccessAction } from "@/lib/tab-access-actions";
 import { CONFIGURABLE_TABS } from "@/lib/tab-access-config";
 
 type TabAccessEditorProps = {
@@ -25,7 +25,7 @@ function SubmitButton() {
 }
 
 export function TabAccessEditor({ adminAllowed, userAllowed }: TabAccessEditorProps) {
-  const [state, formAction] = useActionState(saveTabAccessAction, initialTabAccessActionState);
+  const [state, formAction] = useActionState(saveTabAccessAction, { status: "idle" as const, message: "" });
 
   return (
     <form action={formAction} className="space-y-6">

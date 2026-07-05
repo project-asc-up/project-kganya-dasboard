@@ -4,6 +4,7 @@ import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import type { User } from "@clerk/backend";
 
 import { getPrismaClient } from "@/lib/prisma";
+import { CONFIGURABLE_TABS } from "./tab-access-config";
 
 export const RBAC_ROLES = ["super_admin", "admin", "user"] as const;
 export type RbacRole = (typeof RBAC_ROLES)[number];
@@ -359,16 +360,45 @@ export async function updateManagedUserAccess(formData: FormData) {
   });
 
   const prisma = getPrismaClient();
-  await prisma.userAccessAuditLog.create({
-    data: {
-      actorUserId: authz.userId,
-      actorEmail: authz.email,
-      targetUserId,
-      targetEmail,
-      previousRole,
-      newRole: role,
-      previousPermissions,
-      newPermissions,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.userAccessAuditLog.create({
+      data: {
+        actorUserId: authz.userId,
+        actorEmail: authz.email,
+        targetUserId,
+        targetEmail,
+        previousRole,
+        newRole: role,
+        previousPermissions,
+        newPermissions,
+      },
+    });
+
+    // Clear existing tab overrides for this user
+    await tx.userTabAccess.deleteMany({
+      where: { userId: targetUserId },
+    });
+
+    // Save new overrides if role is not super_admin
+    if (role !== "super_admin") {
+      const overrideOps = [];
+      for (const tab of CONFIGURABLE_TABS) {
+        const setting = formData.get(`tab-override-${tab.href}`); // "allow", "deny", "inherit"
+        if (setting === "allow" || setting === "deny") {
+          overrideOps.push(
+            tx.userTabAccess.create({
+              data: {
+                userId: targetUserId,
+                tab: tab.href,
+                isAllowed: setting === "allow",
+              },
+            })
+          );
+        }
+      }
+      if (overrideOps.length > 0) {
+        await Promise.all(overrideOps);
+      }
+    }
   });
 }

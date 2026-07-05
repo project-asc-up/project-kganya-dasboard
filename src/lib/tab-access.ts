@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getPrismaClient } from "@/lib/prisma";
 import { CONFIGURABLE_TABS } from "./tab-access-config";
 
@@ -73,6 +71,41 @@ export async function getAllowedTabsForRole(role: string): Promise<string[]> {
 
   return Array.from(allowedHrefs);
 }
+
+/**
+ * Returns a list of all tab hrefs allowed for the given user, overlaying role defaults with user-specific overrides.
+ */
+export async function getAllowedTabsForUser(userId: string, role: string): Promise<string[]> {
+  if (role === "super_admin") {
+    // Super Admin automatically has unrestricted access to all tabs
+    return [
+      ...CONFIGURABLE_TABS.map((t) => t.href),
+      "/admin/users", // Super Admin only tab
+    ];
+  }
+
+  // 1. Get role defaults
+  const roleAllowed = await getAllowedTabsForRole(role);
+  const allowedHrefs = new Set<string>(roleAllowed);
+
+  // 2. Query user overrides
+  const prisma = getPrismaClient();
+  const userOverrides = await prisma.userTabAccess.findMany({
+    where: { userId },
+  });
+
+  // 3. Apply overrides
+  for (const record of userOverrides) {
+    if (record.isAllowed) {
+      allowedHrefs.add(record.tab);
+    } else {
+      allowedHrefs.delete(record.tab);
+    }
+  }
+
+  return Array.from(allowedHrefs);
+}
+
 
 /**
  * Checks if a specific pathname is allowed based on the user's allowed tabs.
