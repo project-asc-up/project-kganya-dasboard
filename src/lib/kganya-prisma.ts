@@ -1,12 +1,12 @@
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@/generated/kganya-prisma/client";
 
 import { loadRepoEnv } from "@/lib/load-env";
 import { createDatabaseAdapter } from "@/lib/db-adapter";
 
 loadRepoEnv();
 
-const globalForPrisma = globalThis as typeof globalThis & {
-  prisma?: PrismaClient;
+const globalForKganyaPrisma = globalThis as typeof globalThis & {
+  kganyaPrisma?: PrismaClient;
 };
 
 function resolveUrl(): string | undefined {
@@ -20,7 +20,7 @@ function resolveUrl(): string | undefined {
   );
 }
 
-function createPrismaClient() {
+function createKganyaPrismaClient() {
   const url = resolveUrl();
 
   if (!url) {
@@ -35,10 +35,10 @@ function createPrismaClient() {
   });
 }
 
-export function getPrismaClient() {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient();
+export function getKganyaPrismaClient() {
+  if (!globalForKganyaPrisma.kganyaPrisma) {
+    globalForKganyaPrisma.kganyaPrisma = createKganyaPrismaClient();
   }
 
-  return globalForPrisma.prisma;
+  return globalForKganyaPrisma.kganyaPrisma;
 }

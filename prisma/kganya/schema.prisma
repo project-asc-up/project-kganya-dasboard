@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/kganya-prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id                 String                @id @default(uuid()) @db.Uuid
+  clerkOrgId         String                @unique @map("clerk_org_id")
+  name               String
+  slug               String                @unique
+  status             String                @default("active")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+  knowledgeSources   KnowledgeSource[]
+  sourceRecords      SourceRecord[]
+  documentChunks     DocumentChunk[]
+  ingestionJobs      IngestionJob[]
+  promptPacks        PromptPack[]
+  evaluationSets     EvaluationSet[]
+  chatwootOrgLinks   ChatwootOrgLink[]
+  organizationMembers OrganizationMembership[]
+  accessAuditLogs    AccessAuditLog[]
+  retrievalMetrics   RetrievalMetric[]
+
+  @@map("organizations")
+}
+
+model KnowledgeSource {
+  id            String          @id @default(uuid()) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  sourceKey     String          @map("source_key")
+  sourceFamily  String          @map("source_family")
+  sourceType    String          @map("source_type")
+  title         String
+  canonicalRef  String?         @map("canonical_ref")
+  originalUri   String?         @map("original_uri")
+  originalPath  String?         @map("original_path")
+  status        String          @default("active")
+  lastVerifiedAt DateTime?      @map("last_verified_at") @db.Timestamptz(6)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourceRecords SourceRecord[]
+  documentChunks DocumentChunk[]
+  ingestionJobs IngestionJob[]
+
+  @@unique([organizationId, sourceKey])
+  @@index([organizationId])
+  @@index([sourceFamily])
+  @@index([sourceType])
+  @@map("knowledge_sources")
+}
+
+model SourceRecord {
+  id               String            @id @default(uuid()) @db.Uuid
+  organizationId   String            @map("organization_id") @db.Uuid
+  knowledgeSourceId String           @map("knowledge_source_id") @db.Uuid
+  recordKey        String            @map("record_key")
+  topic            String
+  sourceKind       String            @map("source_kind")
+  title            String
+  bodyMarkdown     String?           @map("body_markdown")
+  bodyJson         Json?             @map("body_json")
+  sourceUrl        String?           @map("source_url")
+  sourceAnchor     String?           @map("source_anchor")
+  version          Int
+  status           String            @default("draft")
+  active           Boolean           @default(true)
+  checksum         String?           @db.Text
+  createdBy        String?           @map("created_by")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  knowledgeSource  KnowledgeSource   @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  fields           SourceRecordField[]
+  chunks           DocumentChunk[]
+  jobs             IngestionJob[]
+
+  @@unique([organizationId, knowledgeSourceId, recordKey, version])
+  @@index([organizationId])
+  @@index([organizationId, knowledgeSourceId, recordKey, active])
+  @@index([topic])
+  @@index([status])
+  @@index([sourceKind])
+  @@map("source_records")
+}
+
+model SourceRecordField {
+  id             String       @id @default(uuid()) @db.Uuid
+  sourceRecordId String       @map("source_record_id") @db.Uuid
+  fieldName      String       @map("field_name")
+  fieldValue     String       @map("field_value")
+  fieldType      String       @map("field_type")
+  fieldOrder     Int          @map("field_order")
+  isKey          Boolean      @default(false) @map("is_key")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  sourceRecord   SourceRecord @relation(fields: [sourceRecordId], references: [id], onDelete: Cascade)
+
+  @@index([sourceRecordId, fieldOrder])
+  @@index([sourceRecordId, fieldName])
+  @@map("source_record_fields")
+}
+
+model DocumentChunk {
+  id               String         @id @default(uuid()) @db.Uuid
+  organizationId   String         @map("organization_id") @db.Uuid
+  knowledgeSourceId String        @map("knowledge_source_id") @db.Uuid
+  sourceRecordId   String         @map("source_record_id") @db.Uuid
+  version          Int
+  chunkIndex       Int            @map("chunk_index")
+  chunkType        String         @map("chunk_type")
+  sourceFamily     String         @map("source_family")
+  topic            String
+  title            String
+  sectionPath      String?        @map("section_path")
+  chunkText        String         @map("chunk_text")
+  chunkHash        String         @map("chunk_hash")
+  embedding        Unsupported("vector")?
+  embeddingModel   String         @map("embedding_model")
+  active           Boolean        @default(true)
+  retiredAt        DateTime?      @map("retired_at") @db.Timestamptz(6)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  sourceRecord     SourceRecord   @relation(fields: [sourceRecordId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, sourceRecordId, version, chunkIndex])
+  @@index([organizationId])
+  @@index([organizationId, knowledgeSourceId, active])
+  @@index([organizationId, topic, active])
+  @@index([sourceRecordId])
+  @@map("document_chunks")
+}
+
+model IngestionJob {
+  id               String          @id @default(uuid()) @db.Uuid
+  organizationId   String          @map("organization_id") @db.Uuid
+  knowledgeSourceId String         @map("knowledge_source_id") @db.Uuid
+  sourceRecordId   String?         @map("source_record_id") @db.Uuid
+  jobType          String         @map("job_type")
+  state            String
+  inputChecksum    String?        @map("input_checksum")
+  outputChecksum   String?        @map("output_checksum")
+  errorMessage     String?        @map("error_message")
+  retryCount       Int            @default(0) @map("retry_count")
+  startedAt        DateTime?      @map("started_at") @db.Timestamptz(6)
+  finishedAt       DateTime?      @map("finished_at") @db.Timestamptz(6)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  knowledgeSource  KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  sourceRecord     SourceRecord?  @relation(fields: [sourceRecordId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, knowledgeSourceId, state])
+  @@index([state])
+  @@map("ingestion_jobs")
+}
+
+model PromptPack {
+  id            String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name          String
+  channel       String
+  systemPrompt  String       @map("system_prompt")
+  stylePrompt   String?      @map("style_prompt")
+  fallbackPrompt String?     @map("fallback_prompt")
+  active        Boolean      @default(true)
+  version       Int          @default(1)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, name, version])
+  @@index([organizationId])
+  @@map("prompt_packs")
+}
+
+model EvaluationSet {
+  id            String          @id @default(uuid()) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  name          String
+  sourceName    String?         @map("source_name")
+  status        String          @default("draft")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  cases         EvaluationCase[]
+
+  @@index([organizationId])
+  @@map("evaluation_sets")
+}
+
+model EvaluationCase {
+  id                String         @id @default(uuid()) @db.Uuid
+  evaluationSetId   String         @map("evaluation_set_id") @db.Uuid
+  promptText        String         @map("prompt_text")
+  expectedCategory  String         @map("expected_category")
+  expectedAnswerTrait String       @map("expected_answer_trait")
+  expectedSourceKey String?        @map("expected_source_key")
+  expectedChunkHint String?        @map("expected_chunk_hint")
+  status            String         @default("active")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  evaluationSet     EvaluationSet  @relation(fields: [evaluationSetId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationSetId])
+  @@index([expectedCategory])
+  @@map("evaluation_cases")
+}
+
+model RetrievalMetric {
+  id            String       @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  metricKey     String       @map("metric_key")
+  metricValue   Float        @map("metric_value")
+  thresholdValue Float?      @map("threshold_value")
+  observedAt    DateTime     @map("observed_at") @db.Timestamptz(6)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([metricKey])
+  @@map("retrieval_metrics")
+}
+
+model ChatwootOrgLink {
+  id               String       @id @default(uuid()) @db.Uuid
+  organizationId   String       @map("organization_id") @db.Uuid
+  chatwootAccountId String      @map("chatwoot_account_id")
+  chatwootInboxId  String       @map("chatwoot_inbox_id")
+  channel          String
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, channel])
+  @@index([organizationId])
+  @@map("chatwoot_org_links")
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  clerkUserId    String       @map("clerk_user_id")
+  email          String
+  role           String
+  status         String
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, clerkUserId])
+  @@index([email])
+  @@map("organization_memberships")
+}
+
+model AccessAuditLog {
+  id                  String       @id @default(uuid()) @db.Uuid
+  organizationId      String       @map("organization_id") @db.Uuid
+  actorUserId         String       @map("actor_user_id")
+  targetUserId        String       @map("target_user_id")
+  actorEmail          String?      @map("actor_email")
+  targetEmail         String?      @map("target_email")
+  previousRole        String       @map("previous_role")
+  newRole             String       @map("new_role")
+  previousPermissions Json         @map("previous_permissions")
+  newPermissions      Json         @map("new_permissions")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([actorUserId])
+  @@index([targetUserId])
+  @@map("access_audit_logs")
+}

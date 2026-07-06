@@ -1,90 +1,99 @@
-# Project ASC Chatbot
+# Project Kganya Console
 
-Deployable Next.js app root for the Project ASC MVP.
+Vercel-hosted staff console connected to Neon Postgres for the Kganya operating system.
 
-## What is in this app
+This repo is the implementation surface. The product plan lives in `../kganya-operating-system`, and this codebase must be adapted to that plan, not the other way around.
 
-- Next.js 16 App Router scaffold
-- Prisma 7 schema for:
-  - `faculties`
-  - `asc_coaches`
-  - `programmes`
-  - `courses_modules`
-  - `resources`
-  - `faqs`
-- Runtime adapter selection for Prisma
-  - Neon adapter for Neon hosts
-  - `pg` adapter for local/self-hosted PostgreSQL
-- CSV seed importer wired to the repo-level knowledge base in `../docs`
-- `GET /api/health` database verification endpoint
+For the backend table and migration design, see [KGANYA_SCHEMA_AND_MIGRATION_PLAN.md](C:/Users/sewar/repos/Project%20Kganya/project-kganya-dasboard/KGANYA_SCHEMA_AND_MIGRATION_PLAN.md).
 
-## Vercel setup
+For the source-by-source import path, see [KGANYA_BACKFILL_MAP.md](C:/Users/sewar/repos/Project%20Kganya/project-kganya-dasboard/KGANYA_BACKFILL_MAP.md).
 
-Use the repository root as the Vercel project root.
+The Kganya Prisma schema lives at `prisma/kganya/schema.prisma`, and its generated client target is `src/generated/kganya-prisma`.
 
-Required environment variables:
+## Current reality
 
-- `DATABASE_URL`
-  - Pooled Neon connection string used by the running app, or a local/self-hosted PostgreSQL URL.
-- `DIRECT_URL`
-  - Direct non-pooled Neon connection string used by Prisma CLI commands when using Neon.
-  - For local/self-hosted PostgreSQL, you can point this at the same local database URL.
-- `BETTER_AUTH_SECRET`
-  - Strong random secret used to sign login sessions.
-- `ADMIN_PASSWORD`
-  - Optional. Required only if you want to sign in with the built-in `admin` account.
+- Next.js 16 App Router console already exists and updates data in Neon Postgres.
+- Prisma 7 is the data layer.
+- Clerk is present, but auth is still mixed with a legacy signed-cookie path.
+- The current schema still reflects the older ASC-style content tables.
+- The console is useful now, but it is not yet aligned to the Kganya source-record, derived-chunk, and org-scoped retrieval model.
+
+## Alignment rules
+
+- Postgres is the source of truth for editable data.
+- `pgvector` is derived retrieval state only.
+- Clerk organization context is the auth boundary.
+- `organization_id` should be the canonical tenant key in app code and docs.
+- `org_id` should not remain a second competing concept.
+- n8n orchestrates ingestion and retrieval jobs.
+- Chatwoot is the conversation boundary, not the data boundary.
+
+## What this repo already proves
+
+- The working UI can run on Vercel.
+- Prisma can connect cleanly to Neon.
+- Console edits can persist to the live database.
+- The repo is far enough along to prioritize alignment work instead of rebuilding the entire stack.
+
+## What still needs to change
+
+- Normalize tenant identity and auth around Clerk orgs.
+- Replace legacy ASC domain tables with Kganya source-record and derived-chunk tables.
+- Use row-level `source_records` with `record_key` for structured CSV sources instead of flattening them into one blob per file.
+- Add ingestion job state, reindex visibility, and approval workflow support.
+- Add retrieval evaluation and health checks for the derived index.
+- Dispatch pending embedding jobs through `KGANYA_EMBEDDING_WEBHOOK_URL` when the n8n workflow is ready.
+- Reframe the UI around source management instead of legacy academic-content CRUD.
+
+## UI constraint
+
+Keep the current UI behavior and editing flow intact where possible.
+
+The migration should happen in the backend:
+
+- database schema
+- tenant resolution
+- source normalization
+- derived vector generation
+- sync and reindex state
+
+Only change the UI where the backend contract requires it.
 
 ## Local commands
 
 ```bash
 npm install
 npm run db:generate
+npm run db:generate:kganya
+npm run kganya:init-schema
 npm run dev
 ```
-
-For local development, copy `.env.example` to `.env`, fill in the database URLs, and set `BETTER_AUTH_SECRET`.
 
 Once a database is connected:
 
 ```bash
+npm run kganya:backfill:preview
+npm run kganya:backfill:apply
+npm run kganya:embedding-dispatch
+npm run kganya:ingestion-status
 npm run db:push
 npm run db:seed
 ```
 
-## Database verification
+## Verification
 
-After the schema is applied and the seed has run, call:
+The current `/api/health` route only proves the legacy data model is reachable. The Kganya target state still needs health checks for:
 
-```text
-/api/health
-```
+- organization resolution
+- source-record coverage
+- ingestion queue status
+- derived chunk freshness
+- retrieval readiness
 
-Expected success shape:
+## Next step
 
-```json
-{
-  "ok": true,
-  "database": {
-    "connected": true,
-    "counts": {
-      "faculties": 10,
-      "ascCoaches": 30,
-      "programmes": 262,
-      "courseModules": 14643,
-      "resources": 9,
-      "faqs": 6
-    }
-  }
-}
-```
+Start with tenant normalization and auth consolidation:
 
-## Seed source
-
-The seed importer reads:
-
-- `docs/seed-faculties.csv`
-- `docs/seed-asc-coaches.csv`
-- `docs/seed-programmes.csv`
-- `docs/seed-course-modules.csv`
-- `docs/seed-resources.csv`
-- `docs/seed-faqs.csv`
+1. Pick one canonical tenant key and remove the split between `org_id` and `organization_id`.
+2. Make Clerk organization context the only auth boundary for Kganya flows.
+3. Refactor the console toward source-record editing before expanding retrieval and Chatwoot integration.
