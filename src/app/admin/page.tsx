@@ -8,6 +8,8 @@ import { getHealthOverview } from "@/lib/admin-queries";
 import { getAllowedTabsForRole } from "@/lib/tab-access";
 import { getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 const shortcuts = [
   {
     href: "/admin/faculties",

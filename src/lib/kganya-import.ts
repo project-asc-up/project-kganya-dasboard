@@ -106,11 +106,6 @@ interface ParsedMarkdownDocument {
   body: string;
 }
 
-interface ParsedCsvRow {
-  row: Record<string, string>;
-  index: number;
-}
-
 export function parseMarkdownDocument(source: string): ParsedMarkdownDocument {
   const normalized = source.replace(/\r\n/g, "\n");
 

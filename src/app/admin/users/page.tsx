@@ -1,14 +1,11 @@
 import Link from "next/link";
 
 import { PageHeader, Section, TextInput } from "@/components/admin-form";
+import { CreateUserInviteModal } from "@/components/create-user-invite-modal";
 import { UserAccessEditor } from "@/components/user-access-editor";
-import {
-  getManagedUserPage,
-  PERMISSION_GROUPS,
-  PERMISSION_LABELS,
-  RBAC_ROLES,
-  ROLE_LABELS,
-} from "@/lib/rbac";
+import { getManagedUserPage, RBAC_ROLES, ROLE_LABELS } from "@/lib/rbac";
+
+export const dynamic = "force-dynamic";
 
 type UserManagementSearchParams = Promise<{
   q?: string | string[];
@@ -63,17 +60,14 @@ export default async function UserManagementPage({
     value: role,
     label: ROLE_LABELS[role],
   }));
-  const permissionGroups = PERMISSION_GROUPS.map((group) => ({
-    label: group.label,
-    permissions: [...group.permissions],
-  }));
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Super Admin"
         title="User access management"
-        description="Search registered Clerk users, review profile details, and grant or revoke roles and permissions with an audit trail."
+        description="Search registered Clerk users, review profile details, and grant or revoke role-based access with an audit trail."
+        action={<CreateUserInviteModal roles={roleOptions} />}
       />
 
       <Section
@@ -196,12 +190,10 @@ export default async function UserManagementPage({
                 key={userPage.selectedUser.id}
                 user={userPage.selectedUser}
                 roles={roleOptions}
-                permissionGroups={permissionGroups}
-                permissionLabels={PERMISSION_LABELS}
               />
             ) : (
               <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-sm leading-6 text-[var(--color-text-muted)]">
-                Search for a registered user, then select a result to manage their role and permissions.
+                Search for a registered user, then select a result to manage their role.
               </div>
             )}
           </div>

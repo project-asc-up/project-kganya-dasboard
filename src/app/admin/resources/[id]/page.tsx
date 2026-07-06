@@ -6,6 +6,8 @@ import { getFacultyOptions, getResourceById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
 }
@@ -30,19 +32,52 @@ export default async function ResourceDetailPage({
   const deleteAction = deleteResource.bind(null, resource.id);
   const canUpdate = canAccess(authz, "resource:update");
   const canDelete = canAccess(authz, "resource:delete");
+  const isDocument = resource.resourceType === "document";
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Resource detail"
         title={resource.title}
-        description={`${resource.category} | ${resource.faculty ? `${resource.faculty.code} - ${displayFacultyName(resource.faculty.name)}` : "General"}`}
+        description={`${resource.category} | ${resource.faculty ? `${resource.faculty.code} - ${displayFacultyName(resource.faculty.name)}` : "General"} | ${isDocument ? "Uploaded document" : "Link resource"}`}
         action={canDelete ? (
           <form action={deleteAction}>
             <ActionButton tone="danger">Delete resource</ActionButton>
           </form>
         ) : null}
       />
+
+      {isDocument ? (
+        <Section title="Document ingest" description="This resource was uploaded as a document and chunked into the Kganya vector pipeline.">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Upload file</div>
+              <div className="mt-1 font-medium text-[var(--color-text)]">{resource.attachmentName ?? "Unknown"}</div>
+            </div>
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Status</div>
+              <div className="mt-1 font-medium text-[var(--color-text)]">{resource.attachmentStatus ?? "Unknown"}</div>
+            </div>
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">File type</div>
+              <div className="mt-1 font-medium text-[var(--color-text)]">{resource.attachmentMimeType ?? "Unknown"}</div>
+            </div>
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Vector source key</div>
+              <div className="mt-1 break-all font-mono text-xs text-[var(--color-text-muted)]">{resource.kganyaSourceKey ?? "Pending"}</div>
+            </div>
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Chunk count</div>
+              <div className="mt-1 font-medium text-[var(--color-text)]">{resource.chunkCount ?? 0}</div>
+            </div>
+          </div>
+          {resource.attachmentError ? (
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {resource.attachmentError}
+            </div>
+          ) : null}
+        </Section>
+      ) : null}
 
       {canUpdate ? (
       <Section title="Edit resource" description="Keep the support resource linked and verified.">
@@ -66,6 +101,14 @@ export default async function ResourceDetailPage({
           <Field label="URL">
             <TextInput name="url" type="url" defaultValue={resource.url} required />
           </Field>
+          <Field label="Resource type">
+            <TextInput name="resourceType" defaultValue={resource.resourceType} disabled />
+          </Field>
+          {isDocument ? (
+            <Field label="Uploaded file type">
+              <TextInput name="attachmentMimeType" defaultValue={resource.attachmentMimeType ?? ""} disabled />
+            </Field>
+          ) : null}
           <Field label="Description">
             <TextArea name="description" defaultValue={resource.description ?? ""} />
           </Field>
@@ -75,6 +118,11 @@ export default async function ResourceDetailPage({
           <Field label="Last verified">
             <TextInput name="lastVerified" type="date" defaultValue={formatDate(resource.lastVerified)} />
           </Field>
+          {isDocument ? (
+            <Field label="Document status">
+              <TextInput name="attachmentStatus" defaultValue={resource.attachmentStatus ?? ""} disabled />
+            </Field>
+          ) : null}
           <div className="md:col-span-2">
             <Field label="Notes">
               <TextArea name="notes" defaultValue={resource.notes ?? ""} />

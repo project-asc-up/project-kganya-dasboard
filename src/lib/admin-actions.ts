@@ -8,6 +8,10 @@ import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
 import { getPrismaClient } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
+import {
+  extractUploadedResourceDocument,
+  persistUploadedResourceDocument,
+} from "@/lib/kganya-resource-ingest";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -338,6 +342,7 @@ export async function createResource(formData: FormData) {
     data: {
       seedKey,
       facultyId,
+      resourceType: "link",
       category: requiredText(formData, "category"),
       title,
       description: textValue(formData, "description"),
@@ -345,8 +350,102 @@ export async function createResource(formData: FormData) {
       sourceUrl: textValue(formData, "sourceUrl"),
       lastVerified: optionalDate(formData, "lastVerified"),
       notes: textValue(formData, "notes"),
+      attachmentName: null,
+      attachmentMimeType: null,
+      attachmentSizeBytes: null,
+      attachmentStatus: null,
+      attachmentError: null,
+      kganyaSourceKey: null,
+      kganyaRecordKey: null,
+      chunkCount: null,
     },
   });
+
+  redirectTo("resources", resource.id);
+  redirect(`/admin/resources/${resource.id}`);
+}
+
+export async function createResourceDocument(formData: FormData) {
+  const authz = await requirePermission("resource:create");
+  if (!authz) {
+    throw new Error("Unable to resolve the current user.");
+  }
+  const prisma = getPrismaClient();
+  const facultyId = await facultyIdOrNull(formData);
+  const facultyCode = await facultyCodeForId(prisma, facultyId);
+  const title = requiredText(formData, "title");
+  const file = formData.get("documentFile");
+
+  if (!(file instanceof File)) {
+    throw new Error("A document file is required.");
+  }
+
+  const uploadedDocument = await extractUploadedResourceDocument(file);
+  const baseSeedKey = buildAdminSeedKey("resource", facultyCode, `${title} document`);
+  const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
+    const existing = await prisma.resource.findUnique({
+      where: { seedKey: candidate },
+      select: { id: true },
+    });
+    return Boolean(existing);
+  });
+
+  const resource = await prisma.resource.create({
+    data: {
+      seedKey,
+      facultyId,
+      resourceType: "document",
+      category: requiredText(formData, "category"),
+      title,
+      description: textValue(formData, "description"),
+      url: "/admin/resources",
+      sourceUrl: textValue(formData, "sourceUrl"),
+      lastVerified: optionalDate(formData, "lastVerified"),
+      notes: textValue(formData, "notes"),
+      attachmentName: uploadedDocument.fileName,
+      attachmentMimeType: uploadedDocument.mimeType,
+      attachmentSizeBytes: uploadedDocument.sizeBytes,
+      attachmentStatus: "processing",
+      attachmentError: null,
+      kganyaSourceKey: null,
+      kganyaRecordKey: null,
+      chunkCount: null,
+    },
+  });
+
+  try {
+    const kganyaResult = await persistUploadedResourceDocument({
+      resourceId: resource.id,
+      resourceTitle: title,
+      category: requiredText(formData, "category"),
+      sourceUrl: textValue(formData, "sourceUrl"),
+      notes: textValue(formData, "notes"),
+      createdBy: authz.userId,
+      uploadedDocument,
+    });
+
+    await prisma.resource.update({
+      where: { id: resource.id },
+      data: {
+        url: `/admin/resources/${resource.id}`,
+        attachmentStatus: "processed",
+        attachmentError: null,
+        kganyaSourceKey: kganyaResult.sourceKey,
+        kganyaRecordKey: kganyaResult.recordKey,
+        chunkCount: kganyaResult.chunkCount,
+      },
+    });
+  } catch (error) {
+    await prisma.resource.update({
+      where: { id: resource.id },
+      data: {
+        url: `/admin/resources/${resource.id}`,
+        attachmentStatus: "failed",
+        attachmentError: error instanceof Error ? error.message : "Unknown upload error",
+      },
+    });
+    throw error;
+  }
 
   redirectTo("resources", resource.id);
   redirect(`/admin/resources/${resource.id}`);
@@ -355,6 +454,12 @@ export async function createResource(formData: FormData) {
 export async function updateResource(id: string, formData: FormData) {
   await requirePermission("resource:update");
   const prisma = getPrismaClient();
+  const existingResource = await prisma.resource.findUnique({
+    where: { id },
+  });
+  if (!existingResource) {
+    throw new Error("Resource not found.");
+  }
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
@@ -372,6 +477,7 @@ export async function updateResource(id: string, formData: FormData) {
     data: {
       seedKey,
       facultyId,
+      resourceType: existingResource.resourceType,
       category: requiredText(formData, "category"),
       title,
       description: textValue(formData, "description"),
@@ -379,6 +485,14 @@ export async function updateResource(id: string, formData: FormData) {
       sourceUrl: textValue(formData, "sourceUrl"),
       lastVerified: optionalDate(formData, "lastVerified"),
       notes: textValue(formData, "notes"),
+      attachmentName: existingResource.attachmentName,
+      attachmentMimeType: existingResource.attachmentMimeType,
+      attachmentSizeBytes: existingResource.attachmentSizeBytes,
+      attachmentStatus: existingResource.attachmentStatus,
+      attachmentError: existingResource.attachmentError,
+      kganyaSourceKey: existingResource.kganyaSourceKey,
+      kganyaRecordKey: existingResource.kganyaRecordKey,
+      chunkCount: existingResource.chunkCount,
     },
   });
 

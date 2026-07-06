@@ -1,0 +1,146 @@
+{
+  "name": "Kganya 03 Embed and Persist Worker",
+  "nodes": [
+    {
+      "id": "cron_trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyMinute"
+          }
+        ]
+      }
+    },
+    {
+      "id": "claim_draft_chunks",
+      "name": "Claim Draft Bundles",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [520, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT source_record_id AS \"sourceRecordId\", organization_id AS \"organizationId\", knowledge_source_id AS \"knowledgeSourceId\", version, json_agg(json_build_object('chunkId', id, 'chunkIndex', chunk_index, 'chunkText', chunk_text, 'chunkHash', chunk_hash) ORDER BY chunk_index) AS chunks FROM document_chunks WHERE embedding IS NULL AND embedding_model = 'pending' AND active = true GROUP BY source_record_id, organization_id, knowledge_source_id, version ORDER BY MIN(created_at) ASC LIMIT 25;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "build_embedding_payload",
+      "name": "Build Embedding Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json ?? item);\nreturn rows.map((row) => ({ json: { organizationId: row.organizationId, knowledgeSourceId: row.knowledgeSourceId, sourceRecordId: row.sourceRecordId, version: row.version, bundleChunkIds: Array.isArray(row.chunks) ? row.chunks.map((chunk) => chunk.chunkId) : [], chunks: row.chunks || [] } }));"
+      }
+    },
+    {
+      "id": "dispatch_embeddings",
+      "name": "Dispatch Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [780, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KGANYA_EMBEDDING_PROVIDER_URL}}",
+        "authentication": "predefinedCredentialType",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"organizationId\": $json.organizationId, \"knowledgeSourceId\": $json.knowledgeSourceId, \"sourceRecordId\": $json.sourceRecordId, \"version\": $json.version, \"chunks\": $json.chunks}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      }
+    },
+    {
+      "id": "persist_derived_rows",
+      "name": "Persist Derived Rows",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1040, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH embeddings AS (\n  SELECT\n    (vec->>'chunkId')::uuid AS chunk_id,\n    vec->'vector' AS embedding,\n    COALESCE('{{$json.embeddingModel}}', 'pending') AS embedding_model\n  FROM jsonb_array_elements('{{$json.vectors}}'::jsonb) AS vec\n), updated AS (\n  UPDATE document_chunks dc\n  SET embedding = e.embedding,\n      embedding_model = e.embedding_model,\n      updated_at = NOW()\n  FROM embeddings e\n  WHERE dc.id = e.chunk_id\n    AND dc.organization_id = '{{$node[\"Build Embedding Payload\"].json.organizationId}}'::uuid\n    AND dc.source_record_id = '{{$node[\"Build Embedding Payload\"].json.sourceRecordId}}'::uuid\n    AND dc.version = '{{$node[\"Build Embedding Payload\"].json.version}}'::int\n  RETURNING dc.id\n)\nSELECT COUNT(*)::int AS \"writtenCount\" FROM updated;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "update_job_state",
+      "name": "Update Job State",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ingestion_jobs SET state = 'completed', finished_at = NOW(), updated_at = NOW() WHERE organization_id = '{{$node[\"Build Embedding Payload\"].json.organizationId}}'::uuid AND source_record_id = '{{$node[\"Build Embedding Payload\"].json.sourceRecordId}}'::uuid AND state = 'processing' RETURNING id AS \"jobId\", state, retry_count AS \"retryCount\";"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "build_worker_summary",
+      "name": "Build Worker Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "parameters": {
+        "jsCode": "return [{ json: { embedded: true, chunkCount: Array.isArray($node[\"Build Embedding Payload\"].json.chunks) ? $node[\"Build Embedding Payload\"].json.chunks.length : 0, organizationId: $node[\"Build Embedding Payload\"].json.organizationId || null, knowledgeSourceId: $node[\"Build Embedding Payload\"].json.knowledgeSourceId || null, sourceRecordId: $node[\"Build Embedding Payload\"].json.sourceRecordId || null } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [[{ "node": "Claim Draft Bundles", "type": "main", "index": 0 }]]
+    },
+    "Claim Draft Bundles": {
+      "main": [[{ "node": "Build Embedding Payload", "type": "main", "index": 0 }]]
+    },
+    "Build Embedding Payload": {
+      "main": [[{ "node": "Dispatch Embeddings", "type": "main", "index": 0 }]]
+    },
+    "Dispatch Embeddings": {
+      "main": [[{ "node": "Persist Derived Rows", "type": "main", "index": 0 }]]
+    },
+    "Persist Derived Rows": {
+      "main": [[{ "node": "Update Job State", "type": "main", "index": 0 }]]
+    },
+    "Update Job State": {
+      "main": [[{ "node": "Build Worker Summary", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    { "name": "kganya" },
+    { "name": "backend" },
+    { "name": "n8n" }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "versionId": "kganya-backend-embed-v1"
+}

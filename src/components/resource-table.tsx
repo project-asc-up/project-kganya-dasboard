@@ -12,6 +12,8 @@ type ResourceRow = {
   title: string;
   category: string;
   url: string;
+  resourceType?: string;
+  attachmentName?: string | null;
   facultyId: string | null;
   faculty?: { id: string; name: string; code: string } | null;
 };
@@ -100,6 +102,11 @@ export function ResourceTable({ resources, faculties }: Readonly<{ resources: Re
                 <tr key={resource.id} className="align-top hover:bg-[color:var(--color-bg-light)] transition-colors">
                   <td className="border-b border-[color:var(--color-border)] px-4 py-4">
                     <div className="font-semibold text-[color:var(--color-primary-dark)]">{resource.title}</div>
+                    {resource.resourceType === "document" ? (
+                      <div className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">
+                        {resource.attachmentName ?? "Uploaded document"}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="border-b border-[color:var(--color-border)] px-4 py-4">
                     <span className="rounded-full bg-[color:var(--color-bg-light)] px-3 py-1 text-sm font-semibold text-[color:var(--color-primary-dark)]">

@@ -2,9 +2,12 @@ import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 
 export default function SsoCallbackPage() {
   return (
-    <AuthenticateWithRedirectCallback
-      signInForceRedirectUrl="/admin"
-      signUpForceRedirectUrl="/admin"
-    />
+    <>
+      <div id="clerk-captcha" />
+      <AuthenticateWithRedirectCallback
+        signInForceRedirectUrl="/admin"
+        signUpForceRedirectUrl="/admin"
+      />
+    </>
   );
 }

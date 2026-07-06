@@ -4,6 +4,8 @@ import { ProgrammeExplorer } from "@/components/programme-explorer";
 import { getFacultyOptions, getProgrammeRows } from "@/lib/admin-queries";
 import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProgrammesPage() {
   const [programmes, faculties, authz] = await Promise.all([
     getProgrammeRows(),

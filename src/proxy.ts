@@ -1,18 +1,41 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+import { getAuthSessionSecret, verifyAuthSessionToken } from "@/lib/auth-session";
+
 const isProtectedRoute = createRouteMatcher([
   "/admin(.*)",
   "/api/admin(.*)",
 ]);
 
+type MiddlewareRequest = Request & {
+  nextUrl: URL;
+  cookies: {
+    get(name: string): { value: string } | undefined;
+  };
+};
+
+async function hasDevelopmentAdminSession(request: MiddlewareRequest) {
+  if (process.env.NODE_ENV !== "development") return false;
+
+  const sessionSecret = getAuthSessionSecret();
+  if (!sessionSecret) return false;
+
+  const session = await verifyAuthSessionToken(request.cookies.get("asc_admin_session")?.value, {
+    secret: sessionSecret,
+  });
+
+  return session?.username === "admin";
+}
+
 export const proxy = clerkMiddleware(async (auth, request) => {
+  const middlewareRequest = request as MiddlewareRequest;
   const session = await auth();
   const isSignedIn = !!session.userId;
 
-  if (isProtectedRoute(request)) {
-    const signInUrl = new URL("/sign-in", request.url).toString();
-    const unauthorizedUrl = new URL("/", request.url).toString();
+  if (isProtectedRoute(middlewareRequest) && !(await hasDevelopmentAdminSession(middlewareRequest))) {
+    const signInUrl = new URL("/sign-in", middlewareRequest.url).toString();
+    const unauthorizedUrl = new URL("/", middlewareRequest.url).toString();
 
     await auth.protect({
       unauthenticatedUrl: signInUrl,
@@ -20,20 +43,20 @@ export const proxy = clerkMiddleware(async (auth, request) => {
     });
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  const requestHeaders = new Headers(middlewareRequest.headers);
+  requestHeaders.set("x-pathname", middlewareRequest.nextUrl.pathname);
 
   const now = Date.now();
   const TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
   if (isSignedIn) {
-    const lastActivityCookie = request.cookies.get("asc_last_activity")?.value;
+    const lastActivityCookie = middlewareRequest.cookies.get("asc_last_activity")?.value;
 
     if (lastActivityCookie) {
       const lastActivity = Number(lastActivityCookie);
       if (Number.isFinite(lastActivity) && now - lastActivity > TIMEOUT_MS) {
         // Session timeout reached! Perform hard logout by destroying session cookies.
-        const response = NextResponse.redirect(new URL("/sign-in", request.url));
+        const response = NextResponse.redirect(new URL("/sign-in", middlewareRequest.url));
         response.cookies.delete("__session");
         response.cookies.delete("asc_last_activity");
         response.cookies.delete("asc_admin_session");

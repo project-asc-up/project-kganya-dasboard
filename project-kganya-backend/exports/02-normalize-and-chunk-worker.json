@@ -1,0 +1,158 @@
+{
+  "name": "Kganya 02 Normalize and Chunk Worker",
+  "nodes": [
+    {
+      "id": "cron_trigger",
+      "name": "Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyMinute"
+          }
+        ]
+      }
+    },
+    {
+      "id": "claim_queued_jobs",
+      "name": "Claim Queued Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [520, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH claimed AS (\n  UPDATE ingestion_jobs\n  SET state = 'processing',\n      started_at = COALESCE(started_at, NOW()),\n      updated_at = NOW()\n  WHERE id IN (\n    SELECT id\n    FROM ingestion_jobs\n    WHERE state = 'queued' AND job_type = 'embedding'\n    ORDER BY created_at ASC\n    LIMIT 50\n    FOR UPDATE SKIP LOCKED\n  )\n  RETURNING id AS \"jobId\", organization_id AS \"organizationId\", knowledge_source_id AS \"knowledgeSourceId\", source_record_id AS \"sourceRecordId\"\n)\nSELECT * FROM claimed;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "fetch_source_graph",
+      "name": "Fetch Source Graph",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sr.id AS \"sourceRecordId\", sr.organization_id AS \"organizationId\", sr.knowledge_source_id AS \"knowledgeSourceId\", sr.record_key AS \"recordKey\", sr.topic, sr.source_kind AS \"sourceKind\", sr.title, sr.body_markdown AS \"bodyMarkdown\", sr.body_json AS \"bodyJson\", sr.source_url AS \"sourceUrl\", sr.source_anchor AS \"sourceAnchor\", sr.version, sr.checksum, ks.source_family AS \"sourceFamily\", ks.source_type AS \"sourceType\", ks.title AS \"sourceTitle\", COALESCE((SELECT json_agg(json_build_object('fieldName', field_name, 'fieldValue', field_value, 'fieldType', field_type, 'fieldOrder', field_order, 'isKey', is_key) ORDER BY field_order) FROM source_record_fields WHERE source_record_id = sr.id), '[]'::json) AS fields FROM source_records sr JOIN knowledge_sources ks ON ks.id = sr.knowledge_source_id WHERE sr.id = '{{$json.sourceRecordId}}'::uuid AND sr.organization_id = '{{$json.organizationId}}'::uuid LIMIT 1;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "normalize_source_record",
+      "name": "Normalize Source Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 300],
+      "parameters": {
+        "jsCode": "const row = $json;\nconst fields = Array.isArray(row.fields) ? [...row.fields].sort((a, b) => Number(a.fieldOrder) - Number(b.fieldOrder)) : [];\nreturn [{ json: { jobId: row.jobId || null, organizationId: row.organizationId, knowledgeSourceId: row.knowledgeSourceId, sourceRecordId: row.sourceRecordId, normalizedRecord: { recordKey: row.recordKey, version: row.version, topic: row.topic, title: row.title, bodyMarkdown: row.bodyMarkdown || null, bodyJson: row.bodyJson || null, checksum: row.checksum || null, sourceFamily: row.sourceFamily, sourceType: row.sourceType, fields } } }];"
+      }
+    },
+    {
+      "id": "build_derived_chunks",
+      "name": "Build Derived Chunks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst record = $json.normalizedRecord;\nconst chunks = [];\nif (record.bodyMarkdown) {\n  chunks.push({ chunkIndex: 0, chunkType: 'markdown-section', sourceFamily: record.sourceFamily, topic: record.topic, title: record.title, sectionPath: record.title, chunkText: record.bodyMarkdown, chunkHash: crypto.createHash('sha256').update(record.bodyMarkdown).digest('hex'), active: true });\n}\nreturn [{ json: { ...$json, chunks } }];"
+      }
+    },
+    {
+      "id": "persist_chunk_drafts",
+      "name": "Persist Chunk Drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*)::int AS \"draftCount\" FROM jsonb_array_elements('{{$json.chunks}}'::jsonb) AS chunk;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "update_job_state",
+      "name": "Update Job State",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1820, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ingestion_jobs SET state = 'processing', started_at = COALESCE(started_at, NOW()), updated_at = NOW() WHERE id = '{{$json.jobId}}'::uuid RETURNING id AS \"jobId\", state, retry_count AS \"retryCount\";"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "build_worker_summary",
+      "name": "Build Worker Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2080, 300],
+      "parameters": {
+        "jsCode": "return [{ json: { normalized: true, chunkCount: Array.isArray($node[\"Build Derived Chunks\"].json.chunks) ? $node[\"Build Derived Chunks\"].json.chunks.length : 0, jobId: $node[\"Normalize Source Record\"].json.jobId || null, organizationId: $node[\"Normalize Source Record\"].json.organizationId || null, knowledgeSourceId: $node[\"Normalize Source Record\"].json.knowledgeSourceId || null, sourceRecordId: $node[\"Normalize Source Record\"].json.sourceRecordId || null } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Cron Trigger": {
+      "main": [[{ "node": "Claim Queued Jobs", "type": "main", "index": 0 }]]
+    },
+    "Claim Queued Jobs": {
+      "main": [
+        [{ "node": "Fetch Source Graph", "type": "main", "index": 0 }],
+        [{ "node": "Build Worker Summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Source Graph": {
+      "main": [[{ "node": "Normalize Source Record", "type": "main", "index": 0 }]]
+    },
+    "Normalize Source Record": {
+      "main": [[{ "node": "Build Derived Chunks", "type": "main", "index": 0 }]]
+    },
+    "Build Derived Chunks": {
+      "main": [[{ "node": "Persist Chunk Drafts", "type": "main", "index": 0 }]]
+    },
+    "Persist Chunk Drafts": {
+      "main": [[{ "node": "Update Job State", "type": "main", "index": 0 }]]
+    },
+    "Update Job State": {
+      "main": [[{ "node": "Build Worker Summary", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    { "name": "kganya" },
+    { "name": "backend" },
+    { "name": "n8n" }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "versionId": "kganya-backend-normalize-v1"
+}

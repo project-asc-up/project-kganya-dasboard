@@ -117,7 +117,9 @@ export async function AdminShell({
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight text-[var(--color-text)]">Access Denied</h1>
                 <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                  You do not have permission to access the "{crumbs[crumbs.length - 1]?.label ?? "requested"}" tab. Please contact your system administrator.
+                  You do not have permission to access the &quot;
+                  {crumbs[crumbs.length - 1]?.label ?? "requested"}
+                  &quot; tab. Please contact your system administrator.
                 </p>
                 <div className="mt-6">
                   <a

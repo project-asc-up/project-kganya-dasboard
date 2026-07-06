@@ -15,6 +15,8 @@ import {
 import { coachMatchesQuery } from "@/lib/coach-search";
 import { displayFacultyName } from "@/lib/faculty-display";
 
+export const dynamic = "force-dynamic";
+
 type ResultItem = {
   key: string;
   href: string;

@@ -10,6 +10,39 @@ For the source-by-source import path, see [KGANYA_BACKFILL_MAP.md](C:/Users/sewa
 
 The Kganya Prisma schema lives at `prisma/kganya/schema.prisma`, and its generated client target is `src/generated/kganya-prisma`.
 
+For the backend automation and n8n build spec, see `project-kganya-backend/`.
+
+## Local development
+
+This repo is the frontend UI plus the Kganya console backend contract docs.
+
+- The UI runs locally from this repo.
+- The n8n workflows are documented under `project-kganya-backend/`.
+- The local launcher does not start n8n. Keep that separate.
+
+### What the launcher starts
+
+- Next.js dev server for the frontend UI
+- A browser tab pointed at `http://localhost:3000`
+
+### What the launcher does not start
+
+- n8n
+- Background workflow workers
+- A database server
+
+You still need the expected environment variables for Clerk, Neon, and any other services the UI reads at startup.
+
+## Access model
+
+The admin console now uses role-based access only.
+
+- `user`: view-only access to content screens
+- `admin`: view and edit access to content screens
+- `super_admin`: view, edit, and create access, plus user creation and role management
+
+Roles are assigned in the user management screen and at invite time. Permission checkboxes are no longer the source of truth.
+
 ## Current reality
 
 - Next.js 16 App Router console already exists and updates data in Neon Postgres.
@@ -69,6 +102,31 @@ npm run kganya:init-schema
 npm run dev
 ```
 
+### One-click Windows startup
+
+If you are on Windows, double-click `start-ui.cmd` from this folder.
+
+The launcher will:
+
+1. check that dependencies exist
+2. start the Next.js dev server in a separate window
+3. wait for the app to answer on port `3000`
+4. open your browser to the UI
+
+If `node_modules` is missing, the launcher installs dependencies first.
+
+### Manual startup
+
+If you prefer to run it yourself:
+
+```bash
+cd project-kganya-dasboard
+npm install
+npm run dev
+```
+
+Then open `http://localhost:3000`.
+
 Once a database is connected:
 
 ```bash
@@ -79,6 +137,18 @@ npm run kganya:ingestion-status
 npm run db:push
 npm run db:seed
 ```
+
+## Resource uploads
+
+The Resources section now supports both link resources and document uploads.
+
+- Link resources keep the existing title, category, URL, and metadata flow.
+- Document uploads accept `.md`, `.txt`, `.pdf`, `.docx`, `.png`, `.jpg`, and `.jpeg` files.
+- PNG and JPEG uploads are OCR-extracted on the server, then stored as text before chunking.
+- Uploaded documents are extracted into the Kganya source-record tables and chunked into `document_chunks` for vector search.
+- The resource detail page shows the upload status, chunk count, and Kganya source keys.
+
+If an upload fails, the resource row is still created with a failed status so it can be retried or inspected.
 
 ## Verification
 

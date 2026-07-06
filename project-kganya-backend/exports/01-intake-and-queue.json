@@ -1,0 +1,191 @@
+{
+  "name": "Kganya 01 Intake and Queue",
+  "nodes": [
+    {
+      "id": "webhook_trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kganya/backend/dispatch",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "verify_signature",
+      "name": "Verify Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.KGANYA_EMBEDDING_WEBHOOK_SECRET;\nconst headers = $json.headers || {};\nconst body = $json.body || {};\nconst signature = headers['x-kganya-signature'] || headers['X-Kganya-Signature'] || '';\nconst canonical = JSON.stringify(body);\nif (secret) {\n  const computed = crypto.createHmac('sha256', secret).update(canonical).digest('hex');\n  if (computed !== signature) throw new Error('INVALID_SIGNATURE');\n}\nreturn [{ json: { signatureValid: true, batchId: headers['x-kganya-batch-id'] || body.batchId || null, checksum: headers['x-kganya-checksum'] || body.checksum || null, body } }];"
+      }
+    },
+    {
+      "id": "parse_batch",
+      "name": "Parse Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 300],
+      "parameters": {
+        "jsCode": "const input = $json.body || $json;\nconst jobs = Array.isArray(input.jobs) ? [...input.jobs].sort((a, b) => String(a.jobId).localeCompare(String(b.jobId))) : [];\nreturn [{ json: { batchId: input.batchId, source: input.source || 'kganya', generatedAt: input.generatedAt, jobCount: Number(input.jobCount || jobs.length), jobs, checksum: input.checksum } }];"
+      }
+    },
+    {
+      "id": "validate_batch_schema",
+      "name": "Validate Batch Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300],
+      "parameters": {
+        "jsCode": "const batch = $json;\nconst errors = [];\nif (!batch.batchId) errors.push('batchId is required');\nif (batch.source !== 'kganya') errors.push('source must be kganya');\nif (!batch.generatedAt) errors.push('generatedAt is required');\nif (!Number.isInteger(batch.jobCount) || batch.jobCount < 1) errors.push('jobCount must be a positive integer');\nif (!Array.isArray(batch.jobs) || batch.jobs.length === 0) errors.push('jobs must be a non-empty array');\nif (batch.jobCount !== batch.jobs.length) errors.push('jobCount does not match jobs length');\nfor (const job of batch.jobs || []) {\n  if (!job.jobId) errors.push('jobId is required');\n  if (!job.organization?.id) errors.push('organization.id is required');\n  if (!job.organization?.clerkOrgId) errors.push('organization.clerkOrgId is required');\n  if (!job.knowledgeSource?.id) errors.push('knowledgeSource.id is required');\n  if (!job.sourceRecord?.id) errors.push('sourceRecord.id is required');\n  if (!job.sourceRecord?.recordKey) errors.push('sourceRecord.recordKey is required');\n  if (!Number.isInteger(job.sourceRecord?.version)) errors.push('sourceRecord.version must be an integer');\n  if (!job.sourceRecord?.checksum) errors.push('sourceRecord.checksum is required');\n}\nif (errors.length) throw new Error(`INVALID_BATCH: ${errors.join('; ')}`);\nreturn [{ json: { batchValid: true, batchId: batch.batchId, jobCount: batch.jobCount, normalizedJobs: batch.jobs, checksum: batch.checksum } }];"
+      }
+    },
+    {
+      "id": "resolve_organization",
+      "name": "Resolve Organization",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1220, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, clerk_org_id AS \"clerkOrgId\", name, slug, status FROM organizations WHERE id = '{{$json.normalizedJobs[0].organization.id}}' AND clerk_org_id = '{{$json.normalizedJobs[0].organization.clerkOrgId}}' AND status = 'active' LIMIT 1;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "check_batch_idempotency",
+      "name": "Check Batch Idempotency",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1460, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*)::int AS \"existingCount\", '{{$node[\"Validate Batch Schema\"].json[\"batchId\"]}}'::text AS \"batchId\", '{{$node[\"Validate Batch Schema\"].json[\"normalizedJobs\"][0][\"organization\"][\"id\"]}}'::uuid AS \"organizationId\", '{{$node[\"Validate Batch Schema\"].json[\"checksum\"]}}'::text AS \"checksum\", '{{JSON.stringify($node[\"Validate Batch Schema\"].json[\"normalizedJobs\"] )}}'::jsonb AS \"serializedJobs\" FROM ingestion_jobs WHERE organization_id = '{{$node[\"Validate Batch Schema\"].json[\"normalizedJobs\"][0][\"organization\"][\"id\"]}}'::uuid AND batch_id = '{{$node[\"Validate Batch Schema\"].json[\"batchId\"]}}'::text;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "queue_ingestion_jobs",
+      "name": "Queue Ingestion Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [1460, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH jobs AS (\n  SELECT *\n  FROM jsonb_to_recordset('{{$json.serializedJobs}}'::jsonb) AS job(jobId uuid, organization jsonb, knowledgeSource jsonb, sourceRecord jsonb)\n), inserted AS (\n  INSERT INTO ingestion_jobs (\n    id,\n    batch_id,\n    organization_id,\n    knowledge_source_id,\n    source_record_id,\n    job_type,\n    state,\n    input_checksum,\n    retry_count,\n    created_at,\n    updated_at\n  )\n  SELECT\n    gen_random_uuid(),\n    '{{$json.batchId}}'::text,\n    (job.organization->>'id')::uuid,\n    (job.knowledgeSource->>'id')::uuid,\n    (job.sourceRecord->>'id')::uuid,\n    'embedding',\n    'queued',\n    '{{$json.checksum}}'::text,\n    0,\n    NOW(),\n    NOW()\n  FROM jobs job\n  WHERE NOT EXISTS (\n    SELECT 1\n    FROM ingestion_jobs ij\n    WHERE ij.organization_id = (job.organization->>'id')::uuid\n      AND ij.batch_id = '{{$json.batchId}}'::text\n      AND ij.source_record_id = (job.sourceRecord->>'id')::uuid\n  )\n  RETURNING id\n)\nSELECT COUNT(*)::int AS \"queuedCount\", '{{$json.batchId}}'::text AS \"batchId\", '{{$json.checksum}}'::text AS \"checksum\" FROM inserted;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "__POSTGRES_CREDENTIAL_ID__",
+          "name": "Kganya Neon Postgres"
+        }
+      }
+    },
+    {
+      "id": "build_acknowledgement",
+      "name": "Build Acknowledgement",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 300],
+      "parameters": {
+        "jsCode": "const queuedCount = Number($node[\"Queue Ingestion Jobs\"].json.queuedCount || 0);\nconst existingCount = Number($node[\"Check Batch Idempotency\"].json.existingCount || 0);\nreturn [{ json: { batchId: $node[\"Check Batch Idempotency\"].json.batchId || null, received: true, acceptedCount: queuedCount, rejectedCount: 0, duplicateCount: existingCount, queuedCount, completedCount: 0, failedCount: 0, errors: [], checksum: $node[\"Check Batch Idempotency\"].json.checksum || null } }];"
+      }
+    },
+    {
+      "id": "respond_to_webhook",
+      "name": "Respond To Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1940, 300],
+      "parameters": {
+        "responseBody": "={{$json}}",
+        "responseCode": 200
+      }
+    },
+    {
+      "id": "error_handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1460, 540],
+      "parameters": {
+        "jsCode": "const error = $json.error || $json;\nreturn [{ json: { batchId: $json.batchId || null, received: true, acceptedCount: 0, rejectedCount: 1, queuedCount: 0, completedCount: 0, failedCount: 1, errors: [{ code: error.code || 'WORKFLOW_ERROR', message: error.message || 'Unhandled workflow error', jobId: $json.jobId || null }], checksum: $json.checksum || null } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Verify Signature", "type": "main", "index": 0 }]]
+    },
+    "Verify Signature": {
+      "main": [
+        [{ "node": "Parse Batch", "type": "main", "index": 0 }],
+        [{ "node": "Error Handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "Parse Batch": {
+      "main": [[{ "node": "Validate Batch Schema", "type": "main", "index": 0 }]]
+    },
+    "Validate Batch Schema": {
+      "main": [
+        [{ "node": "Resolve Organization", "type": "main", "index": 0 }],
+        [{ "node": "Error Handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "Resolve Organization": {
+      "main": [
+        [{ "node": "Check Batch Idempotency", "type": "main", "index": 0 }],
+        [{ "node": "Error Handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Batch Idempotency": {
+      "main": [[{ "node": "Queue Ingestion Jobs", "type": "main", "index": 0 }]]
+    },
+    "Queue Ingestion Jobs": {
+      "main": [
+        [{ "node": "Build Acknowledgement", "type": "main", "index": 0 }],
+        [{ "node": "Error Handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Acknowledgement": {
+      "main": [
+        [{ "node": "Respond To Webhook", "type": "main", "index": 0 }],
+        [{ "node": "Error Handler", "type": "main", "index": 0 }]
+      ]
+    },
+    "Error Handler": {
+      "main": [[{ "node": "Respond To Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": [
+    { "name": "kganya" },
+    { "name": "backend" },
+    { "name": "n8n" }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "versionId": "kganya-backend-intake-v1"
+}

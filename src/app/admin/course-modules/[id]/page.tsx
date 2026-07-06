@@ -5,6 +5,8 @@ import { deleteCourseModule, updateCourseModule } from "@/lib/admin-actions";
 import { getCourseModuleById, getProgrammeRows } from "@/lib/admin-queries";
 import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
 }

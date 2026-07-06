@@ -125,19 +125,28 @@ model CourseModule {
 }
 
 model Resource {
-  id           String    @id @default(uuid()) @db.Uuid
-  seedKey      String    @unique @map("seed_key")
-  facultyId    String?   @map("faculty_id") @db.Uuid
-  category     String
-  title        String
-  description  String?
-  url          String
-  sourceUrl    String?   @map("source_url")
-  lastVerified DateTime? @map("last_verified") @db.Date
-  notes        String?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  faculty      Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  id                String    @id @default(uuid()) @db.Uuid
+  seedKey           String    @unique @map("seed_key")
+  facultyId         String?   @map("faculty_id") @db.Uuid
+  resourceType      String    @default("link") @map("resource_type")
+  category          String
+  title             String
+  description       String?
+  url               String
+  sourceUrl         String?   @map("source_url")
+  lastVerified      DateTime? @map("last_verified") @db.Date
+  notes             String?
+  attachmentName    String?   @map("attachment_name")
+  attachmentMimeType String?  @map("attachment_mime_type")
+  attachmentSizeBytes Int?     @map("attachment_size_bytes")
+  attachmentStatus  String?   @map("attachment_status")
+  attachmentError   String?   @map("attachment_error")
+  kganyaSourceKey   String?   @map("kganya_source_key")
+  kganyaRecordKey   String?   @map("kganya_record_key")
+  chunkCount        Int?      @map("chunk_count")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  faculty           Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([category])

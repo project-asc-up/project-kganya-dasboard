@@ -13,12 +13,15 @@ import { buildResourceFacultyOptions, filterResourcesByFaculty } from "@/lib/res
 type ResourceRow = {
   id: string;
   seedKey: string | null;
+  resourceType?: string;
   category: string;
   title: string;
   description: string | null;
   url: string;
   sourceUrl: string | null;
   lastVerified: DisplayDateValue;
+  attachmentName?: string | null;
+  attachmentStatus?: string | null;
   faculty: { id: string; name: string; code: string } | null;
 };
 
@@ -108,9 +111,16 @@ export function ResourceExplorer({ resources }: { resources: ResourceRow[] }) {
                     <span className="rounded-full bg-[color:var(--color-bg-light)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-primary-dark)]">
                       {resource.category}
                     </span>
-                    <span className="rounded-full border border-[color:var(--color-border)] px-3 py-1 text-xs font-medium text-[color:var(--color-text-muted)]">
-                      {formatReadableDate(resource.lastVerified)}
-                    </span>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {resource.resourceType === "document" ? (
+                        <span className="rounded-full bg-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-white">
+                          Document
+                        </span>
+                      ) : null}
+                      <span className="rounded-full border border-[color:var(--color-border)] px-3 py-1 text-xs font-medium text-[color:var(--color-text-muted)]">
+                        {formatReadableDate(resource.lastVerified)}
+                      </span>
+                    </div>
                   </div>
 
                   <h4 className="mt-4 text-lg font-semibold tracking-tight text-[color:var(--color-primary-dark)]">
@@ -124,6 +134,12 @@ export function ResourceExplorer({ resources }: { resources: ResourceRow[] }) {
                   ) : null}
 
                   <div className="mt-4 space-y-2 text-sm text-[color:var(--color-text-muted)]">
+                    {resource.resourceType === "document" ? (
+                      <div className="flex items-center gap-2">
+                        <FileText size={15} />
+                        <span className="truncate">{resource.attachmentName ?? "Uploaded document"}</span>
+                      </div>
+                    ) : null}
                     <div className="flex items-center gap-2">
                       <FileText size={15} />
                       <span className="truncate">{getHostName(resource.url)}</span>

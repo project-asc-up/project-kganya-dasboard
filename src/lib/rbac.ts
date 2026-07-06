@@ -2,9 +2,10 @@ import "server-only";
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import type { User } from "@clerk/backend";
+import { cookies } from "next/headers";
 
+import { getAuthSessionSecret, verifyAuthSessionToken } from "@/lib/auth-session";
 import { getPrismaClient } from "@/lib/prisma";
-import { CONFIGURABLE_TABS } from "./tab-access-config";
 
 export const RBAC_ROLES = ["super_admin", "admin", "user"] as const;
 export type RbacRole = (typeof RBAC_ROLES)[number];
@@ -163,6 +164,31 @@ export function normalizePermissions(value: unknown): RbacPermission[] {
   });
 }
 
+function contentPermissionsFor(actions: Array<"view" | "update" | "create" | "delete">) {
+  const actionSet = new Set(actions);
+
+  return RBAC_PERMISSIONS.filter((permission) => {
+    const [resource, action] = permission.split(":");
+    if (resource === "system") {
+      return actionSet.has("view") && permission === "system:view";
+    }
+
+    return actionSet.has(action as "view" | "update" | "create" | "delete");
+  });
+}
+
+export function permissionsForRole(role: RbacRole): RbacPermission[] {
+  if (role === "super_admin") {
+    return [...RBAC_PERMISSIONS];
+  }
+
+  if (role === "admin") {
+    return contentPermissionsFor(["view", "update"]).filter((permission) => permission !== "system:refresh");
+  }
+
+  return contentPermissionsFor(["view"]);
+}
+
 function bootstrapSuperAdminEmails() {
   return (process.env.RBAC_BOOTSTRAP_SUPER_ADMIN_EMAILS ?? "")
     .split(",")
@@ -191,9 +217,40 @@ function roleForUser(user: User): RbacRole {
   return normalizeRole(user.publicMetadata?.role);
 }
 
-function effectivePermissions(role: RbacRole, metadataPermissions: unknown) {
-  if (role === "super_admin") return [...RBAC_PERMISSIONS];
-  return normalizePermissions(metadataPermissions);
+function effectivePermissions(role: RbacRole) {
+  return permissionsForRole(role);
+}
+
+async function getDevelopmentAuthorization(): Promise<CurrentAuthorization | null> {
+  if (process.env.NODE_ENV !== "development") return null;
+
+  const sessionSecret = getAuthSessionSecret();
+  if (!sessionSecret) return null;
+
+  const cookieStore = await cookies();
+  const session = await verifyAuthSessionToken(cookieStore.get("asc_admin_session")?.value, {
+    secret: sessionSecret,
+  });
+
+  if (!session) return null;
+
+  if (session.username === "admin") {
+    return {
+      userId: "local-admin",
+      email: "admin@localhost",
+      role: "super_admin",
+      permissions: permissionsForRole("super_admin"),
+      isSuperAdmin: true,
+    };
+  }
+
+  return {
+    userId: session.username,
+    email: null,
+    role: "user",
+    permissions: permissionsForRole("user"),
+    isSuperAdmin: false,
+  };
 }
 
 function toManagedUser(user: User, currentUserId: string): ManagedUser {
@@ -206,7 +263,7 @@ function toManagedUser(user: User, currentUserId: string): ManagedUser {
     username: user.username ?? null,
     role,
     roleLabel: ROLE_LABELS[role],
-    permissions: effectivePermissions(role, user.publicMetadata?.permissions),
+    permissions: effectivePermissions(role),
     createdAt: user.createdAt,
     lastSignInAt: user.lastSignInAt,
     isCurrentUser: user.id === currentUserId,
@@ -215,11 +272,13 @@ function toManagedUser(user: User, currentUserId: string): ManagedUser {
 
 export async function getCurrentAuthorization(): Promise<CurrentAuthorization | null> {
   const user = await currentUser();
-  if (!user) return null;
+  if (!user) {
+    return getDevelopmentAuthorization();
+  }
 
   const role = roleForUser(user);
   const email = primaryEmailForUser(user);
-  const permissions = effectivePermissions(role, user.publicMetadata?.permissions);
+  const permissions = effectivePermissions(role);
 
   return {
     userId: user.id,
@@ -321,7 +380,6 @@ export async function updateManagedUserAccess(formData: FormData) {
   const authz = await requireSuperAdmin();
   const targetUserId = String(formData.get("userId") ?? "");
   const role = normalizeRole(formData.get("role"));
-  const permissions = normalizePermissions(formData.getAll("permissions"));
   const superAdminConfirmation = String(formData.get("superAdminConfirmation") ?? "");
 
   if (!targetUserId) {
@@ -329,13 +387,13 @@ export async function updateManagedUserAccess(formData: FormData) {
   }
 
   if (targetUserId === authz.userId) {
-    throw new Error("You cannot modify your own role or permissions.");
+    throw new Error("You cannot modify your own role.");
   }
 
   const client = await clerkClient();
   const targetUser = await client.users.getUser(targetUserId);
   const previousRole = roleForUser(targetUser);
-  const previousPermissions = effectivePermissions(previousRole, targetUser.publicMetadata?.permissions);
+  const previousPermissions = effectivePermissions(previousRole);
   const targetEmail = primaryEmailForUser(targetUser);
 
   if (isBootstrapSuperAdmin(targetUser) && role !== "super_admin") {
@@ -350,12 +408,12 @@ export async function updateManagedUserAccess(formData: FormData) {
     throw new Error("Please confirm the Super Admin role change before saving.");
   }
 
-  const newPermissions = effectivePermissions(role, role === "super_admin" ? [] : permissions);
+  const newPermissions = effectivePermissions(role);
 
   await client.users.updateUserMetadata(targetUserId, {
     publicMetadata: {
       role,
-      permissions: role === "super_admin" ? [] : permissions,
+      permissions: newPermissions,
     },
   });
 
@@ -374,31 +432,9 @@ export async function updateManagedUserAccess(formData: FormData) {
       },
     });
 
-    // Clear existing tab overrides for this user
+    // Clear any legacy tab overrides. Role-only access is the source of truth.
     await tx.userTabAccess.deleteMany({
       where: { userId: targetUserId },
     });
-
-    // Save new overrides if role is not super_admin
-    if (role !== "super_admin") {
-      const overrideOps = [];
-      for (const tab of CONFIGURABLE_TABS) {
-        const setting = formData.get(`tab-override-${tab.href}`); // "allow", "deny", "inherit"
-        if (setting === "allow" || setting === "deny") {
-          overrideOps.push(
-            tx.userTabAccess.create({
-              data: {
-                userId: targetUserId,
-                tab: tab.href,
-                isAllowed: setting === "allow",
-              },
-            })
-          );
-        }
-      }
-      if (overrideOps.length > 0) {
-        await Promise.all(overrideOps);
-      }
-    }
   });
 }

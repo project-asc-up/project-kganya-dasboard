@@ -4,6 +4,8 @@ import { PageHeader, Section } from "@/components/admin-form";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { getHealthOverview } from "@/lib/admin-queries";
 
+export const dynamic = "force-dynamic";
+
 function StatusPill({ label, tone }: { label: string; tone: "good" | "warn" | "bad" }) {
   const toneClass =
     tone === "good"

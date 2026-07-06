@@ -4,6 +4,8 @@ import { FaqExplorer } from "@/components/faq-explorer";
 import { getFaqRows, getFacultyOptions } from "@/lib/admin-queries";
 import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 const categoryOptions = [
   "Coach Referral",
   "Study Tips",

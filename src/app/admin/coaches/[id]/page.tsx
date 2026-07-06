@@ -14,6 +14,8 @@ import { getFacultyOptions, getCoachById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
+export const dynamic = "force-dynamic";
+
 function formatDate(value: Date | null) {
   return value ? value.toISOString().slice(0, 10) : "";
 }
