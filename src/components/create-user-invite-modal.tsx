@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-import { CreateButton, Field, Select, TextInput } from "@/components/admin-form";
+import { ActionButton, CreateButton, Field, Select, TextInput } from "@/components/admin-form";
 import { Modal } from "@/components/modal";
 import { createUserInvitation } from "@/lib/user-management-actions";
+import { initialUserInviteActionState, type UserAccessActionState } from "@/lib/user-management-types";
 
 type RoleOption = {
   value: string;
@@ -15,25 +16,10 @@ type CreateUserInviteModalProps = {
   roles: RoleOption[];
 };
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
-  return (
-    <button
-      type="submit"
-      disabled={disabled}
-      className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      Invite User
-    </button>
-  );
-}
-
 export function CreateUserInviteModal({ roles }: CreateUserInviteModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<{ status: "idle" | "success" | "error"; message: string }>({
-    status: "idle",
-    message: "",
-  });
+  const [feedback, setFeedback] = useState<UserAccessActionState>(initialUserInviteActionState);
 
   const handleSubmit = async (formData: FormData) => {
     try {
@@ -103,14 +89,21 @@ export function CreateUserInviteModal({ roles }: CreateUserInviteModalProps) {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--color-border)]">
-            <button
+            <ActionButton
               type="button"
+              tone="secondary"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+              disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <SubmitButton disabled={isSubmitting} />
+            </ActionButton>
+            <ActionButton
+              type="submit"
+              loading={isSubmitting}
+              loadingText="Inviting..."
+            >
+              Invite User
+            </ActionButton>
           </div>
         </form>
       </Modal>

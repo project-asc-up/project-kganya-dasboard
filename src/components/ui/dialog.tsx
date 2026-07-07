@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { IconButton } from "@/components/ui/icon-button";
 
 export interface DialogProps {
   open: boolean;
@@ -112,18 +113,14 @@ export function Dialog({
             </div>
             <div className="flex items-center gap-2">
               {headerAside}
-              <button
-                type="button"
+              <IconButton
+                icon={X}
                 onClick={() => onOpenChange(false)}
                 aria-label="Close dialog"
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)]",
-                  "text-[var(--color-text-muted)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-surface-raised)]"
-                )}
-              >
-                <X className="h-4 w-4" aria-hidden="true" />
-              </button>
+                size="sm"
+                variant="ghost"
+                rounded="full"
+              />
             </div>
           </header>
         )}
@@ -137,6 +134,3 @@ export function Dialog({
     </dialog>
   );
 }
-
-/* Register the `dialog-in` keyframes via global stylesheet import.
-   We expose it as a Tailwind utility by name in globals.css. */

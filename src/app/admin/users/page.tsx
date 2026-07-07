@@ -5,6 +5,7 @@ import { CreateUserInviteModal } from "@/components/create-user-invite-modal";
 import { UserAccessEditor } from "@/components/user-access-editor";
 import { TabAccessEditor } from "@/components/tab-access-editor";
 import { UserSearchAccordion } from "@/components/user-search-accordion";
+import { Button } from "@/components/ui/button";
 import { getManagedUserPage, RBAC_ROLES, ROLE_LABELS, getCurrentAuthorization } from "@/lib/rbac";
 import { getAllowedTabsForRole } from "@/lib/tab-access";
 
@@ -82,7 +83,7 @@ export default async function UserManagementPage({
         title="Find a user"
         description="Search by name, email address, or username. Results are loaded server-side for scalability."
       >
-        <UserSearchAccordion defaultExpanded={!!userPage.query || !!userPage.selectedUserId}>
+        <UserSearchAccordion defaultExpanded={!!userPage.query || !!userPage.selectedUser?.id}>
           <form className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]" action="/admin/users">
             <TextInput
               type="search"
@@ -90,12 +91,14 @@ export default async function UserManagementPage({
               defaultValue={userPage.query}
               placeholder="Search by name, email, or username..."
             />
-            <button
+            <Button
               type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2"
+              variant="primary"
+              size="lg"
+              rounded="full"
             >
               Search users
-            </button>
+            </Button>
           </form>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--color-text-muted)]">
@@ -158,38 +161,40 @@ export default async function UserManagementPage({
               )}
 
               <div className="flex items-center justify-between gap-3 pt-2">
-                <Link
-                  href={pageHref({
-                    query: userPage.query,
-                    page: Math.max(userPage.page - 1, 1),
-                    selectedUserId: userPage.selectedUser?.id,
-                  })}
-                  aria-disabled={!userPage.hasPreviousPage}
-                  className={[
-                    "rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold transition",
-                    userPage.hasPreviousPage
-                      ? "text-[var(--color-brand)] hover:border-[var(--color-brand)]"
-                      : "pointer-events-none text-[var(--color-text-muted)] opacity-50",
-                  ].join(" ")}
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  rounded="full"
+                  disabled={!userPage.hasPreviousPage}
                 >
-                  Previous
-                </Link>
-                <Link
-                  href={pageHref({
-                    query: userPage.query,
-                    page: userPage.page + 1,
-                    selectedUserId: userPage.selectedUser?.id,
-                  })}
-                  aria-disabled={!userPage.hasNextPage}
-                  className={[
-                    "rounded-full border border-[var(--color-border)] px-4 py-2 text-sm font-semibold transition",
-                    userPage.hasNextPage
-                      ? "text-[var(--color-brand)] hover:border-[var(--color-brand)]"
-                      : "pointer-events-none text-[var(--color-text-muted)] opacity-50",
-                  ].join(" ")}
+                  <Link
+                    href={pageHref({
+                      query: userPage.query,
+                      page: Math.max(userPage.page - 1, 1),
+                      selectedUserId: userPage.selectedUser?.id,
+                    })}
+                  >
+                    Previous
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="sm"
+                  rounded="full"
+                  disabled={!userPage.hasNextPage}
                 >
-                  Next
-                </Link>
+                  <Link
+                    href={pageHref({
+                      query: userPage.query,
+                      page: userPage.page + 1,
+                      selectedUserId: userPage.selectedUser?.id,
+                    })}
+                  >
+                    Next
+                  </Link>
+                </Button>
               </div>
             </div>
 

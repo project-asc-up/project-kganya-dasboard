@@ -346,9 +346,10 @@ function CreateAccountSubmitButton() {
       variant="primary"
       size="lg"
       loading={pending}
+      loadingText="Creating account"
       className="w-full"
     >
-      {pending ? "Creating account" : "Create account"}
+      Create account
     </Button>
   );
 }
@@ -362,10 +363,11 @@ function LoginSubmitButton() {
       variant="danger"
       size="lg"
       loading={pending}
+      loadingText="Signing in"
       className="w-full"
     >
       <LogIn className="h-4 w-4" aria-hidden="true" />
-      {pending ? "Signing in" : "Sign in"}
+      Sign in
     </Button>
   );
 }

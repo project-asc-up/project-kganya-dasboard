@@ -3,9 +3,7 @@ import Link from "next/link";
 import { PageHeader, Section } from "@/components/admin-form";
 import { CourseModuleFilters } from "@/components/course-module-filters";
 import { CourseModuleAtlas } from "@/components/course-module-atlas";
-import { CreateCourseModuleModal } from "@/components/create-course-module-modal";
 import { getCourseModulePage, getProgrammeOptions } from "@/lib/admin-queries";
-import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 export default async function CourseModulesPage({
   searchParams,
@@ -15,7 +13,7 @@ export default async function CourseModulesPage({
   const { q, page, facultyId, programmeId } = await searchParams;
   const pageSize = 50;
   const currentPage = Math.max(Number(page ?? "1") || 1, 1);
-  const [pageData, programmes, authz] = await Promise.all([
+  const [pageData, programmes] = await Promise.all([
     getCourseModulePage({
       query: q,
       page: currentPage,
@@ -24,7 +22,6 @@ export default async function CourseModulesPage({
       programmeId,
     }),
     getProgrammeOptions(),
-    getCurrentAuthorization(),
   ]);
 
   const totalPages = Math.max(Math.ceil(pageData.total / pageSize), 1);
@@ -34,7 +31,6 @@ export default async function CourseModulesPage({
       <PageHeader
         title="Course Modules"
         description="Browse curriculum rows as grouped module cards, keeping the programme context visible."
-        action={canAccess(authz, "course-module:create") ? <CreateCourseModuleModal programmes={programmes} /> : null}
       />
 
       <Section title="Search modules" description="Filter by module code, name, or programme context.">

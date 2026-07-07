@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { Field } from "@/components/admin-form";
 import { LiveSearchInput } from "@/components/live-search-input";
+import { Button } from "@/components/ui/button";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { rankSuggestions } from "@/lib/search-suggestions";
 
@@ -132,12 +133,16 @@ export function ProgrammeTable({
                     {programme._count?.courseModules || 0}
                   </td>
                   <td className="border-b border-[color:var(--color-border)] px-4 py-4 text-right">
-                    <Link
-                      href={`/admin/programmes/${programme.id}`}
-                      className="inline-flex rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="sm"
+                      rounded="full"
                     >
-                      View / edit
-                    </Link>
+                      <Link href={`/admin/programmes/${programme.id}`}>
+                        View / edit
+                      </Link>
+                    </Button>
                   </td>
                 </tr>
               ))

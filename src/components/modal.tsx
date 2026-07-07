@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useCallback } from 'react';
+import { X } from 'lucide-react';
+import { IconButton } from '@/components/ui/icon-button';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -76,25 +78,13 @@ export function Modal({
               <h2 className="text-2xl font-semibold text-[color:var(--color-primary-dark)]">
                 {title}
               </h2>
-              <button
+              <IconButton
+                icon={X}
                 onClick={onClose}
-                className="rounded-full p-2 text-[color:var(--color-text-muted)] transition hover:bg-[color:var(--color-bg-light)] hover:text-[color:var(--color-text)]"
                 aria-label="Close modal"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                variant="ghost"
+                rounded="full"
+              />
             </div>
           </div>
 

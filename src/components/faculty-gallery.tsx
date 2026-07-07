@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { LiveSearchInput } from "@/components/live-search-input";
+import { Button } from "@/components/ui/button";
 import { formatIsoDate, type DisplayDateValue } from "@/lib/date-display";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { cn } from "@/lib/cn";
@@ -205,19 +206,16 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                   { key: "review", label: "Needs review" },
                   { key: "other", label: "Other" },
                 ].map((item) => (
-                  <button
+                  <Button
                     key={item.key}
-                    type="button"
+                    variant={statusFilter === item.key ? "primary" : "secondary"}
+                    size="sm"
+                    rounded="full"
                     onClick={() => setStatusFilter(item.key)}
-                    className={cn(
-                      "rounded-full border px-3 py-2 text-sm font-medium transition",
-                      statusFilter === item.key
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                        : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:border-[var(--color-brand)] hover:text-[var(--color-text)]",
-                    )}
+                    className="h-10 px-4"
                   >
                     {item.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -240,18 +238,18 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
               const aliases = splitAliases(faculty.aliases);
 
               return (
-                <button
+                <Button
                   key={faculty.id}
-                  type="button"
+                  variant="ghost"
                   onClick={() => setSelectedId(faculty.id)}
                   className={cn(
-                    "w-full text-left transition focus-visible:outline-none",
+                    "w-full text-left transition focus-visible:outline-none h-auto p-0 rounded-[var(--radius-lg)] overflow-hidden",
                     selected ? "scale-[1.01]" : "hover:-translate-y-0.5",
                   )}
                 >
                   <Card
                     className={cn(
-                      "border transition-all duration-200",
+                      "w-full border transition-all duration-200",
                       selected
                         ? "border-[var(--color-brand)] ring-2 ring-[var(--color-brand-soft)]"
                         : "border-[var(--color-border)] hover:border-[var(--color-brand)]/40 hover:shadow-[0_18px_40px_rgba(0,32,80,0.08)]",
@@ -344,7 +342,7 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                       ) : null}
                     </CardBody>
                   </Card>
-                </button>
+                </Button>
               );
             })}
           </div>

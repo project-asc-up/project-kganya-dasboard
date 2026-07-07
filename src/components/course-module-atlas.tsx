@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { BookOpen, ChevronRight, Hash } from "lucide-react";
 
 import { MetricCard, MetricGrid } from "@/components/metric-card";
+import { Button } from "@/components/ui/button";
 import { displayFacultyName } from "@/lib/faculty-display";
 
 type ModuleRow = {
@@ -136,13 +139,17 @@ export function CourseModuleAtlas({
                     </div>
 
                     <div className="mt-5 flex justify-end">
-                      <Link
-                        href={`/admin/course-modules/${module.id}`}
-                        className="inline-flex items-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+                      <Button
+                        asChild
+                        variant="secondary"
+                        size="sm"
+                        rounded="full"
                       >
-                        View / edit
-                        <ChevronRight size={14} className="ml-2" />
-                      </Link>
+                        <Link href={`/admin/course-modules/${module.id}`}>
+                          View / edit
+                          <ChevronRight size={14} className="ml-2" />
+                        </Link>
+                      </Button>
                     </div>
                   </article>
                 ))}

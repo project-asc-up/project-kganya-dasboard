@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Modal } from "@/components/modal";
-import { Field, TextInput, TextArea, Select } from "@/components/admin-form";
+import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from "@/components/admin-form";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { createResourceDocument } from "@/lib/admin-actions";
 
@@ -29,12 +29,12 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
 
   return (
     <>
-      <button
+      <CreateButton
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-white"
+        className="border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] text-[color:var(--color-primary)] hover:border-[color:var(--color-primary)] hover:bg-white"
       >
         Upload Document or Image
-      </button>
+      </CreateButton>
 
       <Modal
         isOpen={isOpen}
@@ -42,7 +42,7 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
         title="Upload Resource Document"
         size="lg"
       >
-        <form action={handleSubmit} className="space-y-5" encType="multipart/form-data">
+        <form action={handleSubmit} className="space-y-5">
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Faculty">
               <Select name="facultyId" defaultValue="">
@@ -96,20 +96,21 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--color-border)]">
-            <button
+            <ActionButton
               type="button"
+              tone="secondary"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Uploading..." : "Upload File"}
-            </button>
+              Cancel
+            </ActionButton>
+            <ActionButton
+              type="submit"
+              loading={isSubmitting}
+              loadingText="Uploading..."
+            >
+              Upload File
+            </ActionButton>
           </div>
         </form>
       </Modal>

@@ -9,6 +9,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/admin-form";
+import { ClientActionButton } from "@/components/client-action-button";
 import { deleteCoach, updateCoach } from "@/lib/admin-actions";
 import { getFacultyOptions, getCoachById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
@@ -130,7 +131,7 @@ export default async function CoachDetailPage({
               />
               Active coach
             </label>
-            <ActionButton>Save changes</ActionButton>
+            <ClientActionButton loadingText="Saving Changes...">Save changes</ClientActionButton>
           </div>
         </form>
       </Section>

@@ -7,6 +7,7 @@ import { LiveSearchInput } from "@/components/live-search-input";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
@@ -122,32 +123,26 @@ export function ProgrammeExplorer({ programmes }: ProgrammeExplorerProps) {
             />
 
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
+              <Button
+                variant={facultyFilter === "all" ? "primary" : "secondary"}
+                size="sm"
+                rounded="full"
                 onClick={() => setFacultyFilter("all")}
-                className={cn(
-                  "rounded-full border px-3 py-2 text-sm font-medium transition",
-                  facultyFilter === "all"
-                    ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                    : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
-                )}
+                className="h-10 px-4"
               >
                 All faculties
-              </button>
+              </Button>
               {facultyOptions.map((faculty) => (
-                <button
+                <Button
                   key={faculty.id}
-                  type="button"
+                  variant={facultyFilter === faculty.id ? "primary" : "secondary"}
+                  size="sm"
+                  rounded="full"
                   onClick={() => setFacultyFilter(faculty.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
-                    facultyFilter === faculty.id
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                      : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
-                  )}
+                  className="h-10 px-4 whitespace-nowrap"
                 >
                   {displayFacultyName(faculty.name)}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -171,12 +166,12 @@ export function ProgrammeExplorer({ programmes }: ProgrammeExplorerProps) {
             return (
               <section
                 key={faculty.id}
-                className="rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-card)]"
+                className="rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-card)] overflow-hidden"
               >
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   onClick={() => setCollapsed((current) => ({ ...current, [faculty.id]: !isCollapsed }))}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left h-auto rounded-none hover:bg-[var(--color-surface-sunken)]/40"
                 >
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -193,7 +188,7 @@ export function ProgrammeExplorer({ programmes }: ProgrammeExplorerProps) {
                   <Badge tone="brand" outlined>
                     {isCollapsed ? "Expand" : "Collapse"}
                   </Badge>
-                </button>
+                </Button>
 
                 {!isCollapsed ? (
                   <div className="grid gap-3 border-t border-[var(--color-border)] p-4 md:grid-cols-2 xl:grid-cols-3">
