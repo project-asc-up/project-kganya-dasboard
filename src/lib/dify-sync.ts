@@ -1,5 +1,5 @@
 ﻿import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 
 import { Prisma } from "@/generated/prisma/client";
 import { createDifyDocument, createDifyDocumentFromFile, deleteDifyDocument, updateDifyDocument, updateDifyDocumentFromFile } from "@/lib/dify-knowledge";
@@ -145,18 +145,30 @@ export async function upsertDifySyncMap(input: {
 export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
   const prisma = getPrismaClient();
   const dedupeKey = buildDifySyncDedupeKey({ ...input, inputChecksum: input.inputChecksum ?? hashMutationPayload(input.payload) });
+  await prisma.difySyncJob.updateMany({
+    where: {
+      sourceTable: input.sourceTable,
+      sourceId: input.sourceId,
+      syncAction: input.action,
+      contentKind: input.contentKind,
+      status: "pending",
+      dedupeKey: { not: dedupeKey },
+    },
+    data: { status: "cancelled", nextRetryAt: null },
+  });
   const existing = await prisma.difySyncJob.findFirst({
     where: { dedupeKey, status: { in: ["pending", "processing", "completed", "failed"] } },
     orderBy: { createdAt: "desc" },
   });
   if (existing) {
-    if (existing.status === "pending") {
+    const reuseAction = resolveDifySyncReuseAction(existing.status);
+    if (reuseAction === "reuse" && existing.status === "pending") {
       return prisma.difySyncJob.update({
         where: { id: existing.id },
         data: { payload: input.payload, nextRetryAt: null, lastError: null },
       });
     }
-    if (existing.status === "failed") {
+    if (reuseAction === "refresh") {
       return prisma.difySyncJob.update({
         where: { id: existing.id },
         data: { status: "pending", payload: input.payload, attemptCount: 0, nextRetryAt: null, lastError: null },
@@ -242,7 +254,10 @@ export async function processPendingDifySyncJobs(limit = 10) {
         });
         if (map?.difyDocumentId) {
           await deleteDifyDocument(map.difyDocumentId);
-          difyDocumentId = map.difyDocumentId;
+          await prisma.difySyncMap.update({
+            where: { sourceTable_sourceId: { sourceTable: job.sourceTable, sourceId: job.sourceId } },
+            data: { difyDocumentId: null },
+          });
         }
       } else if (contentKind === "file") {
         const staged = await getStagedResourceUpload({ sourceTable: job.sourceTable, sourceId: job.sourceId });
