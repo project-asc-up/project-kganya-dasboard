@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { Prisma } from "@/generated/prisma/client";
 import { createDifyDocument, createDifyDocumentFromFile, deleteDifyDocument, updateDifyDocument, updateDifyDocumentFromFile } from "@/lib/dify-knowledge";
 import { getPrismaClient } from "@/lib/prisma";
+import { hashMutationPayload } from "@/lib/mutation-receipts";
 
 type DifySyncAction = "create" | "update" | "delete";
 type DifySyncContentKind = "text" | "file";
@@ -17,8 +18,8 @@ type EnqueueDifySyncJobInput = {
   inputChecksum?: string | null;
 };
 
-export function buildDifySyncDedupeKey(input: Pick<EnqueueDifySyncJobInput, "sourceTable" | "sourceId" | "action" | "contentKind">) {
-  return [input.sourceTable, input.sourceId, input.action, input.contentKind].join(":");
+export function buildDifySyncDedupeKey(input: Pick<EnqueueDifySyncJobInput, "sourceTable" | "sourceId" | "action" | "contentKind"> & { inputChecksum?: string | null }) {
+  return [input.sourceTable, input.sourceId, input.action, input.contentKind, input.inputChecksum ?? ""].join(":");
 }
 
 type StagedUploadManifest = {
@@ -135,9 +136,9 @@ export async function upsertDifySyncMap(input: {
 
 export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
   const prisma = getPrismaClient();
-  const dedupeKey = buildDifySyncDedupeKey(input);
+  const dedupeKey = buildDifySyncDedupeKey({ ...input, inputChecksum: input.inputChecksum ?? hashMutationPayload(input.payload) });
   const existing = await prisma.difySyncJob.findFirst({
-    where: { dedupeKey, status: { in: ["pending", "processing"] } },
+    where: { dedupeKey, status: { in: ["pending", "processing", "completed"] } },
     orderBy: { createdAt: "desc" },
   });
   if (existing) {
@@ -149,7 +150,9 @@ export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
     }
     return existing;
   }
-  const job = await prisma.difySyncJob.create({
+  let job: Awaited<ReturnType<typeof prisma.difySyncJob.create>>;
+  try {
+    job = await prisma.difySyncJob.create({
     data: {
       sourceTable: input.sourceTable,
       sourceId: input.sourceId,
@@ -161,7 +164,13 @@ export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
       attemptCount: 0,
       nextRetryAt: null,
     },
-  });
+    });
+  } catch (error) {
+    if (!(error && typeof error === "object" && "code" in error && error.code === "P2002")) throw error;
+    const raced = await prisma.difySyncJob.findUnique({ where: { dedupeKey } });
+    if (!raced) throw new Error("Dify sync dedupe claim was lost; retry the mutation.");
+    return raced;
+  }
 
   await upsertDifySyncMap({
     sourceTable: input.sourceTable,

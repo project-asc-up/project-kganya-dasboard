@@ -33,9 +33,9 @@ export function domainIdentity(
 ): string {
   const values = Array.isArray(parts)
     ? parts
-    : Object.keys(parts)
+    : Object.keys(parts as Record<string, string | null | undefined>)
         .sort()
-        .map((key) => `${normalizeIdentityPart(key)}=${normalizeIdentityPart(parts[key])}`);
+        .map((key) => `${normalizeIdentityPart(key)}=${normalizeIdentityPart((parts as Record<string, string | null | undefined>)[key])}`);
   // Encode the parts as JSON so delimiters in user input cannot create collisions.
   return JSON.stringify([normalizeIdentityPart(namespace), ...values.map(normalizeIdentityPart)]);
 }

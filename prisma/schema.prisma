@@ -172,7 +172,7 @@ model DifySyncJob {
   sourceId       String    @map("source_id")
   syncAction     String    @map("sync_action")
   contentKind    String    @map("content_kind")
-  dedupeKey      String?   @map("dedupe_key")
+  dedupeKey      String?   @unique @map("dedupe_key")
   status         String    @default("pending")
   payload        Json?     @map("payload")
   attemptCount   Int       @default(0) @map("attempt_count")

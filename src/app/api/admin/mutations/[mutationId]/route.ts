@@ -25,18 +25,14 @@ export async function GET(_request: Request, context: RouteContext) {
     ? await prisma.difySyncJob.findUnique({ where: { id: receipt.syncJobId } })
     : null;
 
+  const syncStatus = syncJob
+    ? syncJob.status === "completed" ? "synced" : syncJob.status === "failed" ? "failed" : "pending"
+    : "not_applicable";
   return NextResponse.json({
-    mutation: {
-      id: receipt.id,
-      requestId: receipt.requestId,
-      kind: receipt.kind,
-      recordId: receipt.recordId,
-      status: receipt.status,
-      result: receipt.result,
-      errorMessage: receipt.errorMessage,
-    },
-    sync: syncJob
-      ? { jobId: syncJob.id, status: syncJob.status, lastError: syncJob.lastError }
-      : { jobId: receipt.syncJobId, status: "not_applicable", lastError: null },
+    mutationId: receipt.id,
+    persistence: receipt.status === "completed" ? "saved" : receipt.status === "failed" ? "failed" : "pending",
+    recordId: receipt.recordId,
+    sync: { status: syncStatus, jobId: syncJob?.id ?? receipt.syncJobId },
+    error: receipt.errorMessage ?? syncJob?.lastError ?? null,
   });
 }
