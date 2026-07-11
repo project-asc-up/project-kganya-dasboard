@@ -18,3 +18,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS "mutation_receipts_request_id_key"
 
 CREATE INDEX IF NOT EXISTS "mutation_receipts_status_idx"
   ON "mutation_receipts"("status");
+
+CREATE INDEX IF NOT EXISTS "mutation_receipts_record_id_idx"
+  ON "mutation_receipts"("record_id");

@@ -115,4 +115,41 @@ test("schema and migration include mutation linkage fields", () => {
   const migration = readFileSync("prisma/migrations/0007_mutation_receipts/migration.sql", "utf8");
   for (const field of ["kind", "recordId", "syncJobId", "errorMessage"]) assert.match(schema, new RegExp(field));
   for (const field of ["kind", "record_id", "sync_job_id", "error_message"]) assert.match(migration, new RegExp(field));
+  assert.match(schema, /@@index\(\[recordId\]\)/);
+  assert.match(migration, /mutation_receipts_record_id_idx/);
+});
+
+test("durable runner can execute inside a transaction callback", async () => {
+  let transactionCalls = 0;
+  const store = {
+    async findUnique() { return null; },
+    async create() {},
+    async updateMany() { return { count: 0 }; },
+    async update() {},
+  };
+  const result = await executeMutationWithReceipt({
+    store,
+    requestId: "tx-1",
+    payload: { x: 1 },
+    write: async () => "saved",
+    transaction: async (work) => {
+      transactionCalls += 1;
+      return work(store);
+    },
+  });
+  assert.equal(result, "saved");
+  assert.equal(transactionCalls, 1);
+});
+
+test("durable runner propagates non-unique receipt errors", async () => {
+  const store = {
+    async findUnique() { return null; },
+    async create() { throw new Error("database unavailable"); },
+    async updateMany() { return { count: 0 }; },
+    async update() {},
+  };
+  await assert.rejects(
+    executeMutationWithReceipt({ store, requestId: "tx-error", payload: {}, write: async () => "never" }),
+    /database unavailable/,
+  );
 });

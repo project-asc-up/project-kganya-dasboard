@@ -200,6 +200,7 @@ model MutationReceipt {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@index([status])
+  @@index([recordId])
   @@map("mutation_receipts")
 }
 

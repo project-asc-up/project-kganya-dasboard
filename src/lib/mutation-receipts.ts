@@ -119,7 +119,11 @@ export async function executeMutationWithReceipt<T>(input: {
   payload: unknown;
   kind?: string;
   write: () => Promise<T>;
+  transaction?: (work: (store: MutationReceiptStore) => Promise<T>) => Promise<T>;
 }): Promise<T> {
+  if (input.transaction) {
+    return input.transaction((store) => executeMutationWithReceipt({ ...input, store, transaction: undefined }));
+  }
   const requestId = validateRequestId(input.requestId);
   const payloadHash = hashMutationPayload(input.payload);
   const existing = await input.store.findUnique({ where: { requestId } });
@@ -147,8 +151,9 @@ export async function executeMutationWithReceipt<T>(input: {
     try {
       await input.store.create({ data: { requestId, payloadHash, kind: input.kind ?? "unknown", status: "processing" } });
       claimed = true;
-    } catch {
+    } catch (error) {
       // Another request won the unique request-id race; read its receipt below.
+      if (!isUniqueConflict(error)) throw error;
     }
     if (!claimed) {
       const raced = await input.store.findUnique({ where: { requestId } });
@@ -177,4 +182,10 @@ export async function executeMutationWithReceipt<T>(input: {
     });
     throw error;
   }
+}
+
+function isUniqueConflict(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { code?: unknown; message?: unknown };
+  return candidate.code === "P2002" || (typeof candidate.message === "string" && /unique|duplicate/i.test(candidate.message));
 }
