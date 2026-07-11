@@ -119,10 +119,12 @@ export async function executeMutationWithReceipt<T>(input: {
   payload: unknown;
   kind?: string;
   write: () => Promise<T>;
-  transaction?: (work: (store: MutationReceiptStore) => Promise<T>) => Promise<T>;
+  transaction?: (work: (store: MutationReceiptStore, write: () => Promise<T>) => Promise<T>) => Promise<T>;
 }): Promise<T> {
   if (input.transaction) {
-    return input.transaction((store) => executeMutationWithReceipt({ ...input, store, transaction: undefined }));
+    return input.transaction((store, transactionWrite) =>
+      executeMutationWithReceipt({ ...input, store, write: transactionWrite, transaction: undefined }),
+    );
   }
   const requestId = validateRequestId(input.requestId);
   const payloadHash = hashMutationPayload(input.payload);
@@ -145,6 +147,8 @@ export async function executeMutationWithReceipt<T>(input: {
         data: { status: "processing" },
       });
       if (claimed.count !== 1) throw new Error("Mutation receipt could not be claimed for retry.");
+    } else {
+      throw new Error(`Unknown mutation receipt status: ${existing.status}`);
     }
   } else {
     let claimed = false;
@@ -158,6 +162,7 @@ export async function executeMutationWithReceipt<T>(input: {
     if (!claimed) {
       const raced = await input.store.findUnique({ where: { requestId } });
       if (raced?.payloadHash !== payloadHash) throw new MutationReceiptConflictError();
+      if (!raced) throw new Error("Mutation receipt claim was lost; retry the mutation.");
       if (raced?.status === "completed") return raced.result as T;
       if (raced?.status === "processing") {
         for (let attempt = 0; attempt < 120; attempt += 1) {
@@ -168,6 +173,7 @@ export async function executeMutationWithReceipt<T>(input: {
         }
         throw new Error("Mutation receipt is still processing; retry after it completes.");
       }
+      if (raced?.status !== "failed") throw new Error(`Unknown mutation receipt status: ${raced?.status}`);
     }
   }
 
@@ -176,10 +182,14 @@ export async function executeMutationWithReceipt<T>(input: {
         await input.store.update({ where: { requestId }, data: { status: "completed", result } });
         return result;
   } catch (error) {
-    await input.store.update({
-      where: { requestId },
-      data: { status: "failed", errorMessage: error instanceof Error ? error.message : "Mutation failed" },
-    });
+    try {
+      await input.store.update({
+        where: { requestId },
+        data: { status: "failed", errorMessage: error instanceof Error ? error.message : "Mutation failed" },
+      });
+    } catch {
+      // Preserve the original domain error; the receipt can be reconciled by a later retry.
+    }
     throw error;
   }
 }

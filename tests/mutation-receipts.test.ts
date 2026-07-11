@@ -134,7 +134,7 @@ test("durable runner can execute inside a transaction callback", async () => {
     write: async () => "saved",
     transaction: async (work) => {
       transactionCalls += 1;
-      return work(store);
+      return work(store, async () => "saved");
     },
   });
   assert.equal(result, "saved");
@@ -151,5 +151,26 @@ test("durable runner propagates non-unique receipt errors", async () => {
   await assert.rejects(
     executeMutationWithReceipt({ store, requestId: "tx-error", payload: {}, write: async () => "never" }),
     /database unavailable/,
+  );
+});
+
+test("unknown receipt states fail closed and preserve domain errors", async () => {
+  const unknownStore = {
+    async findUnique() { return { payloadHash: hashMutationPayload({}), status: "mystery", result: null }; },
+    async create() {}, async updateMany() { return { count: 0 }; }, async update() {},
+  };
+  await assert.rejects(
+    executeMutationWithReceipt({ store: unknownStore, requestId: "unknown-1", payload: {}, write: async () => "bad" }),
+    /unknown mutation receipt status/i,
+  );
+
+  const failingStore = {
+    async findUnique() { return null; },
+    async create() {}, async updateMany() { return { count: 0 }; },
+    async update() { throw new Error("receipt update unavailable"); },
+  };
+  await assert.rejects(
+    executeMutationWithReceipt({ store: failingStore, requestId: "failed-1", payload: {}, write: async () => { throw new Error("domain failed"); } }),
+    /domain failed/,
   );
 });
