@@ -31,3 +31,7 @@ test("domain identities are deterministic for object fields", () => {
   );
   assert.equal(normalizeIdentityPart("  A\tB  "), "a b");
 });
+
+test("domain identities cannot collide on delimiter characters", () => {
+  assert.notEqual(domainIdentity("seed", ["a|b"]), domainIdentity("seed", ["a", "b"]));
+});

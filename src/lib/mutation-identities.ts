@@ -36,5 +36,6 @@ export function domainIdentity(
     : Object.keys(parts)
         .sort()
         .map((key) => `${normalizeIdentityPart(key)}=${normalizeIdentityPart(parts[key])}`);
-  return [normalizeIdentityPart(namespace), ...values.map(normalizeIdentityPart)].join("|");
+  // Encode the parts as JSON so delimiters in user input cannot create collisions.
+  return JSON.stringify([normalizeIdentityPart(namespace), ...values.map(normalizeIdentityPart)]);
 }
