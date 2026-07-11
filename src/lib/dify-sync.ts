@@ -22,6 +22,14 @@ export function buildDifySyncDedupeKey(input: Pick<EnqueueDifySyncJobInput, "sou
   return [input.sourceTable, input.sourceId, input.action, input.contentKind, input.inputChecksum ?? ""].join(":");
 }
 
+export type DifySyncReuseAction = "create" | "reuse" | "refresh";
+
+export function resolveDifySyncReuseAction(status: string | null | undefined): DifySyncReuseAction {
+  if (status === "pending" || status === "processing" || status === "completed") return "reuse";
+  if (status === "failed") return "refresh";
+  return "create";
+}
+
 type StagedUploadManifest = {
   fileName: string;
   mimeType: string | null;
@@ -138,7 +146,7 @@ export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
   const prisma = getPrismaClient();
   const dedupeKey = buildDifySyncDedupeKey({ ...input, inputChecksum: input.inputChecksum ?? hashMutationPayload(input.payload) });
   const existing = await prisma.difySyncJob.findFirst({
-    where: { dedupeKey, status: { in: ["pending", "processing", "completed"] } },
+    where: { dedupeKey, status: { in: ["pending", "processing", "completed", "failed"] } },
     orderBy: { createdAt: "desc" },
   });
   if (existing) {
@@ -146,6 +154,12 @@ export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
       return prisma.difySyncJob.update({
         where: { id: existing.id },
         data: { payload: input.payload, nextRetryAt: null, lastError: null },
+      });
+    }
+    if (existing.status === "failed") {
+      return prisma.difySyncJob.update({
+        where: { id: existing.id },
+        data: { status: "pending", payload: input.payload, attemptCount: 0, nextRetryAt: null, lastError: null },
       });
     }
     return existing;

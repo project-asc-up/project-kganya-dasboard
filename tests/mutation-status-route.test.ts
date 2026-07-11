@@ -10,4 +10,5 @@ test("mutation status route requires authorization and exposes sync state", () =
   assert.match(source, /difySyncJob/);
   assert.match(source, /persistence/);
   assert.match(source, /not_applicable/);
+  assert.match(source, /error: syncJob/);
 });

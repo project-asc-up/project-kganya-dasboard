@@ -32,7 +32,7 @@ export async function GET(_request: Request, context: RouteContext) {
     mutationId: receipt.id,
     persistence: receipt.status === "completed" ? "saved" : receipt.status === "failed" ? "failed" : "pending",
     recordId: receipt.recordId,
-    sync: { status: syncStatus, jobId: syncJob?.id ?? receipt.syncJobId },
+    sync: { status: syncStatus, jobId: syncJob?.id ?? receipt.syncJobId, error: syncJob?.lastError ?? null },
     error: receipt.errorMessage ?? syncJob?.lastError ?? null,
   });
 }
