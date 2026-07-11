@@ -172,6 +172,7 @@ model DifySyncJob {
   sourceId       String    @map("source_id")
   syncAction     String    @map("sync_action")
   contentKind    String    @map("content_kind")
+  dedupeKey      String?   @map("dedupe_key")
   status         String    @default("pending")
   payload        Json?     @map("payload")
   attemptCount   Int       @default(0) @map("attempt_count")
@@ -183,6 +184,7 @@ model DifySyncJob {
   @@index([status, nextRetryAt])
   @@index([sourceTable, sourceId])
   @@index([syncAction])
+  @@index([dedupeKey, status])
   @@map("dify_sync_jobs")
 }
 

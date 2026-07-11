@@ -17,6 +17,10 @@ type EnqueueDifySyncJobInput = {
   inputChecksum?: string | null;
 };
 
+export function buildDifySyncDedupeKey(input: Pick<EnqueueDifySyncJobInput, "sourceTable" | "sourceId" | "action" | "contentKind">) {
+  return [input.sourceTable, input.sourceId, input.action, input.contentKind].join(":");
+}
+
 type StagedUploadManifest = {
   fileName: string;
   mimeType: string | null;
@@ -131,12 +135,27 @@ export async function upsertDifySyncMap(input: {
 
 export async function enqueueDifySyncJob(input: EnqueueDifySyncJobInput) {
   const prisma = getPrismaClient();
+  const dedupeKey = buildDifySyncDedupeKey(input);
+  const existing = await prisma.difySyncJob.findFirst({
+    where: { dedupeKey, status: { in: ["pending", "processing"] } },
+    orderBy: { createdAt: "desc" },
+  });
+  if (existing) {
+    if (existing.status === "pending") {
+      return prisma.difySyncJob.update({
+        where: { id: existing.id },
+        data: { payload: input.payload, nextRetryAt: null, lastError: null },
+      });
+    }
+    return existing;
+  }
   const job = await prisma.difySyncJob.create({
     data: {
       sourceTable: input.sourceTable,
       sourceId: input.sourceId,
       syncAction: input.action,
       contentKind: input.contentKind,
+      dedupeKey,
       status: "pending",
       payload: input.payload,
       attemptCount: 0,
