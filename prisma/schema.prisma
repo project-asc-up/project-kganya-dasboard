@@ -125,33 +125,65 @@ model CourseModule {
 }
 
 model Resource {
-  id                String    @id @default(uuid()) @db.Uuid
-  seedKey           String    @unique @map("seed_key")
-  facultyId         String?   @map("faculty_id") @db.Uuid
-  resourceType      String    @default("link") @map("resource_type")
-  category          String
-  title             String
-  description       String?
-  url               String
-  sourceUrl         String?   @map("source_url")
-  lastVerified      DateTime? @map("last_verified") @db.Date
-  notes             String?
-  attachmentName    String?   @map("attachment_name")
-  attachmentMimeType String?  @map("attachment_mime_type")
-  attachmentSizeBytes Int?     @map("attachment_size_bytes")
-  attachmentStatus  String?   @map("attachment_status")
-  attachmentError   String?   @map("attachment_error")
-  kganyaSourceKey   String?   @map("kganya_source_key")
-  kganyaRecordKey   String?   @map("kganya_record_key")
-  chunkCount        Int?      @map("chunk_count")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  faculty           Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  id                 String    @id @default(uuid()) @db.Uuid
+  seedKey            String    @unique @map("seed_key")
+  facultyId          String?   @map("faculty_id") @db.Uuid
+  resourceType       String    @default("link") @map("resource_type")
+  category           String
+  title              String
+  description        String?
+  url                String
+  sourceUrl          String?   @map("source_url")
+  lastVerified       DateTime? @map("last_verified") @db.Date
+  notes              String?
+  attachmentName     String?   @map("attachment_name")
+  attachmentMimeType String?   @map("attachment_mime_type")
+  attachmentSizeBytes Int?      @map("attachment_size_bytes")
+  attachmentStatus   String?   @map("attachment_status")
+  attachmentError    String?   @map("attachment_error")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  faculty            Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([category])
   @@index([title])
   @@map("resources")
+}
+
+model DifySyncMap {
+  sourceTable    String    @map("source_table")
+  sourceId       String    @map("source_id")
+  difyDocumentId String?   @map("dify_document_id")
+  syncStatus     String    @default("pending") @map("sync_status")
+  lastSyncedAt   DateTime? @map("last_synced_at") @db.Timestamptz(6)
+  lastError      String?   @map("last_error")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@id([sourceTable, sourceId])
+  @@index([syncStatus])
+  @@map("dify_sync_map")
+}
+
+model DifySyncJob {
+  id             String    @id @default(uuid()) @db.Uuid
+  sourceTable    String    @map("source_table")
+  sourceId       String    @map("source_id")
+  syncAction     String    @map("sync_action")
+  contentKind    String    @map("content_kind")
+  status         String    @default("pending")
+  payload        Json?     @map("payload")
+  attemptCount   Int       @default(0) @map("attempt_count")
+  nextRetryAt    DateTime? @map("next_retry_at") @db.Timestamptz(6)
+  lastError      String?   @map("last_error")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, nextRetryAt])
+  @@index([sourceTable, sourceId])
+  @@index([syncAction])
+  @@map("dify_sync_jobs")
 }
 
 model Faq {

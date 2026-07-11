@@ -6,12 +6,9 @@ import { redirect } from "next/navigation";
 import { CoachLevel } from "@/generated/prisma/enums";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
+import { buildResourceTextContent, enqueueDifySyncJob, stageResourceUpload } from "@/lib/dify-sync";
 import { getPrismaClient } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
-import {
-  extractUploadedResourceDocument,
-  persistUploadedResourceDocument,
-} from "@/lib/kganya-resource-ingest";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -329,6 +326,8 @@ export async function createResource(formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
+  const category = requiredText(formData, "category");
+  const url = requiredText(formData, "url");
   const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title);
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.resource.findUnique({
@@ -343,45 +342,70 @@ export async function createResource(formData: FormData) {
       seedKey,
       facultyId,
       resourceType: "link",
-      category: requiredText(formData, "category"),
+      category,
       title,
       description: textValue(formData, "description"),
-      url: requiredText(formData, "url"),
+      url,
       sourceUrl: textValue(formData, "sourceUrl"),
       lastVerified: optionalDate(formData, "lastVerified"),
       notes: textValue(formData, "notes"),
       attachmentName: null,
       attachmentMimeType: null,
       attachmentSizeBytes: null,
-      attachmentStatus: null,
+      attachmentStatus: "pending",
       attachmentError: null,
-      kganyaSourceKey: null,
-      kganyaRecordKey: null,
-      chunkCount: null,
     },
   });
 
+  try {
+    await enqueueDifySyncJob({
+      sourceTable: "resources",
+      sourceId: resource.id,
+      action: "create",
+      contentKind: "text",
+      inputChecksum: null,
+      payload: {
+        name: title,
+        text: buildResourceTextContent({
+          title,
+          category,
+          description: textValue(formData, "description"),
+          url,
+          sourceUrl: textValue(formData, "sourceUrl"),
+          notes: textValue(formData, "notes"),
+        }),
+      },
+    });
+  } catch (error) {
+    await prisma.resource.update({
+      where: { id: resource.id },
+      data: {
+        attachmentStatus: "failed",
+        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
+      },
+    });
+    console.error("Failed to queue Dify sync for resource create:", error);
+  }
+
   redirectTo("resources", resource.id);
-  redirect(`/admin/resources/${resource.id}`);
+  redirect("/admin/resources/" + resource.id);
 }
 
 export async function createResourceDocument(formData: FormData) {
-  const authz = await requirePermission("resource:create");
-  if (!authz) {
-    throw new Error("Unable to resolve the current user.");
-  }
+  await requirePermission("resource:create");
   const prisma = getPrismaClient();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
+  const category = requiredText(formData, "category");
   const file = formData.get("documentFile");
 
   if (!(file instanceof File)) {
     throw new Error("A document file is required.");
   }
 
-  const uploadedDocument = await extractUploadedResourceDocument(file);
-  const baseSeedKey = buildAdminSeedKey("resource", facultyCode, `${title} document`);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title + " document");
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.resource.findUnique({
       where: { seedKey: candidate },
@@ -395,60 +419,56 @@ export async function createResourceDocument(formData: FormData) {
       seedKey,
       facultyId,
       resourceType: "document",
-      category: requiredText(formData, "category"),
+      category,
       title,
       description: textValue(formData, "description"),
       url: "/admin/resources",
       sourceUrl: textValue(formData, "sourceUrl"),
       lastVerified: optionalDate(formData, "lastVerified"),
       notes: textValue(formData, "notes"),
-      attachmentName: uploadedDocument.fileName,
-      attachmentMimeType: uploadedDocument.mimeType,
-      attachmentSizeBytes: uploadedDocument.sizeBytes,
-      attachmentStatus: "processing",
+      attachmentName: file.name || "uploaded-document",
+      attachmentMimeType: file.type || "application/octet-stream",
+      attachmentSizeBytes: file.size,
+      attachmentStatus: "pending",
       attachmentError: null,
-      kganyaSourceKey: null,
-      kganyaRecordKey: null,
-      chunkCount: null,
     },
   });
 
-  try {
-    const kganyaResult = await persistUploadedResourceDocument({
-      resourceId: resource.id,
-      resourceTitle: title,
-      category: requiredText(formData, "category"),
-      sourceUrl: textValue(formData, "sourceUrl"),
-      notes: textValue(formData, "notes"),
-      createdBy: authz.userId,
-      uploadedDocument,
-    });
+  const staged = await stageResourceUpload({
+    sourceTable: "resources",
+    sourceId: resource.id,
+    fileName: file.name || "uploaded-document",
+    mimeType: file.type || "application/octet-stream",
+    bytes: buffer,
+  });
 
-    await prisma.resource.update({
-      where: { id: resource.id },
-      data: {
-        url: `/admin/resources/${resource.id}`,
-        attachmentStatus: "processed",
-        attachmentError: null,
-        kganyaSourceKey: kganyaResult.sourceKey,
-        kganyaRecordKey: kganyaResult.recordKey,
-        chunkCount: kganyaResult.chunkCount,
+  try {
+    await enqueueDifySyncJob({
+      sourceTable: "resources",
+      sourceId: resource.id,
+      action: "create",
+      contentKind: "file",
+      inputChecksum: null,
+      payload: {
+        name: title,
+        filePath: staged.filePath,
+        fileName: file.name || "uploaded-document",
+        mimeType: file.type || "application/octet-stream",
       },
     });
   } catch (error) {
     await prisma.resource.update({
       where: { id: resource.id },
       data: {
-        url: `/admin/resources/${resource.id}`,
         attachmentStatus: "failed",
-        attachmentError: error instanceof Error ? error.message : "Unknown upload error",
+        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
       },
     });
-    throw error;
+    console.error("Failed to queue Dify sync for resource upload:", error);
   }
 
   redirectTo("resources", resource.id);
-  redirect(`/admin/resources/${resource.id}`);
+  redirect("/admin/resources/" + resource.id);
 }
 
 export async function updateResource(id: string, formData: FormData) {
@@ -463,6 +483,8 @@ export async function updateResource(id: string, formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
+  const category = requiredText(formData, "category");
+  const url = requiredText(formData, "url");
   const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title);
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.resource.findUnique({
@@ -478,10 +500,10 @@ export async function updateResource(id: string, formData: FormData) {
       seedKey,
       facultyId,
       resourceType: existingResource.resourceType,
-      category: requiredText(formData, "category"),
+      category,
       title,
       description: textValue(formData, "description"),
-      url: requiredText(formData, "url"),
+      url,
       sourceUrl: textValue(formData, "sourceUrl"),
       lastVerified: optionalDate(formData, "lastVerified"),
       notes: textValue(formData, "notes"),
@@ -490,20 +512,66 @@ export async function updateResource(id: string, formData: FormData) {
       attachmentSizeBytes: existingResource.attachmentSizeBytes,
       attachmentStatus: existingResource.attachmentStatus,
       attachmentError: existingResource.attachmentError,
-      kganyaSourceKey: existingResource.kganyaSourceKey,
-      kganyaRecordKey: existingResource.kganyaRecordKey,
-      chunkCount: existingResource.chunkCount,
     },
   });
 
+  try {
+    await enqueueDifySyncJob({
+      sourceTable: "resources",
+      sourceId: id,
+      action: "update",
+      contentKind: "text",
+      inputChecksum: null,
+      payload: {
+        name: title,
+        text: buildResourceTextContent({
+          title,
+          category,
+          description: textValue(formData, "description"),
+          url,
+          sourceUrl: textValue(formData, "sourceUrl"),
+          notes: textValue(formData, "notes"),
+        }),
+      },
+    });
+  } catch (error) {
+    await prisma.resource.update({
+      where: { id },
+      data: {
+        attachmentStatus: "failed",
+        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
+      },
+    });
+    console.error("Failed to queue Dify sync for resource update:", error);
+  }
+
   redirectTo("resources", id);
-  redirect(`/admin/resources/${id}`);
+  redirect("/admin/resources/" + id);
 }
 
 export async function deleteResource(id: string) {
   await requirePermission("resource:delete");
   const prisma = getPrismaClient();
+  const existingResource = await prisma.resource.findUnique({ where: { id } });
   await prisma.resource.delete({ where: { id } });
+
+  if (existingResource) {
+    try {
+      await enqueueDifySyncJob({
+        sourceTable: "resources",
+        sourceId: id,
+        action: "delete",
+        contentKind: "text",
+        inputChecksum: null,
+        payload: {
+          name: existingResource.title,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to queue Dify sync for resource delete:", error);
+    }
+  }
+
   redirectTo("resources");
   redirect("/admin/resources");
 }

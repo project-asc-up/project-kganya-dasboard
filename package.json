@@ -12,15 +12,11 @@
     "test:admin-nav": "node --test --import ./node_modules/tsx/dist/loader.mjs tests/admin-nav.test.ts",
     "test:ui-metrics": "node --test --import ./node_modules/tsx/dist/loader.mjs tests/admin-nav.test.ts tests/faculty-and-programme-display.test.ts tests/metric-card.test.tsx tests/search-suggestions.test.ts tests/course-module-resource-filters.test.ts",
     "db:generate": "node ./node_modules/prisma/build/index.js generate",
-    "db:generate:kganya": "node ./node_modules/prisma/build/index.js generate --schema prisma/kganya/schema.prisma",
-    "kganya:init-schema": "node ./node_modules/prisma/build/index.js db execute --file prisma/kganya/init.sql",
-    "kganya:backfill:preview": "node --import ./node_modules/tsx/dist/loader.mjs scripts/prepare-kganya-backfill.ts",
-    "kganya:backfill:apply": "node --import ./node_modules/tsx/dist/loader.mjs scripts/backfill-kganya-db.ts --apply",
-    "kganya:embedding-dispatch": "node --import ./node_modules/tsx/dist/loader.mjs scripts/dispatch-kganya-embedding-jobs.ts",
-    "kganya:ingestion-status": "node --import ./node_modules/tsx/dist/loader.mjs scripts/kganya-ingestion-status.ts",
     "db:push": "node ./node_modules/prisma/build/index.js db push",
     "db:migrate:deploy": "node ./node_modules/prisma/build/index.js migrate deploy",
-    "db:seed": "node --import ./node_modules/tsx/dist/loader.mjs prisma/seed.ts"
+    "db:seed": "node --import ./node_modules/tsx/dist/loader.mjs prisma/seed.ts",
+    "dify:sync:process": "node --import ./node_modules/tsx/dist/loader.mjs scripts/process-dify-sync-jobs.ts",
+    "dify:sync:backfill": "node --import ./node_modules/tsx/dist/loader.mjs scripts/backfill-dify-sync.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.12",

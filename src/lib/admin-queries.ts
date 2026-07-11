@@ -393,9 +393,6 @@ const getResourceRowsCached = unstable_cache(
         attachmentSizeBytes: true,
         attachmentStatus: true,
         attachmentError: true,
-        kganyaSourceKey: true,
-        kganyaRecordKey: true,
-        chunkCount: true,
         faculty: { select: { id: true, name: true, code: true } },
       },
     });
@@ -411,12 +408,30 @@ export async function getResourceById(id: string) {
 const getResourceByIdCached = unstable_cache(
   async (id: string) => {
     const prisma = getPrismaClient();
-    return prisma.resource.findUnique({
+    const resource = await prisma.resource.findUnique({
       where: { id },
       include: {
         faculty: { select: { id: true, name: true, code: true } },
       },
     });
+
+    if (!resource) {
+      return null;
+    }
+
+    const difySyncMap = await prisma.difySyncMap.findUnique({
+      where: {
+        sourceTable_sourceId: {
+          sourceTable: 'resources',
+          sourceId: id,
+        },
+      },
+    });
+
+    return {
+      ...resource,
+      difySyncMap,
+    };
   },
   ["resource-by-id"],
   { tags: [ADMIN_CACHE_TAGS.resources], revalidate: 300 },
