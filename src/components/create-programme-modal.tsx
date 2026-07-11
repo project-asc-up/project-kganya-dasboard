@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Modal } from '@/components/modal';
-import { Field, TextInput, TextArea, Select } from '@/components/admin-form';
+import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
 import { displayFacultyName } from '@/lib/faculty-display';
 import { createProgramme } from '@/lib/admin-actions';
 
@@ -28,12 +28,9 @@ export function CreateProgrammeModal({ faculties }: CreateProgrammeModalProps) {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-focus-ring)]"
-      >
+      <CreateButton onClick={() => setIsOpen(true)}>
         Create Programme
-      </button>
+      </CreateButton>
 
       <Modal
         isOpen={isOpen}
@@ -110,20 +107,21 @@ export function CreateProgrammeModal({ faculties }: CreateProgrammeModalProps) {
           </Field>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--color-border)]">
-            <button
+            <ActionButton
               type="button"
+              tone="secondary"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)] disabled:opacity-50"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating...' : 'Create Programme'}
-            </button>
+              Cancel
+            </ActionButton>
+            <ActionButton
+              type="submit"
+              loading={isSubmitting}
+              loadingText="Creating..."
+            >
+              Create Programme
+            </ActionButton>
           </div>
         </form>
       </Modal>

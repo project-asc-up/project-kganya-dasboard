@@ -8,6 +8,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { TextInput } from "@/components/admin-form";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { FacultyLogo } from "@/components/faculty-logo";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
@@ -194,15 +195,15 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                     </div>
                     <div className="max-h-72 overflow-y-auto">
                       {suggestions.map(({ coach, matchLabel }) => (
-                        <button
+                        <Button
                           key={coach.id}
-                          type="button"
+                          variant="ghost"
                           onMouseDown={(event) => {
                             event.preventDefault();
                             setQuery(coach.name);
                             setCollapsed({});
                           }}
-                          className="flex w-full items-start justify-between gap-4 border-b border-[var(--color-border)] px-4 py-3 text-left transition hover:bg-[var(--color-surface-sunken)] last:border-b-0"
+                          className="flex w-full items-start justify-between gap-4 border-b border-[var(--color-border)] px-4 py-3 text-left transition hover:bg-[var(--color-surface-sunken)] last:border-b-0 rounded-none h-auto"
                         >
                           <div className="min-w-0 space-y-0.5">
                             <div className="truncate text-sm font-semibold text-[var(--color-text)]">
@@ -215,10 +216,10 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                               {displayFacultyName(coach.faculty.name)}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded-full bg-[var(--color-brand-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-brand-soft-foreground)]">
+                          <Badge tone="brand" soft className="shrink-0">
                             {coach.faculty.code}
-                          </span>
-                        </button>
+                          </Badge>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -233,20 +234,16 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                   { key: "verified", label: "Verified" },
                   { key: "needs-review", label: "Needs review" },
                 ].map((item) => (
-                  <button
+                  <Button
                     key={item.key}
-                    type="button"
-                    aria-pressed={statusFilter === item.key}
+                    variant={statusFilter === item.key ? "primary" : "secondary"}
+                    size="sm"
+                    rounded="full"
                     onClick={() => setStatusFilter(item.key)}
-                    className={cn(
-                      "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
-                      statusFilter === item.key
-                        ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                        : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:border-[var(--color-brand)] hover:text-[var(--color-text)]",
-                    )}
+                    className="h-10 px-4"
                   >
                     {item.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -254,34 +251,26 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
         </Card>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            aria-pressed={facultyFilter === "all"}
+          <Button
+            variant={facultyFilter === "all" ? "primary" : "secondary"}
+            size="sm"
+            rounded="full"
             onClick={() => setFacultyFilter("all")}
-            className={cn(
-              "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
-              facultyFilter === "all"
-                ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
-            )}
+            className="h-10 px-4 whitespace-nowrap"
           >
             All faculties
-          </button>
+          </Button>
           {facultyOptions.map((faculty) => (
-            <button
+            <Button
               key={faculty.id}
-              type="button"
-              aria-pressed={facultyFilter === faculty.id}
+              variant={facultyFilter === faculty.id ? "primary" : "secondary"}
+              size="sm"
+              rounded="full"
               onClick={() => setFacultyFilter(faculty.id)}
-              className={cn(
-                "rounded-full border px-3 py-2 text-sm font-medium transition whitespace-nowrap",
-                facultyFilter === faculty.id
-                  ? "border-[var(--color-brand)] bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-                  : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
-              )}
+              className="h-10 px-4 whitespace-nowrap"
             >
               {displayFacultyName(faculty.name)}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -302,17 +291,17 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
               return (
                 <section
                   key={faculty.id}
-                  className="rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-card)]"
+                  className="rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-card)] overflow-hidden"
                 >
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     onClick={() =>
                       setCollapsed((current) => ({
                         ...current,
                         [faculty.id]: !isCollapsed,
                       }))
                     }
-                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left h-auto rounded-none hover:bg-[var(--color-surface-sunken)]/40"
                   >
                     <div className="flex items-center gap-3">
                       <FacultyLogo size={44} />
@@ -334,7 +323,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                     <Badge tone="brand" outlined>
                       {isCollapsed ? "Expand" : "Collapse"}
                     </Badge>
-                  </button>
+                  </Button>
 
                   {!isCollapsed ? (
                     <div className="grid gap-3 border-t border-[var(--color-border)] p-4 md:grid-cols-2 xl:grid-cols-3">
@@ -375,40 +364,27 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                                 ) : null}
                               </div>
 
-                              <div className="space-y-2 text-sm">
-                                <div className="flex items-start justify-between gap-4">
-                                  <span className="text-[var(--color-text-muted)]">Email</span>
-                                  <a
-                                    className="break-all font-medium text-[var(--color-brand)] hover:underline"
-                                    href={`mailto:${coach.email}`}
-                                  >
-                                    {coach.email}
-                                  </a>
+                              <div className="space-y-2 border-t border-[var(--color-border)] pt-3">
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="font-semibold text-[var(--color-text-muted)]">Email</span>
+                                  <span className="truncate text-[var(--color-text)]">{coach.email}</span>
                                 </div>
-                                <div className="flex items-start justify-between gap-4">
-                                  <span className="text-[var(--color-text-muted)]">Phone</span>
-                                  <span className="font-medium">{safeContact(coach.phone)}</span>
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="font-semibold text-[var(--color-text-muted)]">Phone</span>
+                                  <span className="text-[var(--color-text)]">{safeContact(coach.phone)}</span>
                                 </div>
-                                <div className="flex items-start justify-between gap-4">
-                                  <span className="text-[var(--color-text-muted)]">Cell</span>
-                                  <span className="font-medium">{safeContact(coach.cell)}</span>
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                  <span className="font-semibold text-[var(--color-text-muted)]">Cell</span>
+                                  <span className="text-[var(--color-text)]">{safeContact(coach.cell)}</span>
                                 </div>
                               </div>
 
-                              <div className="flex flex-wrap gap-2 pt-1">
-                                <Link
-                                  href={`/admin/coaches/${coach.id}`}
-                                  className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand)] px-3 py-2 text-xs font-medium text-[var(--color-brand-foreground)] transition-colors hover:bg-[var(--color-brand-strong)]"
-                                >
-                                  Open
-                                </Link>
-                                <a
-                                  href={`mailto:${coach.email}`}
-                                  className="inline-flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-sunken)]"
-                                >
-                                  Email
-                                </a>
-                              </div>
+                              <Link
+                                href={`/admin/coaches/${coach.id}`}
+                                className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-brand-soft)] px-4 py-2 text-xs font-semibold text-[var(--color-brand-soft-foreground)] transition hover:bg-[var(--color-brand)] hover:text-white"
+                              >
+                                View details
+                              </Link>
                             </CardBody>
                           </Card>
                         );

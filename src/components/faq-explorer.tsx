@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ChevronDown, HelpCircle, Tag } from "lucide-react";
 
 import { MetricCard, MetricGrid } from "@/components/metric-card";
+import { Button } from "@/components/ui/button";
 import { formatReadableDate, type DisplayDateValue } from "@/lib/date-display";
 import { displayFacultyName } from "@/lib/faculty-display";
 
@@ -101,12 +104,16 @@ export function FaqExplorer({ faqs }: { faqs: FaqRow[] }) {
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--color-text-muted)]">
                     <span>Verified {formatReadableDate(faq.lastVerified)}</span>
-                    <Link
-                      href={`/admin/faqs/${faq.id}`}
-                      className="inline-flex rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="sm"
+                      rounded="full"
                     >
-                      View / edit
-                    </Link>
+                      <Link href={`/admin/faqs/${faq.id}`}>
+                        View / edit
+                      </Link>
+                    </Button>
                   </div>
                 </article>
               ))}

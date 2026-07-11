@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ActionButton } from "@/components/admin-form";
 
 export default function Error({
   error,
@@ -25,13 +26,14 @@ export default function Error({
         Try refreshing the page. If the problem persists, check the database connection and the browser
         console for the underlying error.
       </p>
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-6 inline-flex rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)]"
-      >
-        Retry
-      </button>
+      <div className="mt-6">
+        <ActionButton
+          type="button"
+          onClick={reset}
+        >
+          Retry
+        </ActionButton>
+      </div>
     </div>
   );
 }

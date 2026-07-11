@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function UserSearchAccordion({
   children,
@@ -15,10 +16,13 @@ export function UserSearchAccordion({
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
+          rounded="full"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-brand)] hover:bg-[var(--color-brand-soft)] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 cursor-pointer"
+          className="gap-2 text-[var(--color-brand)] hover:bg-[var(--color-brand-soft)]"
         >
           {isExpanded ? (
             <>
@@ -29,7 +33,7 @@ export function UserSearchAccordion({
               Show Search Panel <ChevronDown size={14} />
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       <div

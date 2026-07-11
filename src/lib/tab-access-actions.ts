@@ -65,7 +65,7 @@ export async function saveTabAccessAction(
     });
 
     // Revalidate pages and layout cache
-    revalidatePath("/admin");
+    revalidatePath("/admin/users");
     revalidatePath("/admin", "layout");
 
     return {

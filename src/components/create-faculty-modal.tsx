@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Modal } from '@/components/modal';
-import { Field, TextInput, TextArea, Select, CreateButton } from '@/components/admin-form';
+import { Field, TextInput, TextArea, Select, CreateButton, ActionButton } from '@/components/admin-form';
 import { createFaculty } from '@/lib/admin-actions';
 
 export function CreateFacultyModal() {
@@ -160,25 +160,24 @@ export function CreateFacultyModal() {
           </Field>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--color-border)]">
-            <button
+            <ActionButton
               type="button"
+              tone="secondary"
               onClick={() => setIsOpen(false)}
-              className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition-smooth hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)] disabled:opacity-50"
               disabled={isSubmitting}
             >
               Cancel
-            </button>
-            <button
+            </ActionButton>
+            <ActionButton
               type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition-smooth hover:bg-[color:var(--color-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingText="Creating..."
             >
-              {isSubmitting ? 'Creating...' : 'Create Faculty'}
-            </button>
+              Create Faculty
+            </ActionButton>
           </div>
         </form>
       </Modal>
     </>
   );
 }
-

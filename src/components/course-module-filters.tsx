@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ActionButton, Select } from "@/components/admin-form";
 import { LiveSearchInput } from "@/components/live-search-input";
+import { Button } from "@/components/ui/button";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
   buildCourseModuleFacultyOptions,
@@ -167,7 +168,7 @@ export function CourseModuleFilters({
             />
           </div>
           <div className="flex items-center gap-2 sm:shrink-0">
-            <ActionButton type="submit" disabled={isPending}>
+            <ActionButton type="submit" loading={isPending}>
               Search
             </ActionButton>
           </div>
@@ -211,16 +212,18 @@ export function CourseModuleFilters({
       </div>
 
       <div className="flex items-end md:col-span-2 xl:col-span-1 xl:justify-end">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="lg"
           onClick={() => {
             const params = new URLSearchParams();
             router.replace(buildUrl(pathname, params), { scroll: false });
           }}
-          className="w-full rounded-full border border-[color:var(--color-border)] px-4 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)] sm:w-auto"
+          className="w-full sm:w-auto"
         >
           Reset all
-        </button>
+        </Button>
       </div>
     </div>
   );

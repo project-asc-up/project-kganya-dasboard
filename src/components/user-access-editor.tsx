@@ -3,7 +3,9 @@
 import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 
-import { initialUserAccessActionState, updateUserAccess } from "@/lib/user-management-actions";
+import { ActionButton } from "@/components/admin-form";
+import { updateUserAccess } from "@/lib/user-management-actions";
+import { initialUserAccessActionState } from "@/lib/user-management-types";
 
 type UserAccessEditorUser = {
   id: string;
@@ -24,13 +26,14 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
-    <button
+    <ActionButton
       type="submit"
-      disabled={disabled || pending}
-      className="inline-flex items-center justify-center rounded-full bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--color-brand-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+      disabled={disabled}
+      loading={pending}
+      loadingText="Saving role..."
     >
-      {pending ? "Saving role..." : "Save role"}
-    </button>
+      Save role
+    </ActionButton>
   );
 }
 

@@ -4,21 +4,7 @@ import { revalidatePath } from "next/cache";
 import { clerkClient } from "@clerk/nextjs/server";
 
 import { permissionsForRole, normalizeRole, requireSuperAdmin, updateManagedUserAccess } from "@/lib/rbac";
-
-export type UserAccessActionState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialUserAccessActionState: UserAccessActionState = {
-  status: "idle",
-  message: "",
-};
-
-export const initialUserInviteActionState: UserAccessActionState = {
-  status: "idle",
-  message: "",
-};
+import type { UserAccessActionState } from "./user-management-types";
 
 export async function updateUserAccess(
   _previousState: UserAccessActionState,

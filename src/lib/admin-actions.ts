@@ -156,8 +156,8 @@ export async function createCoach(formData: FormData) {
     },
   });
 
-  redirectTo("coaches", coach.id);
-  redirect(`/admin/coaches/${coach.id}`);
+  redirectTo("coaches");
+  redirect("/admin/coaches");
 }
 
 export async function updateCoach(id: string, formData: FormData) {
@@ -187,8 +187,8 @@ export async function updateCoach(id: string, formData: FormData) {
     },
   });
 
-  redirectTo("coaches", id);
-  redirect(`/admin/coaches/${id}`);
+  redirectTo("coaches");
+  redirect("/admin/coaches");
 }
 
 export async function deleteCoach(id: string) {
@@ -605,8 +605,8 @@ export async function createFaq(formData: FormData) {
     },
   });
 
-  redirectTo("faqs", faq.id);
-  redirect(`/admin/faqs/${faq.id}`);
+  redirectTo("faqs");
+  redirect("/admin/faqs");
 }
 
 export async function updateFaq(id: string, formData: FormData) {
@@ -639,8 +639,8 @@ export async function updateFaq(id: string, formData: FormData) {
     },
   });
 
-  redirectTo("faqs", id);
-  redirect(`/admin/faqs/${id}`);
+  redirectTo("faqs");
+  redirect("/admin/faqs");
 }
 
 export async function deleteFaq(id: string) {

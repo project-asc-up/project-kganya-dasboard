@@ -381,7 +381,6 @@ const getResourceRowsCached = unstable_cache(
       select: {
         id: true,
         seedKey: true,
-        resourceType: true,
         category: true,
         title: true,
         description: true,
@@ -836,3 +835,4 @@ const getHealthOverviewCached = unstable_cache(
   ["health-overview"],
   { tags: [ADMIN_CACHE_TAGS.health, ADMIN_CACHE_TAGS.faculties, ADMIN_CACHE_TAGS.coaches, ADMIN_CACHE_TAGS.programmes, ADMIN_CACHE_TAGS.courseModules, ADMIN_CACHE_TAGS.resources, ADMIN_CACHE_TAGS.faqs], revalidate: 120 },
 );
+

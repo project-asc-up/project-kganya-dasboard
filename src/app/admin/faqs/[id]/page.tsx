@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { ActionButton, Field, PageHeader, Section, Select, TextArea, TextInput } from "@/components/admin-form";
+import { ClientActionButton } from "@/components/client-action-button";
 import { deleteFaq, updateFaq } from "@/lib/admin-actions";
 import { getFacultyOptions, getFaqById } from "@/lib/admin-queries";
 import { displayFacultyName } from "@/lib/faculty-display";
@@ -99,7 +100,7 @@ export default async function FaqDetailPage({
             </Field>
           </div>
           <div className="md:col-span-2 flex justify-end">
-            <ActionButton>Save changes</ActionButton>
+            <ClientActionButton loadingText="Saving Changes...">Save changes</ClientActionButton>
           </div>
         </form>
       </Section>

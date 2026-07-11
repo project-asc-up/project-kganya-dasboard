@@ -2,13 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function AdminBackButton() {
   const router = useRouter();
 
   return (
-    <button
+    <Button
       type="button"
+      variant="secondary"
+      size="sm"
+      rounded="full"
       onClick={() => {
         if (window.history.length > 1) {
           router.back();
@@ -17,11 +21,11 @@ export function AdminBackButton() {
 
         router.push("/admin");
       }}
-      className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-overlay)]"
+      className="gap-2"
       aria-label="Go back"
     >
       <ArrowLeft size={16} aria-hidden="true" />
       Back
-    </button>
+    </Button>
   );
 }

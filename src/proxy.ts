@@ -28,7 +28,7 @@ async function hasDevelopmentAdminSession(request: MiddlewareRequest) {
   return session?.username === "admin";
 }
 
-export const proxy = clerkMiddleware(async (auth, request) => {
+export default clerkMiddleware(async (auth, request) => {
   const middlewareRequest = request as MiddlewareRequest;
   const session = await auth();
   const isSignedIn = !!session.userId;

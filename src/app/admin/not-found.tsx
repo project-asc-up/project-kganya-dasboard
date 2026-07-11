@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
@@ -14,18 +15,16 @@ export default function NotFound() {
         the entity directory to continue.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link
-          href="/admin"
-          className="inline-flex rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)]"
-        >
-          Back to dashboard
-        </Link>
-        <Link
-          href="/admin/faculties"
-          className="inline-flex rounded-full border border-[color:var(--color-border)] px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)]"
-        >
-          Open faculties
-        </Link>
+        <Button asChild variant="primary" size="lg" rounded="full">
+          <Link href="/admin">
+            Back to dashboard
+          </Link>
+        </Button>
+        <Button asChild variant="secondary" size="lg" rounded="full">
+          <Link href="/admin/faculties">
+            Open faculties
+          </Link>
+        </Button>
       </div>
     </div>
   );

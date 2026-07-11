@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 
 export function GoogleSignInButton() {
   const { fetchStatus, signIn } = useSignIn();
@@ -32,17 +33,20 @@ export function GoogleSignInButton() {
 
   return (
     <div className="space-y-3">
-      <button
+      <Button
         type="button"
+        variant="secondary"
         onClick={handleGoogleSignIn}
-        disabled={!signIn || isSubmitting || fetchStatus === "fetching"}
-        className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-text)] shadow-[var(--shadow-sm)] transition hover:bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface-raised)] disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={!signIn || fetchStatus === "fetching"}
+        loading={isSubmitting}
+        loadingText="Connecting to Google..."
+        className="min-h-12 w-full gap-3 font-semibold shadow-[var(--shadow-sm)]"
       >
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[conic-gradient(from_45deg,#ea4335_0_25%,#fbbc05_25%_50%,#34a853_50%_75%,#4285f4_75%_100%)]" aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-white" />
         </span>
-        {isSubmitting ? "Connecting to Google..." : "Continue with Google"}
-      </button>
+        Continue with Google
+      </Button>
 
       {error ? (
         <p className="text-xs leading-5 text-[var(--color-danger)]" role="alert">

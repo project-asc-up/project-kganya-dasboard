@@ -6,6 +6,7 @@ import { ExternalLink, FileText, MapPin } from "lucide-react";
 
 import { Field, Select } from "@/components/admin-form";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
+import { Button } from "@/components/ui/button";
 import { formatReadableDate, type DisplayDateValue } from "@/lib/date-display";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { buildResourceFacultyOptions, filterResourcesByFaculty } from "@/lib/resource-filters";
@@ -155,21 +156,31 @@ export function ResourceExplorer({ resources }: { resources: ResourceRow[] }) {
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <Link
-                      href={`/admin/resources/${resource.id}`}
-                      className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="sm"
+                      rounded="full"
                     >
-                      View / edit
-                    </Link>
-                    <a
-                      href={resource.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--color-hover)]"
+                      <Link href={`/admin/resources/${resource.id}`}>
+                        View / edit
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="primary"
+                      size="sm"
+                      rounded="full"
                     >
-                      Open
-                      <ExternalLink size={14} className="ml-2" />
-                    </a>
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open
+                        <ExternalLink size={14} className="ml-2" />
+                      </a>
+                    </Button>
                   </div>
                 </article>
               ))}

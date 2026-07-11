@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useCallback } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 
 type DialogProps = {
   open: boolean;
@@ -90,7 +93,7 @@ export function Dialog({
         aria-labelledby="dialog-title"
         aria-describedby={description ? "dialog-description" : undefined}
       >
-        <div className="rounded-2xl border border-[color:var(--color-border)] bg-white shadow-2xl">
+        <div className="rounded-2xl border border-[color:var(--color-border)] bg-white shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="border-b border-[color:var(--color-border)] px-6 py-5">
             <div className="flex items-start justify-between gap-4">
@@ -110,15 +113,14 @@ export function Dialog({
                   </p>
                 )}
               </div>
-              <button
+              <IconButton
+                variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="inline-flex items-center justify-center rounded-full p-1 text-[color:var(--color-text-muted)] transition-smooth hover:bg-[color:var(--color-bg-light)] hover:text-[color:var(--color-text)]"
                 aria-label="Close dialog"
+                className="rounded-full"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
+                <X size={20} />
+              </IconButton>
             </div>
           </div>
 
@@ -128,19 +130,25 @@ export function Dialog({
           {/* Footer */}
           {onSubmit && (
             <div className="flex gap-3 border-t border-[color:var(--color-border)] px-6 py-4">
-              <button
+              <Button
+                variant="secondary"
+                size="lg"
                 onClick={() => onOpenChange(false)}
-                className="flex-1 rounded-full border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition-smooth hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-bg-light)]"
+                disabled={isLoading}
+                className="flex-1"
               >
                 {cancelLabel}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="lg"
                 onClick={onSubmit}
-                disabled={isLoading}
-                className="flex-1 rounded-full bg-[color:var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition-smooth hover:bg-[color:var(--color-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={isLoading}
+                loadingText="Loading..."
+                className="flex-1"
               >
-                {isLoading ? "Loading..." : submitLabel}
-              </button>
+                {submitLabel}
+              </Button>
             </div>
           )}
         </div>
@@ -165,8 +173,12 @@ export function DialogTrigger({
   }
 
   return (
-    <button onClick={onClick} className="transition-smooth hover:opacity-90">
+    <Button
+      variant="ghost"
+      onClick={onClick}
+      className="h-auto p-0 font-normal hover:bg-transparent opacity-100 hover:opacity-90"
+    >
       {children}
-    </button>
+    </Button>
   );
 }

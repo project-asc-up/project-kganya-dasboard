@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 export function PageHeader({
   eyebrow,
@@ -75,15 +77,15 @@ const inputClass =
   "w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-text)] shadow-sm outline-none transition-smooth placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-primary)] focus:ring-2 focus:ring-[color:var(--color-focus-ring)]/25 focus:shadow-md hover:border-[color:var(--color-primary)]/50 hover:shadow-[0_2px_12px_rgba(0,59,122,0.08)]";
 
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${inputClass} ${props.className ?? ""}`.trim()} />;
+  return <input {...props} className={cn(inputClass, props.className)} />;
 }
 
 export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`${inputClass} min-h-32 ${props.className ?? ""}`.trim()} />;
+  return <textarea {...props} className={cn(inputClass, "min-h-32", props.className)} />;
 }
 
 export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={`${inputClass} ${props.className ?? ""}`.trim()} />;
+  return <select {...props} className={cn(inputClass, props.className)} />;
 }
 
 export function Checkbox({
@@ -103,28 +105,38 @@ export function ActionButton({
   tone = "primary",
   type = "submit",
   disabled = false,
+  loading = false,
+  loadingText,
+  className,
+  ...props
 }: {
   children: ReactNode;
   tone?: "primary" | "secondary" | "danger";
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
-}) {
-  const styles =
-    tone === "danger"
-      ? "bg-[color:var(--color-accent-red)] text-white hover:bg-[#a30c24]"
-      : tone === "secondary"
-        ? "border border-[color:var(--color-border)] bg-white text-[color:var(--color-primary)] hover:border-[color:var(--color-primary)]"
-        : "bg-[color:var(--color-primary)] text-white hover:bg-[color:var(--color-hover)]";
+  loading?: boolean;
+  loadingText?: string;
+  className?: string;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const variantMap = {
+    primary: "primary",
+    secondary: "secondary",
+    danger: "danger",
+  } as const;
+
   return (
-    <button
+    <Button
       type={type}
+      variant={variantMap[tone]}
       disabled={disabled}
-      className={`inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${styles} ${
-        disabled ? "opacity-60 cursor-not-allowed" : ""
-      }`}
+      loading={loading}
+      loadingText={loadingText}
+      rounded="full"
+      className={cn("px-5 py-3 h-auto", className)}
+      {...props}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -132,20 +144,29 @@ export function CreateButton({
   onClick,
   children,
   className = "",
+  disabled = false,
+  loading = false,
+  ...props
 }: {
-  onClick: () => void;
+  onClick?: () => void;
   children: ReactNode;
   className?: string;
-}) {
+  disabled?: boolean;
+  loading?: boolean;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
+    <Button
       onClick={onClick}
-      className={`inline-flex items-center justify-center rounded-full bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition-smooth hover-lift ${className}`}
+      disabled={disabled}
+      loading={loading}
+      rounded="full"
+      className={cn("px-5 py-3 h-auto", className)}
+      {...props}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mr-2">
         <path d="M12 5v14M5 12h14" strokeWidth="2" strokeLinecap="round" />
       </svg>
       {children}
-    </button>
+    </Button>
   );
 }

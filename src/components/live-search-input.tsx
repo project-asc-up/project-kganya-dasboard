@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { TextInput } from "@/components/admin-form";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { SearchSuggestion } from "@/lib/search-suggestions";
 
@@ -121,11 +122,9 @@ export function LiveSearchInput({
               <div className="px-4 py-4 text-sm text-[color:var(--color-text-muted)]">Keep typing to refine the search.</div>
             ) : (
               suggestions.map((suggestion) => (
-                <button
+                <Button
                   key={suggestion.id}
-                  type="button"
-                  role="option"
-                  aria-selected={false}
+                  variant="ghost"
                   onMouseDown={(event) => {
                     event.preventDefault();
                     if (suggestion.href) {
@@ -139,7 +138,7 @@ export function LiveSearchInput({
                     }
                     setIsOpen(false);
                   }}
-                  className="flex w-full items-start justify-between gap-4 border-b border-[color:var(--color-border)] px-4 py-3 text-left transition hover:bg-[var(--color-surface-sunken)] last:border-b-0"
+                  className="flex w-full items-start justify-between gap-4 border-b border-[color:var(--color-border)] px-4 py-3 text-left h-auto rounded-none last:border-b-0 hover:bg-[var(--color-surface-sunken)]"
                 >
                   <div className="min-w-0 space-y-0.5">
                     <div className="truncate text-sm font-semibold text-[color:var(--color-text)]">
@@ -156,7 +155,7 @@ export function LiveSearchInput({
                       {suggestion.badge}
                     </span>
                   ) : null}
-                </button>
+                </Button>
               ))
             )}
           </div>
