@@ -610,7 +610,6 @@ export async function createFaq(formData: FormData) {
         persistence: "saved" as const,
         sync: { status: "pending" as const, jobId: previousReceipt.syncJobId },
       } satisfies MutationResult;
-      redirectTo("faqs", previous.recordId);
       return existingResult;
     }
   }
@@ -642,7 +641,6 @@ export async function createFaq(formData: FormData) {
     payload: { name: question, text: `${question}\n\n${answer}` },
   });
   await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
-  redirectTo("faqs", result.recordId);
   return {
     mutationId: receipt.id,
     requestId,
