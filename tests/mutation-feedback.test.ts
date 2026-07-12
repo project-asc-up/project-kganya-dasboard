@@ -13,7 +13,7 @@ test("mutation feedback modal has centered blurred lifecycle states", () => {
 
 test("mutation form disables duplicate submits and polls sync", () => {
   const source = readFileSync("src/components/mutation-form.tsx", "utf8");
-  assert.match(source, /if \(submitting\) return/);
+  assert.match(source, /submittingRef\.current/);
   assert.match(source, /crypto.randomUUID/);
   assert.match(source, /api\/admin\/mutations/);
 });

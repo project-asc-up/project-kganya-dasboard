@@ -2,6 +2,7 @@ export type MutationKind = "create" | "update" | "delete" | "invite" | "access";
 
 export type MutationPhase =
   | "idle"
+  | "confirm-delete"
   | "submitting"
   | "saved"
   | "syncing"
