@@ -9,6 +9,8 @@ import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-k
 import { buildResourceTextContent, enqueueDifySyncJob, stageResourceUpload } from "@/lib/dify-sync";
 import { getPrismaClient } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
+import { executeMutationWithReceipt, type MutationReceiptStore } from "@/lib/mutation-receipts";
+import { faqIdentity } from "@/lib/mutation-identities";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -591,22 +593,31 @@ export async function createFaq(formData: FormData) {
     return Boolean(existing);
   });
 
-  const faq = await prisma.faq.create({
-    data: {
-      seedKey,
-      facultyId,
-      question,
-      answer: requiredText(formData, "answer"),
-      category: requiredText(formData, "category"),
-      priority: optionalNumber(formData, "priority"),
-      sourceUrl: textValue(formData, "sourceUrl"),
-      lastVerified: optionalDate(formData, "lastVerified"),
-      notes: textValue(formData, "notes"),
-    },
+  const answer = requiredText(formData, "answer");
+  const category = requiredText(formData, "category");
+  const payload = { facultyId, category, question, answer, priority: optionalNumber(formData, "priority") };
+  const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
+  const result = await executeMutationWithReceipt<{ recordId: string }>({
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId,
+    payload,
+    kind: "create",
+    transaction: async (work) => prisma.$transaction(async (tx) => work(
+      tx.mutationReceipt as unknown as MutationReceiptStore,
+      async () => {
+        const identity = faqIdentity({ facultyId, category, question });
+        const candidates = await tx.faq.findMany({ where: { facultyId, category } });
+        const existing = candidates.find((candidate) => faqIdentity({ facultyId: candidate.facultyId, category: candidate.category, question: candidate.question }) === identity);
+        const faq = existing
+          ? await tx.faq.update({ where: { id: existing.id }, data: { answer, question, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } })
+          : await tx.faq.create({ data: { seedKey, facultyId, question, answer, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } });
+        return { recordId: faq.id };
+      },
+    )),
   });
 
   redirectTo("faqs");
-  redirect("/admin/faqs");
+  redirect(`/admin/faqs/${result.recordId}`);
 }
 
 export async function updateFaq(id: string, formData: FormData) {
