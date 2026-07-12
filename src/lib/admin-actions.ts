@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { CoachLevel } from "@/generated/prisma/enums";
+import { Prisma } from "@/generated/prisma/client";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
 import { buildResourceTextContent, enqueueDifySyncJob, stageResourceUpload } from "@/lib/dify-sync";
@@ -598,24 +599,34 @@ export async function createFaq(formData: FormData) {
 
   const payload = { facultyId, category, question, answer, priority: optionalNumber(formData, "priority") };
   const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
-  const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
-    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
-    requestId,
-    payload,
-    kind: "create",
-    transaction: async (work) => prisma.$transaction(async (tx) => work(
-      tx.mutationReceipt as unknown as MutationReceiptStore,
-      async () => {
-        const identity = faqIdentity({ facultyId, category, question });
-        const candidates = await tx.faq.findMany({ where: { facultyId } });
-        const existing = candidates.find((candidate) => faqIdentity({ facultyId: candidate.facultyId, category: candidate.category, question: candidate.question }) === identity);
-        const faq = existing
-          ? await tx.faq.update({ where: { id: existing.id }, data: { answer, question, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } })
-          : await tx.faq.create({ data: { seedKey, facultyId, question, answer, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } });
-        return { recordId: faq.id, created: !existing };
-      },
-    )),
-  });
+  let result: { recordId: string; created: boolean } | undefined;
+  for (let attempt = 0; attempt < 3 && !result; attempt += 1) {
+    try {
+      result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
+        store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+        requestId,
+        payload,
+        kind: "create",
+        write: async () => { throw new Error("FAQ write must run inside transaction"); },
+        transaction: async (work) => prisma.$transaction(async (tx) => work(
+          tx.mutationReceipt as unknown as MutationReceiptStore,
+          async () => {
+            const identity = faqIdentity({ facultyId, category, question });
+            const candidates = await tx.faq.findMany({ where: { facultyId } });
+            const existing = candidates.find((candidate) => faqIdentity({ facultyId: candidate.facultyId, category: candidate.category, question: candidate.question }) === identity);
+            const faq = existing
+              ? await tx.faq.update({ where: { id: existing.id }, data: { answer, question, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } })
+              : await tx.faq.create({ data: { seedKey, facultyId, question, answer, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } });
+            return { recordId: faq.id, created: !existing };
+          },
+        ), { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }),
+      });
+    } catch (error) {
+      const retryable = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
+      if (!retryable || attempt === 2) throw error;
+    }
+  }
+  if (!result) throw new Error("FAQ mutation did not complete.");
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after FAQ save.");
   if (receipt.syncJobId && receipt.result) {
