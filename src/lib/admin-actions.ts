@@ -598,21 +598,6 @@ export async function createFaq(formData: FormData) {
 
   const payload = { facultyId, category, question, answer, priority: optionalNumber(formData, "priority") };
   const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
-  const previousReceipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
-  if (previousReceipt?.status === "completed" && previousReceipt.result && previousReceipt.syncJobId) {
-    const previous = previousReceipt.result as { recordId?: string };
-    if (previous.recordId) {
-      const existingResult = {
-        mutationId: previousReceipt.id,
-        requestId,
-        kind: "create" as const,
-        recordId: previous.recordId,
-        persistence: "saved" as const,
-        sync: { status: "pending" as const, jobId: previousReceipt.syncJobId },
-      } satisfies MutationResult;
-      return existingResult;
-    }
-  }
   const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
     store: prisma.mutationReceipt as unknown as MutationReceiptStore,
     requestId,
@@ -633,6 +618,19 @@ export async function createFaq(formData: FormData) {
   });
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after FAQ save.");
+  if (receipt.syncJobId && receipt.result) {
+    const previous = receipt.result as { recordId?: string };
+    if (previous.recordId) {
+      return {
+        mutationId: receipt.id,
+        requestId,
+        kind: "create",
+        recordId: previous.recordId,
+        persistence: "saved",
+        sync: { status: "pending", jobId: receipt.syncJobId },
+      } satisfies MutationResult;
+    }
+  }
   const syncJob = await enqueueDifySyncJob({
     sourceTable: "faqs",
     sourceId: result.recordId,
