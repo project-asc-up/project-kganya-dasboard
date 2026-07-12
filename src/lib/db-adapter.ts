@@ -1,3 +1,4 @@
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 function isLocalHost(hostname: string) {
@@ -18,8 +19,23 @@ function normalizeConnectionString(connectionString: string) {
   return url.toString();
 }
 
+export function resolveDatabaseTransport(
+  connectionString: string,
+): "neon" | "pg" {
+  const { hostname } = new URL(connectionString);
+
+  return hostname.endsWith(".neon.tech") ? "neon" : "pg";
+}
+
 export function createDatabaseAdapter(connectionString: string) {
   const normalizedConnectionString = normalizeConnectionString(connectionString);
+
+  if (resolveDatabaseTransport(normalizedConnectionString) === "neon") {
+    return new PrismaNeon({
+      connectionString: normalizedConnectionString,
+      max: 1,
+    });
+  }
 
   return new PrismaPg({ connectionString: normalizedConnectionString });
 }

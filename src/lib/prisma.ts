@@ -9,19 +9,21 @@ const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient;
 };
 
-function resolveUrl(): string | undefined {
+export function resolveDatabaseUrl(
+  env: Record<string, string | undefined> = process.env,
+): string | undefined {
   return (
-    process.env.DATABASE_URL ||
-    process.env.DATABASE_URL_UNPOOLED ||
-    process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.DIRECT_URL
+    env.DATABASE_URL ||
+    env.DATABASE_URL_UNPOOLED ||
+    env.POSTGRES_URL_NON_POOLING ||
+    env.POSTGRES_PRISMA_URL ||
+    env.POSTGRES_URL ||
+    env.DIRECT_URL
   );
 }
 
 function createPrismaClient() {
-  const url = resolveUrl();
+  const url = resolveDatabaseUrl();
 
   if (!url) {
     throw new Error("DATABASE_URL is not configured");

@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import "./globals.css";
 import { deploymentConfig } from "@/lib/deployment-config";
+import { ChatwootWidget } from "@/components/chatwoot-widget";
 import { ThemeProvider } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
@@ -41,7 +42,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[var(--color-surface)] text-[var(--color-text)]">
         <ClerkProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <ChatwootWidget />
+          </ThemeProvider>
         </ClerkProvider>
       </body>
     </html>

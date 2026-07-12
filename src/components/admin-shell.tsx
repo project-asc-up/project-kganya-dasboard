@@ -73,6 +73,7 @@ export async function AdminShell({
   );
   const crumbs = buildCrumbs(pathname);
   const authz = await getCurrentAuthorization();
+  const isLocalSession = authz?.userId === "local-admin";
   const allowedTabs = authz
     ? await getAllowedTabsForUser(authz.userId, authz.role)
     : [];
@@ -102,7 +103,7 @@ export async function AdminShell({
             </div>
             <div className="flex items-center gap-3">
               <SearchBar />
-              <AdminProfileMenu />
+              <AdminProfileMenu localSession={isLocalSession} />
             </div>
           </header>
 

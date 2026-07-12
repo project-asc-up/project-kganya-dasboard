@@ -34,6 +34,8 @@ const exampleSearches = [
   "course code",
 ];
 
+const SEARCH_RESULT_LIMIT = 100;
+
 function normalizeQuery(value: string | undefined) {
   return value?.trim() ?? "";
 }
@@ -171,12 +173,12 @@ export default async function SearchPage({
   }
 
   const [faculties, coaches, programmes, resources, faqs, modules] = await Promise.all([
-    searchFacultyRows(query),
-    searchCoachRows(query),
-    searchProgrammeRows(query),
-    searchResourceRows(query),
-    searchFaqRows(query),
-    searchCourseModuleRows(query),
+    searchFacultyRows(query, SEARCH_RESULT_LIMIT),
+    searchCoachRows(query, SEARCH_RESULT_LIMIT),
+    searchProgrammeRows(query, SEARCH_RESULT_LIMIT),
+    searchResourceRows(query, SEARCH_RESULT_LIMIT),
+    searchFaqRows(query, SEARCH_RESULT_LIMIT),
+    searchCourseModuleRows(query, SEARCH_RESULT_LIMIT),
   ]);
 
   const facultyResults: ResultItem[] = faculties

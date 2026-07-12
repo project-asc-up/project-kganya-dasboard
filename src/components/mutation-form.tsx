@@ -6,7 +6,7 @@ import type { MutationPhase, MutationResult } from "@/lib/mutation-types";
 
 export type MutationAction = (formData: FormData) => Promise<MutationResult>;
 
-export function MutationForm({ action, children, className }: { action: MutationAction; children: ReactNode; className?: string }) {
+export function MutationForm({ action, children, className, onComplete }: { action: MutationAction; children: ReactNode; className?: string; onComplete?: () => void }) {
   const [phase, setPhase] = useState<MutationPhase>("idle");
   const [result, setResult] = useState<MutationResult>();
   const [error, setError] = useState<string>();
@@ -75,6 +75,6 @@ export function MutationForm({ action, children, className }: { action: Mutation
   };
   return <>
     <form className={className} onSubmit={submit} aria-busy={submitting}>{children}</form>
-    <MutationFeedbackModal open={phase !== "idle"} phase={phase} result={result} error={error} onDone={() => setPhase("idle")} onRetry={retry} />
+    <MutationFeedbackModal open={phase !== "idle"} phase={phase} result={result} error={error} onDone={() => { setPhase("idle"); onComplete?.(); }} onRetry={retry} />
   </>;
 }

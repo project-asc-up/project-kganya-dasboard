@@ -107,34 +107,41 @@ export async function createFaculty(formData: FormData): Promise<MutationResult>
   return { mutationId: receipt.id, requestId, kind: "create", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
 }
 
-export async function updateFaculty(id: string, formData: FormData) {
+export async function updateFaculty(id: string, formData: FormData): Promise<MutationResult> {
   await requirePermission("faculty:update");
   const prisma = getPrismaClient();
-  await prisma.faculty.update({
-    where: { id },
-    data: {
-      name: requiredText(formData, "name"),
-      code: requiredText(formData, "code").toUpperCase(),
-      codeStatus: requiredText(formData, "codeStatus"),
-      officialPageUrl: textValue(formData, "officialPageUrl"),
-      supportPageUrl: textValue(formData, "supportPageUrl"),
-      sourceUrl: textValue(formData, "sourceUrl"),
-      lastVerified: optionalDate(formData, "lastVerified"),
-      notes: textValue(formData, "notes"),
-      aliases: textValue(formData, "aliases"),
-    },
+  const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
+  const data = { name: requiredText(formData, "name"), code: requiredText(formData, "code").toUpperCase(), codeStatus: requiredText(formData, "codeStatus"), officialPageUrl: textValue(formData, "officialPageUrl"), supportPageUrl: textValue(formData, "supportPageUrl"), sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes"), aliases: textValue(formData, "aliases") };
+  const result = await executeMutationWithReceipt<{ recordId: string }>({
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId, payload: { id, ...data }, kind: "update", write: async () => { throw new Error("transaction required"); },
+    transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+      const faculty = await tx.faculty.update({ where: { id }, data });
+      return { recordId: faculty.id };
+    })),
   });
-
-  redirectTo("faculties", id);
-  redirect(`/admin/faculties/${id}`);
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
+  if (!receipt) throw new Error("Mutation receipt was not found after faculty update.");
+  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: result.recordId, action: "update", contentKind: "text", payload: { name: data.name, text: `${data.code}: ${data.name}\n${data.notes ?? ""}` } });
+  await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
+  return { mutationId: receipt.id, requestId, kind: "update", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
 }
 
-export async function deleteFaculty(id: string) {
+export async function deleteFaculty(id: string, requestId?: string): Promise<MutationResult> {
   await requirePermission("faculty:delete");
   const prisma = getPrismaClient();
-  await prisma.faculty.delete({ where: { id } });
-  redirectTo("faculties");
-  redirect("/admin/faculties");
+  const request = requestId ?? crypto.randomUUID();
+  const result = await executeMutationWithReceipt<{ recordId: string }>({
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId: request, payload: { id }, kind: "delete", write: async () => { throw new Error("transaction required"); },
+    transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+      await tx.faculty.delete({ where: { id } });
+      return { recordId: id };
+    })),
+  });
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId: request } });
+  if (!receipt) throw new Error("Mutation receipt was not found after faculty delete.");
+  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: id, action: "delete", contentKind: "text", payload: { name: id } });
+  await prisma.mutationReceipt.update({ where: { requestId: request }, data: { syncJobId: syncJob.id } });
+  return { mutationId: receipt.id, requestId: request, kind: "delete", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
 }
 
 export async function createCoach(formData: FormData) {

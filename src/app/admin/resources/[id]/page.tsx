@@ -28,8 +28,12 @@ export default async function ResourceDetailPage({
     notFound();
   }
 
-  const updateAction = updateResource.bind(null, resource.id);
-  const deleteAction = deleteResource.bind(null, resource.id);
+  const updateAction = async (formData: FormData) => {
+    await updateResource(resource.id, formData);
+  };
+  const deleteAction = async () => {
+    await deleteResource(resource.id);
+  };
   const canUpdate = canAccess(authz, "resource:update");
   const canDelete = canAccess(authz, "resource:delete");
   const isDocument = resource.resourceType === "document";

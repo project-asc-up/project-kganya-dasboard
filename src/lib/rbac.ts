@@ -271,10 +271,14 @@ function toManagedUser(user: User, currentUserId: string): ManagedUser {
 }
 
 export async function getCurrentAuthorization(): Promise<CurrentAuthorization | null> {
+  // In local development, prefer the signed admin session before touching
+  // Clerk. This keeps the local recovery login independent from mismatched or
+  // unavailable Clerk development keys.
+  const developmentAuthorization = await getDevelopmentAuthorization();
+  if (developmentAuthorization) return developmentAuthorization;
+
   const user = await currentUser();
-  if (!user) {
-    return getDevelopmentAuthorization();
-  }
+  if (!user) return null;
 
   const role = roleForUser(user);
   const email = primaryEmailForUser(user);

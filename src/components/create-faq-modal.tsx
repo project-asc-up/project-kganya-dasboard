@@ -5,6 +5,7 @@ import { Modal } from '@/components/modal';
 import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
 import { displayFacultyName } from '@/lib/faculty-display';
 import { createFaq } from '@/lib/admin-actions';
+import { MutationForm } from '@/components/mutation-form';
 
 interface CreateFaqModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
@@ -13,19 +14,6 @@ interface CreateFaqModalProps {
 
 export function CreateFaqModal({ faculties, categoryOptions }: CreateFaqModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (formData: FormData) => {
-    try {
-      setIsSubmitting(true);
-      await createFaq(formData);
-      setIsOpen(false);
-      setIsSubmitting(false);
-    } catch (error) {
-      setIsSubmitting(false);
-      console.error('Failed to create FAQ:', error);
-    }
-  };
 
   return (
     <>
@@ -39,7 +27,7 @@ export function CreateFaqModal({ faculties, categoryOptions }: CreateFaqModalPro
         title="Create New FAQ"
         size="lg"
       >
-        <form action={handleSubmit} className="space-y-5">
+        <MutationForm action={createFaq} className="space-y-5" onComplete={() => setIsOpen(false)}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Faculty">
               <Select name="facultyId" defaultValue="">
@@ -95,19 +83,19 @@ export function CreateFaqModal({ faculties, categoryOptions }: CreateFaqModalPro
               type="button"
               tone="secondary"
               onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
+              disabled={false}
             >
               Cancel
             </ActionButton>
             <ActionButton
               type="submit"
-              loading={isSubmitting}
+              loading={false}
               loadingText="Creating FAQ..."
             >
               Create FAQ
             </ActionButton>
           </div>
-        </form>
+        </MutationForm>
       </Modal>
     </>
   );
