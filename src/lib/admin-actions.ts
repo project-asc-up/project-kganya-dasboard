@@ -83,12 +83,7 @@ function redirectTo(entity: string, id?: string) {
   revalidateTag(ADMIN_CACHE_TAGS.faqs, "max");
 }
 
-function localMutationResult(kind: "create" | "update" | "delete", requestId: string | null, recordId: string | null): MutationResult {
-  const id = requestId ?? crypto.randomUUID();
-  return { mutationId: id, requestId: id, kind, recordId, persistence: "saved", sync: { status: "not_applicable", jobId: null } };
-}
-
-export async function createFaculty(formData: FormData): Promise<MutationResult> {
+export async function createFaculty(formData: FormData) {
   await requirePermission("faculty:create");
   const prisma = getPrismaClient();
   const faculty = await prisma.faculty.create({
@@ -105,10 +100,11 @@ export async function createFaculty(formData: FormData): Promise<MutationResult>
     },
   });
 
-  return localMutationResult("create", textValue(formData, "requestId"), faculty.id);
+  redirectTo("faculties", faculty.id);
+  redirect(`/admin/faculties/${faculty.id}`);
 }
 
-export async function updateFaculty(id: string, formData: FormData): Promise<MutationResult> {
+export async function updateFaculty(id: string, formData: FormData) {
   await requirePermission("faculty:update");
   const prisma = getPrismaClient();
   await prisma.faculty.update({
@@ -126,14 +122,16 @@ export async function updateFaculty(id: string, formData: FormData): Promise<Mut
     },
   });
 
-  return localMutationResult("update", textValue(formData, "requestId"), id);
+  redirectTo("faculties", id);
+  redirect(`/admin/faculties/${id}`);
 }
 
-export async function deleteFaculty(id: string, requestId?: string): Promise<MutationResult> {
+export async function deleteFaculty(id: string) {
   await requirePermission("faculty:delete");
   const prisma = getPrismaClient();
   await prisma.faculty.delete({ where: { id } });
-  return localMutationResult("delete", requestId ?? null, id);
+  redirectTo("faculties");
+  redirect("/admin/faculties");
 }
 
 export async function createCoach(formData: FormData) {
