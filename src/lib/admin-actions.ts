@@ -92,17 +92,17 @@ export async function createFaculty(formData: FormData): Promise<MutationResult>
     officialPageUrl: textValue(formData, "officialPageUrl"), supportPageUrl: textValue(formData, "supportPageUrl"), sourceUrl: textValue(formData, "sourceUrl"),
     lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes"), aliases: textValue(formData, "aliases"),
   };
-  const result = await executeMutationWithReceipt<{ recordId: string }>({
+  const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
     store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId, payload: data, kind: "create", write: async () => { throw new Error("transaction required"); },
     transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
       const existing = await tx.faculty.findUnique({ where: { code: data.code } });
       const faculty = existing ? await tx.faculty.update({ where: { id: existing.id }, data }) : await tx.faculty.create({ data });
-      return { recordId: faculty.id };
+      return { recordId: faculty.id, created: !existing };
     })),
   });
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after faculty save.");
-  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: result.recordId, action: "update", contentKind: "text", payload: { name: data.name, text: `${data.code}: ${data.name}\n${data.notes ?? ""}` } });
+  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: result.recordId, action: result.created ? "create" : "update", contentKind: "text", payload: { name: data.name, text: `${data.code}: ${data.name}\n${data.notes ?? ""}` } });
   await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
   return { mutationId: receipt.id, requestId, kind: "create", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
 }
