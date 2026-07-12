@@ -36,3 +36,17 @@ export async function GET(_request: Request, context: RouteContext) {
     error: receipt.errorMessage ?? syncJob?.lastError ?? null,
   });
 }
+
+export async function POST(_request: Request, context: RouteContext) {
+  const authz = await getCurrentAuthorization();
+  if (!authz) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (authz.role !== "admin" && authz.role !== "super_admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { mutationId } = await context.params;
+  if (!/^[0-9a-f-]{36}$/i.test(mutationId)) return NextResponse.json({ error: "Invalid mutation id" }, { status: 400 });
+  const prisma = getPrismaClient();
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { id: mutationId } });
+  if (!receipt) return NextResponse.json({ error: "Mutation not found" }, { status: 404 });
+  if (!receipt.syncJobId) return NextResponse.json({ ok: true, status: "not_applicable" });
+  await prisma.difySyncJob.update({ where: { id: receipt.syncJobId }, data: { status: "pending", attemptCount: 0, nextRetryAt: null, lastError: null } });
+  return NextResponse.json({ ok: true, status: "pending", jobId: receipt.syncJobId });
+}

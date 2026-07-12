@@ -19,11 +19,17 @@ export type MutationFeedbackModalProps = {
 
 export function MutationFeedbackModal({ open, phase, result, error, onDone, onRetry, title = "Saving changes", destructive = false, onConfirmDelete }: MutationFeedbackModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const previousActive = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!open) return;
-    const previous = document.activeElement as HTMLElement | null;
+    previousActive.current = document.activeElement as HTMLElement | null;
     const dialog = dialogRef.current;
     dialog?.querySelector<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")?.focus();
+    return () => { previousActive.current?.focus(); previousActive.current = null; };
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const dialog = dialogRef.current;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !["submitting", "saved", "syncing"].includes(phase)) onDone();
       if (event.key !== "Tab" || !dialog) return;
@@ -33,7 +39,7 @@ export function MutationFeedbackModal({ open, phase, result, error, onDone, onRe
       else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0]?.focus(); }
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => { document.removeEventListener("keydown", handleKeyDown); previous?.focus(); };
+    return () => { document.removeEventListener("keydown", handleKeyDown); };
   }, [open, onDone, phase]);
   if (!open) return null;
   const message = typeof error === "string" ? error : error?.message;
@@ -62,7 +68,7 @@ export function MutationFeedbackModal({ open, phase, result, error, onDone, onRe
         {result?.recordId && <p className="mt-3 text-xs text-[color:var(--color-text-muted)]">Record: {result.recordId}</p>}
         <div className="mt-6 flex justify-end gap-3">
           {isError && onRetry && <Button variant="secondary" onClick={onRetry}><RefreshCw size={16} /> Try again</Button>}
-          {isConfirmDelete && <><Button variant="secondary" onClick={onDone}>Cancel</Button><Button variant={destructive ? "danger" : "primary"} onClick={onConfirmDelete}>Delete permanently</Button></>}
+          {isConfirmDelete && <><Button variant="secondary" onClick={onDone}>Cancel</Button>{onConfirmDelete && <Button variant={destructive ? "danger" : "primary"} onClick={onConfirmDelete}>Delete permanently</Button>}</>}
           {(isComplete || isError) && <Button variant="primary" onClick={onDone}>{isComplete ? "Done" : "Close"}</Button>}
         </div>
       </div>

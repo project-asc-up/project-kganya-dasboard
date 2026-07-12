@@ -55,6 +55,8 @@ export function MutationForm({ action, children, className }: { action: Mutation
     setError(undefined);
     setPhase("syncing");
     try {
+      const retryResponse = await fetch(`/api/admin/mutations/${result.mutationId}`, { method: "POST" });
+      if (!retryResponse.ok) throw new Error("Unable to retry the live chatbot update.");
       for (let attempt = 0; attempt < 120; attempt += 1) {
         await new Promise((resolve) => setTimeout(resolve, 500));
         const response = await fetch(`/api/admin/mutations/${result.mutationId}`, { cache: "no-store" });
