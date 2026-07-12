@@ -12,26 +12,36 @@ declare global {
   }
 }
 
-const CHATWOOT_BASE_URL = "https://app.chatwoot.com";
-const CHATWOOT_WEBSITE_TOKEN = "ENwKsLtCoELnGq396HZThziu";
 const CHATWOOT_SCRIPT_ID = "chatwoot-sdk";
-const CHATWOOT_SCRIPT_SRC = `${CHATWOOT_BASE_URL}/packs/js/sdk.js`;
+
+function resolveChatwootConfig() {
+  const websiteToken = process.env.NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN?.trim();
+  if (!websiteToken) return null;
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_CHATWOOT_BASE_URL?.trim().replace(/\/$/, "") ||
+    "https://app.chatwoot.com";
+
+  return { websiteToken, baseUrl };
+}
 
 export function ChatwootWidget() {
   const { isLoaded, isSignedIn } = useAuth();
+  const chatwootConfig = resolveChatwootConfig();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || window.chatwootWidgetBooted) return;
+    if (!isLoaded || !isSignedIn || window.chatwootWidgetBooted || !chatwootConfig) return;
 
     const runChatwoot = () => {
       if (window.chatwootWidgetBooted) return;
       window.chatwootWidgetBooted = true;
       window.chatwootSDK?.run({
-        websiteToken: CHATWOOT_WEBSITE_TOKEN,
-        baseUrl: CHATWOOT_BASE_URL,
+        websiteToken: chatwootConfig.websiteToken,
+        baseUrl: chatwootConfig.baseUrl,
       });
     };
 
+    const scriptSrc = `${chatwootConfig.baseUrl}/packs/js/sdk.js`;
     const existingScript = document.getElementById(CHATWOOT_SCRIPT_ID);
     if (existingScript) {
       if (window.chatwootSDK) {
@@ -44,11 +54,11 @@ export function ChatwootWidget() {
 
     const script = document.createElement("script");
     script.id = CHATWOOT_SCRIPT_ID;
-    script.src = CHATWOOT_SCRIPT_SRC;
+    script.src = scriptSrc;
     script.async = true;
     script.onload = runChatwoot;
     document.body.appendChild(script);
-  }, [isLoaded, isSignedIn]);
+  }, [chatwootConfig, isLoaded, isSignedIn]);
 
   return null;
 }

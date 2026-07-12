@@ -35,6 +35,13 @@ npm run dify:sync:process
 - `dify:sync:backfill` enqueues resource records for initial sync.
 - `dify:sync:process` processes pending sync jobs and retries failures.
 
+## Chatwoot Webchat
+
+Set these environment variables to point the signed-in webchat at the correct Chatwoot inbox:
+
+- `NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN`
+- `NEXT_PUBLIC_CHATWOOT_BASE_URL` - optional, defaults to `https://app.chatwoot.com`
+
 ## Resource Uploads
 
 - Link resources update Dify with text content.
