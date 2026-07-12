@@ -11,6 +11,7 @@ import { getPrismaClient } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
 import { executeMutationWithReceipt, type MutationReceiptStore } from "@/lib/mutation-receipts";
 import { faqIdentity } from "@/lib/mutation-identities";
+import type { MutationResult } from "@/lib/mutation-types";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -584,7 +585,9 @@ export async function createFaq(formData: FormData) {
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const question = requiredText(formData, "question");
-  const baseSeedKey = buildAdminSeedKey("faq", facultyCode, question);
+  const answer = requiredText(formData, "answer");
+  const category = requiredText(formData, "category");
+  const baseSeedKey = buildAdminSeedKey("faq", facultyCode, `${category}::${question}`);
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.faq.findUnique({
       where: { seedKey: candidate },
@@ -593,11 +596,25 @@ export async function createFaq(formData: FormData) {
     return Boolean(existing);
   });
 
-  const answer = requiredText(formData, "answer");
-  const category = requiredText(formData, "category");
   const payload = { facultyId, category, question, answer, priority: optionalNumber(formData, "priority") };
   const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
-  const result = await executeMutationWithReceipt<{ recordId: string }>({
+  const previousReceipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
+  if (previousReceipt?.status === "completed" && previousReceipt.result && previousReceipt.syncJobId) {
+    const previous = previousReceipt.result as { recordId?: string };
+    if (previous.recordId) {
+      const existingResult = {
+        mutationId: previousReceipt.id,
+        requestId,
+        kind: "create" as const,
+        recordId: previous.recordId,
+        persistence: "saved" as const,
+        sync: { status: "pending" as const, jobId: previousReceipt.syncJobId },
+      } satisfies MutationResult;
+      redirectTo("faqs", previous.recordId);
+      return existingResult;
+    }
+  }
+  const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
     store: prisma.mutationReceipt as unknown as MutationReceiptStore,
     requestId,
     payload,
@@ -606,18 +623,34 @@ export async function createFaq(formData: FormData) {
       tx.mutationReceipt as unknown as MutationReceiptStore,
       async () => {
         const identity = faqIdentity({ facultyId, category, question });
-        const candidates = await tx.faq.findMany({ where: { facultyId, category } });
+        const candidates = await tx.faq.findMany({ where: { facultyId } });
         const existing = candidates.find((candidate) => faqIdentity({ facultyId: candidate.facultyId, category: candidate.category, question: candidate.question }) === identity);
         const faq = existing
           ? await tx.faq.update({ where: { id: existing.id }, data: { answer, question, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } })
           : await tx.faq.create({ data: { seedKey, facultyId, question, answer, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } });
-        return { recordId: faq.id };
+        return { recordId: faq.id, created: !existing };
       },
     )),
   });
-
-  redirectTo("faqs");
-  redirect(`/admin/faqs/${result.recordId}`);
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
+  if (!receipt) throw new Error("Mutation receipt was not found after FAQ save.");
+  const syncJob = await enqueueDifySyncJob({
+    sourceTable: "faqs",
+    sourceId: result.recordId,
+    action: result.created ? "create" : "update",
+    contentKind: "text",
+    payload: { name: question, text: `${question}\n\n${answer}` },
+  });
+  await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
+  redirectTo("faqs", result.recordId);
+  return {
+    mutationId: receipt.id,
+    requestId,
+    kind: "create",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: { status: "pending", jobId: syncJob.id },
+  } satisfies MutationResult;
 }
 
 export async function updateFaq(id: string, formData: FormData) {
