@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { AppBreadcrumbs, type Crumb } from "@/components/app-breadcrumbs";
 import { AdminProfileMenu } from "@/components/admin-profile-menu";
-import { AdminSidebarNav } from "@/components/admin-sidebar-nav";
+import { AdminMobileNav, AdminSidebarNav } from "@/components/admin-sidebar-nav";
 import { SessionTimeoutGuard } from "@/components/session-timeout-guard";
 import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,11 @@ export async function AdminShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex min-h-16 items-center gap-4 border-b border-[var(--color-border)] bg-[var(--color-surface-overlay)] px-5 py-3 backdrop-blur-sm sm:px-8">
+            <AdminMobileNav
+              initialPathname={pathname}
+              canManageUsers={authz?.isSuperAdmin ?? false}
+              allowedTabs={allowedTabs}
+            />
             <div className="min-w-0 flex-1">
               <AppBreadcrumbs crumbs={crumbs} />
             </div>

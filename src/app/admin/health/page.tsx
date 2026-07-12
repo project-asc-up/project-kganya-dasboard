@@ -18,7 +18,30 @@ function StatusPill({ label, tone }: { label: string; tone: "good" | "warn" | "b
 }
 
 export default async function HealthPage() {
-  const data = await getHealthOverview();
+  const { data, error } = await getHealthOverview()
+    .then((result) => ({ data: result, error: null as string | null }))
+    .catch((caught) => ({
+      data: {
+        totals: {
+          faculties: 0,
+          coaches: 0,
+          programmes: 0,
+          modules: 0,
+          resources: 0,
+          faqs: 0,
+        },
+        risk: {
+          facultyNeedsReview: 0,
+          coachInactive: 0,
+          coachNeedReview: 0,
+          programmeNoDuration: 0,
+          moduleNoYearSort: 0,
+          resourceNoVerification: 0,
+          faqNoVerification: 0,
+        },
+      },
+      error: caught instanceof Error ? caught.message : "Unknown database error",
+    }));
 
   const freshnessSignals: Array<{
     label: string;
@@ -76,6 +99,19 @@ export default async function HealthPage() {
         title="Health & Quality"
         description="Monitor database consistency, verification freshness, and data quality across all content types."
       />
+
+      {error ? (
+        <div
+          role="alert"
+          className="rounded-[var(--radius-md)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-danger-foreground)]"
+        >
+          <p className="font-medium">Live health checks are temporarily unavailable.</p>
+          <p className="mt-0.5 text-xs opacity-80">
+            The database could not be reached while loading this page. The metrics below are showing zero until the
+            connection recovers. ({error})
+          </p>
+        </div>
+      ) : null}
 
       <MetricGrid className="items-stretch md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <MetricCard label="Faculties" value={data.totals.faculties} detail="Master faculty records." />
