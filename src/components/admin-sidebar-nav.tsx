@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createPortal } from "react-dom";
 import { BarChart3, BookOpen, HelpCircle, Link as LinkIcon, Settings, Users, BookMarked, Upload, Home, ShieldCheck, Menu, X } from "lucide-react";
 
 import { isAdminNavItemActive, normalizeAdminPathname, type AdminNavItem } from "@/lib/admin-nav";
@@ -163,6 +164,7 @@ export function AdminMobileNav({
 }: AdminNavProps) {
   const drawerId = useId();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const currentPathname = useCurrentAdminPathname(initialPathname);
@@ -173,6 +175,24 @@ export function AdminMobileNav({
     if (restoreFocus) {
       window.setTimeout(() => openButtonRef.current?.focus(), 0);
     }
+  }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktopQuery.matches) setIsOpen(false);
+    };
+
+    closeOnDesktop();
+    desktopQuery.addEventListener("change", closeOnDesktop);
+
+    return () => {
+      desktopQuery.removeEventListener("change", closeOnDesktop);
+    };
   }, []);
 
   useEffect(() => {
@@ -193,6 +213,68 @@ export function AdminMobileNav({
     };
   }, [closeDrawer, isOpen]);
 
+  const drawer = (
+    <div
+      className={[
+        "fixed inset-0 z-[80] h-dvh w-screen overflow-hidden transition",
+        isOpen ? "pointer-events-auto" : "pointer-events-none",
+      ].join(" ")}
+      aria-hidden={!isOpen}
+      inert={!isOpen}
+    >
+      <button
+        type="button"
+        aria-label="Close navigation menu"
+        onClick={() => closeDrawer()}
+        className={[
+          "fixed inset-0 h-dvh w-screen bg-slate-950/45 transition-opacity duration-200",
+          isOpen ? "opacity-100" : "opacity-0",
+        ].join(" ")}
+      />
+
+      <aside
+        id={drawerId}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        className={[
+          "fixed left-0 top-0 z-[90] flex h-dvh max-h-dvh w-[min(22rem,100vw)] max-w-full flex-col overflow-hidden",
+          "border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-xl)]",
+          "transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+      >
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
+          <AdminBrandLink onClick={() => setIsOpen(false)} />
+          <IconButton
+            ref={closeButtonRef}
+            type="button"
+            variant="ghost"
+            aria-label="Close navigation menu"
+            onClick={() => closeDrawer()}
+            className="shrink-0"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </IconButton>
+        </div>
+
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-4" aria-label="Mobile primary">
+          <AdminNavLinks
+            currentPathname={currentPathname}
+            items={visibleNavItems}
+            onNavigate={() => closeDrawer(false)}
+          />
+        </nav>
+
+        <div className="shrink-0 border-t border-[var(--color-border)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-sunken)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
+            Browser theme preference
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+
   return (
     <div className="lg:hidden">
       <IconButton
@@ -207,66 +289,7 @@ export function AdminMobileNav({
       >
         <Menu className="h-5 w-5" aria-hidden="true" />
       </IconButton>
-
-      <div
-        className={[
-          "fixed inset-0 z-50 transition",
-          isOpen ? "pointer-events-auto" : "pointer-events-none",
-        ].join(" ")}
-        aria-hidden={!isOpen}
-        inert={!isOpen}
-      >
-        <button
-          type="button"
-          aria-label="Close navigation menu"
-          onClick={() => closeDrawer()}
-          className={[
-            "absolute inset-0 bg-slate-950/45 transition-opacity duration-200",
-            isOpen ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-        />
-
-        <aside
-          id={drawerId}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile navigation"
-          className={[
-            "absolute inset-y-0 left-0 flex w-[min(20rem,calc(100vw-2.5rem))] flex-col",
-            "border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] shadow-[var(--shadow-xl)]",
-            "transition-transform duration-200 ease-out",
-            isOpen ? "translate-x-0" : "-translate-x-full",
-          ].join(" ")}
-        >
-          <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
-            <AdminBrandLink onClick={() => setIsOpen(false)} />
-            <IconButton
-              ref={closeButtonRef}
-              type="button"
-              variant="ghost"
-              aria-label="Close navigation menu"
-              onClick={() => closeDrawer()}
-              className="shrink-0"
-            >
-              <X className="h-5 w-5" aria-hidden="true" />
-            </IconButton>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto px-2.5 py-4" aria-label="Mobile primary">
-            <AdminNavLinks
-              currentPathname={currentPathname}
-              items={visibleNavItems}
-              onNavigate={() => closeDrawer(false)}
-            />
-          </nav>
-
-          <div className="border-t border-[var(--color-border)] px-4 py-3">
-            <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-sunken)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
-              Browser theme preference
-            </div>
-          </div>
-        </aside>
-      </div>
+      {isMounted ? createPortal(drawer, document.body) : null}
     </div>
   );
 }
