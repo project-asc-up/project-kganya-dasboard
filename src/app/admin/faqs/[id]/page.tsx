@@ -37,8 +37,12 @@ export default async function FaqDetailPage({
     notFound();
   }
 
-  const updateAction = updateFaq.bind(null, faq.id);
-  const deleteAction = deleteFaq.bind(null, faq.id);
+  const updateAction = async (formData: FormData) => {
+    await updateFaq(faq.id, formData);
+  };
+  const deleteAction = async () => {
+    await deleteFaq(faq.id);
+  };
   const canUpdate = canAccess(authz, "faq:update");
   const canDelete = canAccess(authz, "faq:delete");
 

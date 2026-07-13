@@ -37,8 +37,12 @@ export default async function CoachDetailPage({
     notFound();
   }
 
-  const updateAction = updateCoach.bind(null, coach.id);
-  const deleteAction = deleteCoach.bind(null, coach.id);
+  const updateAction = async (formData: FormData) => {
+    await updateCoach(coach.id, formData);
+  };
+  const deleteAction = async () => {
+    await deleteCoach(coach.id);
+  };
   const canUpdate = canAccess(authz, "coach:update");
   const canDelete = canAccess(authz, "coach:delete");
 

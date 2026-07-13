@@ -11,6 +11,10 @@ test("isPathAllowed allows exact matches", () => {
   assert.equal(isPathAllowed("/admin/coaches", allowed), true);
 });
 
+test("isPathAllowed allows admin search for an allowed admin", () => {
+  assert.equal(isPathAllowed("/admin/search", ["/admin"]), true);
+});
+
 test("isPathAllowed blocks exact matches not in list", () => {
   const allowed = ["/admin", "/admin/faculties"];
 

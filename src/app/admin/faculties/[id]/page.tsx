@@ -35,7 +35,9 @@ export default async function FacultyDetailPage({
     notFound();
   }
 
-  const updateAction = updateFaculty.bind(null, faculty.id);
+  const updateAction = async (formData: FormData) => {
+    await updateFaculty(faculty.id, formData);
+  };
   const canUpdate = canAccess(authz, "faculty:update");
 
   return (

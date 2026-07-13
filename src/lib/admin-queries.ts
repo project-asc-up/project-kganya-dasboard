@@ -3,6 +3,10 @@ import { unstable_cache } from "next/cache";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { getPrismaClient } from "@/lib/prisma";
 
+export function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function containsInsensitive(value: string) {
   return { contains: value, mode: "insensitive" as const };
 }
@@ -62,6 +66,7 @@ const getFacultyRowsCached = unstable_cache(
 );
 
 export async function getFacultyById(id: string) {
+  if (!isUuid(id)) return null;
   return getFacultyByIdCached(id);
 }
 
@@ -136,6 +141,7 @@ const getCoachRowsCached = unstable_cache(
 );
 
 export async function getCoachById(id: string) {
+  if (!isUuid(id)) return null;
   return getCoachByIdCached(id);
 }
 
@@ -211,6 +217,7 @@ const getProgrammeOptionsCached = unstable_cache(
 );
 
 export async function getProgrammeById(id: string) {
+  if (!isUuid(id)) return null;
   return getProgrammeByIdCached(id);
 }
 
@@ -348,6 +355,7 @@ const getCourseModulePageCached = unstable_cache(
 );
 
 export async function getCourseModuleById(id: string) {
+  if (!isUuid(id)) return null;
   return getCourseModuleByIdCached(id);
 }
 
@@ -387,6 +395,11 @@ const getResourceRowsCached = unstable_cache(
         url: true,
         sourceUrl: true,
         lastVerified: true,
+        attachmentName: true,
+        attachmentMimeType: true,
+        attachmentSizeBytes: true,
+        attachmentStatus: true,
+        attachmentError: true,
         faculty: { select: { id: true, name: true, code: true } },
       },
     });
@@ -396,18 +409,37 @@ const getResourceRowsCached = unstable_cache(
 );
 
 export async function getResourceById(id: string) {
+  if (!isUuid(id)) return null;
   return getResourceByIdCached(id);
 }
 
 const getResourceByIdCached = unstable_cache(
   async (id: string) => {
     const prisma = getPrismaClient();
-    return prisma.resource.findUnique({
+    const resource = await prisma.resource.findUnique({
       where: { id },
       include: {
         faculty: { select: { id: true, name: true, code: true } },
       },
     });
+
+    if (!resource) {
+      return null;
+    }
+
+    const difySyncMap = await prisma.difySyncMap.findUnique({
+      where: {
+        sourceTable_sourceId: {
+          sourceTable: 'resources',
+          sourceId: id,
+        },
+      },
+    });
+
+    return {
+      ...resource,
+      difySyncMap,
+    };
   },
   ["resource-by-id"],
   { tags: [ADMIN_CACHE_TAGS.resources], revalidate: 300 },
@@ -440,6 +472,7 @@ const getFaqRowsCached = unstable_cache(
 );
 
 export async function getFaqById(id: string) {
+  if (!isUuid(id)) return null;
   return getFaqByIdCached(id);
 }
 
@@ -812,3 +845,4 @@ const getHealthOverviewCached = unstable_cache(
   ["health-overview"],
   { tags: [ADMIN_CACHE_TAGS.health, ADMIN_CACHE_TAGS.faculties, ADMIN_CACHE_TAGS.coaches, ADMIN_CACHE_TAGS.programmes, ADMIN_CACHE_TAGS.courseModules, ADMIN_CACHE_TAGS.resources, ADMIN_CACHE_TAGS.faqs], revalidate: 120 },
 );
+

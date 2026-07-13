@@ -23,7 +23,7 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
       setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);
-      console.error("Failed to upload resource document:", error);
+      console.error("Failed to Upload Resource Document:", error);
     }
   };
 
@@ -92,7 +92,7 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
           </Field>
 
           <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] px-4 py-3 text-sm leading-6 text-[color:var(--color-text-muted)]">
-            Uploaded documents and PNG/JPEG images are extracted into the Kganya source-record tables and chunked for vector search.
+            Uploaded files are staged locally, then queued into Dify as document sync jobs. If the sync fails after retries, the resource stays visible for manual repair.
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--color-border)]">
@@ -117,3 +117,4 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
     </>
   );
 }
+

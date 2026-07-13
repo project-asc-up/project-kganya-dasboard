@@ -1,2 +1,2 @@
-# Project: Project ASC
-@~/.gemini/projects/project-asc.md
+# Project: Project Kganya
+@~/.gemini/projects/project-kganya-dasboard.md

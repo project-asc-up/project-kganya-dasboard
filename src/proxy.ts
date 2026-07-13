@@ -30,10 +30,18 @@ async function hasDevelopmentAdminSession(request: MiddlewareRequest) {
 
 export default clerkMiddleware(async (auth, request) => {
   const middlewareRequest = request as MiddlewareRequest;
+  const hasLocalAdminSession = await hasDevelopmentAdminSession(middlewareRequest);
+
+  if (hasLocalAdminSession) {
+    const requestHeaders = new Headers(middlewareRequest.headers);
+    requestHeaders.set("x-pathname", middlewareRequest.nextUrl.pathname);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   const session = await auth();
   const isSignedIn = !!session.userId;
 
-  if (isProtectedRoute(middlewareRequest) && !(await hasDevelopmentAdminSession(middlewareRequest))) {
+  if (isProtectedRoute(middlewareRequest)) {
     const signInUrl = new URL("/sign-in", middlewareRequest.url).toString();
     const unauthorizedUrl = new URL("/", middlewareRequest.url).toString();
 

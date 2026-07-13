@@ -118,6 +118,13 @@ export function isPathAllowed(pathname: string, allowedTabs: string[] = []): boo
 
   const normalized = normalizeTabPathname(pathname);
 
+  // Search is a utility surface launched from the shell header, not a
+  // configurable content tab. Anyone who can open the admin overview can use
+  // it without making the search route appear as a separately managed tab.
+  if (normalized === "/admin/search" && allowedTabs.includes("/admin")) {
+    return true;
+  }
+
   // Direct match
   if (allowedTabs.includes(normalized)) {
     return true;

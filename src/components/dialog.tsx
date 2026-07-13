@@ -79,7 +79,7 @@ export function Dialog({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/30 animate-fade-in"
+        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm animate-fade-in"
         onClick={handleBackdropClick}
         role="presentation"
       />

@@ -28,8 +28,12 @@ export default async function ProgrammeDetailPage({
     notFound();
   }
 
-  const updateAction = updateProgramme.bind(null, programme.id);
-  const deleteAction = deleteProgramme.bind(null, programme.id);
+  const updateAction = async (formData: FormData) => {
+    await updateProgramme(programme.id, formData);
+  };
+  const deleteAction = async () => {
+    await deleteProgramme(programme.id);
+  };
   const canUpdate = canAccess(authz, "programme:update");
   const canDelete = canAccess(authz, "programme:delete");
 

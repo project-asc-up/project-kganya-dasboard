@@ -216,7 +216,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                               {displayFacultyName(coach.faculty.name)}
                             </div>
                           </div>
-                          <Badge tone="brand" soft className="shrink-0">
+                          <Badge tone="brand" className="shrink-0">
                             {coach.faculty.code}
                           </Badge>
                         </Button>

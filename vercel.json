@@ -2,19 +2,10 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "env": [
-    "DATABASE_URL",
-    "BETTER_AUTH_SECRET"
-  ],
-  "previewDeploymentBlocker": {
-    "enabled": false
-  },
-  "productionDeploymentBlocker": {
-    "enabled": false
-  },
   "git": {
     "deploymentEnabled": {
       "main": true
     }
   }
 }
+

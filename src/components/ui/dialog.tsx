@@ -117,7 +117,6 @@ export function Dialog({
                 icon={X}
                 onClick={() => onOpenChange(false)}
                 aria-label="Close dialog"
-                size="sm"
                 variant="ghost"
                 rounded="full"
               />
