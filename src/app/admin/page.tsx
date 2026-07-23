@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { PageHeader, Section } from "@/components/admin-form";
+import { DifyBackfillButton } from "@/components/dify-backfill-button";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { getHealthOverview } from "@/lib/admin-queries";
 import { getCurrentAuthorization } from "@/lib/rbac";
@@ -27,6 +28,8 @@ const shortcuts = [
 ];
 
 export default async function AdminHomePage() {
+  const authz = await getCurrentAuthorization();
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -56,6 +59,7 @@ export default async function AdminHomePage() {
             <p className="mt-3 text-sm leading-6 text-[var(--color-text-muted)]">{item.description}</p>
           </Link>
         ))}
+        {authz?.isSuperAdmin && <DifyBackfillButton />}
       </section>
 
     </div>
