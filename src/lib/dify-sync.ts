@@ -1,4 +1,4 @@
-﻿import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { Prisma } from "@/generated/prisma/client";
@@ -280,16 +280,24 @@ export async function processPendingDifySyncJobs(limit = 10) {
               },
             },
           });
-          if (!map?.difyDocumentId) {
-            throw new Error("Missing Dify document id for file update");
+          if (map?.difyDocumentId) {
+            await updateDifyDocumentFromFile(map.difyDocumentId, {
+              name,
+              fileName: staged.fileName,
+              filePath: staged.filePath,
+              mimeType: staged.mimeType,
+            });
+            difyDocumentId = map.difyDocumentId;
+          } else {
+            // Fallback: If it's an update but we have no existing document mapped in Dify,
+            // create it fresh.
+            difyDocumentId = await createDifyDocumentFromFile({
+              name,
+              fileName: staged.fileName,
+              filePath: staged.filePath,
+              mimeType: staged.mimeType,
+            });
           }
-          await updateDifyDocumentFromFile(map.difyDocumentId, {
-            name,
-            fileName: staged.fileName,
-            filePath: staged.filePath,
-            mimeType: staged.mimeType,
-          });
-          difyDocumentId = map.difyDocumentId;
         }
       } else {
         const text = typeof payload.text === "string" ? payload.text : "";
@@ -307,11 +315,14 @@ export async function processPendingDifySyncJobs(limit = 10) {
               },
             },
           });
-          if (!map?.difyDocumentId) {
-            throw new Error("Missing Dify document id for text update");
+          if (map?.difyDocumentId) {
+            await updateDifyDocument(map.difyDocumentId, name, text);
+            difyDocumentId = map.difyDocumentId;
+          } else {
+            // Fallback: If it's an update but we have no existing document mapped in Dify,
+            // create it fresh.
+            difyDocumentId = await createDifyDocument(name, text);
           }
-          await updateDifyDocument(map.difyDocumentId, name, text);
-          difyDocumentId = map.difyDocumentId;
         }
       }
 

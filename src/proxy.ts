@@ -31,8 +31,13 @@ async function hasDevelopmentAdminSession(request: MiddlewareRequest) {
 export default clerkMiddleware(async (auth, request) => {
   const middlewareRequest = request as MiddlewareRequest;
   const hasLocalAdminSession = await hasDevelopmentAdminSession(middlewareRequest);
+  const secretParam = middlewareRequest.nextUrl.searchParams.get("secret");
+  const isBackfillSecret =
+    middlewareRequest.nextUrl.pathname === "/api/admin/dify-sync/backfill" &&
+    !!process.env.ADMIN_PASSWORD &&
+    secretParam === process.env.ADMIN_PASSWORD;
 
-  if (hasLocalAdminSession) {
+  if (hasLocalAdminSession || isBackfillSecret) {
     const requestHeaders = new Headers(middlewareRequest.headers);
     requestHeaders.set("x-pathname", middlewareRequest.nextUrl.pathname);
     return NextResponse.next({ request: { headers: requestHeaders } });

@@ -1,4 +1,3 @@
-import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 function isLocalHost(hostname: string) {
@@ -16,6 +15,9 @@ function normalizeConnectionString(connectionString: string) {
     url.searchParams.delete("sslmode");
   }
 
+  // pg driver does not support channel_binding
+  url.searchParams.delete("channel_binding");
+
   return url.toString();
 }
 
@@ -29,13 +31,6 @@ export function resolveDatabaseTransport(
 
 export function createDatabaseAdapter(connectionString: string) {
   const normalizedConnectionString = normalizeConnectionString(connectionString);
-
-  if (resolveDatabaseTransport(normalizedConnectionString) === "neon") {
-    return new PrismaNeon({
-      connectionString: normalizedConnectionString,
-      max: 1,
-    });
-  }
 
   return new PrismaPg({ connectionString: normalizedConnectionString });
 }

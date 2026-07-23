@@ -1,7 +1,7 @@
 import { PrismaClient } from "@/generated/prisma/client";
 
-import { loadRepoEnv } from "@/lib/load-env";
 import { createDatabaseAdapter } from "@/lib/db-adapter";
+import { loadRepoEnv } from "@/lib/load-env";
 
 loadRepoEnv();
 

@@ -1,4 +1,4 @@
-﻿import { readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 
 function getDifyConfig() {
   const apiBase = process.env.DIFY_API_BASE ?? "https://api.dify.ai/v1";
@@ -18,7 +18,8 @@ function getDifyConfig() {
 
 async function difyJsonRequest(path: string, init: RequestInit) {
   const { apiBase, apiKey } = getDifyConfig();
-  const response = await fetch(`${apiBase}${path}`, {
+  const normalizedBase = apiBase.replace(/\/+$/, "");
+  const response = await fetch(`${normalizedBase}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -39,7 +40,8 @@ async function difyJsonRequest(path: string, init: RequestInit) {
 
 async function difyMultipartRequest(path: string, formData: FormData, init?: RequestInit) {
   const { apiBase, apiKey } = getDifyConfig();
-  const response = await fetch(`${apiBase}${path}`, {
+  const normalizedBase = apiBase.replace(/\/+$/, "");
+  const response = await fetch(`${normalizedBase}${path}`, {
     ...(init ?? {}),
     method: init?.method ?? "POST",
     body: formData,
@@ -62,7 +64,7 @@ async function difyMultipartRequest(path: string, formData: FormData, init?: Req
 
 export async function createDifyDocument(name: string, text: string): Promise<string> {
   const { datasetId } = getDifyConfig();
-  const data = (await difyJsonRequest(`/datasets/${datasetId}/document/create-by-text`, {
+  const data = (await difyJsonRequest(`/datasets/${datasetId}/document/create_by_text`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -75,7 +77,7 @@ export async function createDifyDocument(name: string, text: string): Promise<st
 
   const documentId = data.document?.id;
   if (!documentId) {
-    throw new Error("Dify create-by-text response did not include document.id");
+    throw new Error("Dify create_by_text response did not include document.id");
   }
 
   return documentId;
@@ -83,7 +85,7 @@ export async function createDifyDocument(name: string, text: string): Promise<st
 
 export async function updateDifyDocument(documentId: string, name: string, text: string) {
   const { datasetId } = getDifyConfig();
-  await difyJsonRequest(`/datasets/${datasetId}/documents/${documentId}/update-by-text`, {
+  await difyJsonRequest(`/datasets/${datasetId}/documents/${documentId}/update_by_text`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, text }),
@@ -126,13 +128,13 @@ async function buildFileFormData(input: DifyFileInput) {
 export async function createDifyDocumentFromFile(input: DifyFileInput): Promise<string> {
   const { datasetId } = getDifyConfig();
   const data = (await difyMultipartRequest(
-    `/datasets/${datasetId}/document/create-by-file`,
+    `/datasets/${datasetId}/document/create_by_file`,
     await buildFileFormData(input),
   )) as { document?: { id?: string } };
 
   const documentId = data.document?.id;
   if (!documentId) {
-    throw new Error("Dify create-by-file response did not include document.id");
+    throw new Error("Dify create_by_file response did not include document.id");
   }
 
   return documentId;
@@ -141,7 +143,7 @@ export async function createDifyDocumentFromFile(input: DifyFileInput): Promise<
 export async function updateDifyDocumentFromFile(documentId: string, input: DifyFileInput) {
   const { datasetId } = getDifyConfig();
   await difyMultipartRequest(
-    `/datasets/${datasetId}/documents/${documentId}/update-by-file`,
+    `/datasets/${datasetId}/documents/${documentId}/update_by_file`,
     await buildFileFormData(input),
     { method: "POST" },
   );
