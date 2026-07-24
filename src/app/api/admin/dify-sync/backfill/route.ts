@@ -6,9 +6,19 @@ import { syncFaculty, syncCoach, syncProgramme, syncResource, syncFaq } from "@/
 async function runReconcileAndBackfill() {
   const prisma = getPrismaClient();
 
-  // 1. Fetch Dify documents
+  // 1. Fetch Dify documents (with graceful fallback on 500 errors)
   console.log("Fetching Dify documents...");
-  const difyDocs = await getDifyDocuments();
+  let difyDocs: Array<{ id: string; name: string }> = [];
+  let reconciliationFailed = false;
+  let reconciliationError = "";
+  try {
+    difyDocs = await getDifyDocuments();
+  } catch (e) {
+    reconciliationFailed = true;
+    reconciliationError = e instanceof Error ? e.message : String(e);
+    console.warn("Reconciliation failed due to Dify API error, proceeding without matching:", e);
+  }
+
   const difyDocsMap = new Map<string, string>(); // name -> documentId
   for (const doc of difyDocs) {
     difyDocsMap.set(doc.name, doc.id);
@@ -100,6 +110,8 @@ async function runReconcileAndBackfill() {
 
   return {
     reconciledDifyDocsCount: difyDocs.length,
+    reconciliationFailed,
+    reconciliationError,
     backfilled: syncedCounts
   };
 }
