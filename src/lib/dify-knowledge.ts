@@ -151,10 +151,11 @@ export async function updateDifyDocumentFromFile(documentId: string, input: Dify
 
 export async function getDifyDocuments(): Promise<Array<{ id: string; name: string }>> {
   const { datasetId } = getDifyConfig();
-  const res = (await difyJsonRequest(`/datasets/${datasetId}/documents?page=1&limit=100`, {
+  const res = (await difyJsonRequest(`/datasets/${datasetId}/documents`, {
     method: "GET",
   })) as { data: Array<{ id: string; name: string }> };
 
   return res.data || [];
 }
+
 
