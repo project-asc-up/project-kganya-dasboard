@@ -2,17 +2,28 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { mkdir, writeFile, unlink } from "node:fs/promises";
+import { join } from "node:path";
 
 import { CoachLevel } from "@/generated/prisma/enums";
 import { Prisma } from "@/generated/prisma/client";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
-import { buildResourceTextContent, enqueueDifySyncJob, stageResourceUpload } from "@/lib/dify-sync";
 import { getPrismaClient } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac";
 import { executeMutationWithReceipt, type MutationReceiptStore } from "@/lib/mutation-receipts";
 import { faqIdentity } from "@/lib/mutation-identities";
 import type { MutationResult } from "@/lib/mutation-types";
+import {
+  syncFaculty,
+  syncCoach,
+  syncProgramme,
+  syncCourseModule,
+  syncResource,
+  syncFaq,
+} from "@/lib/dify-inline-sync";
+import { deleteDifyDocument, createDifyDocumentFromFile } from "@/lib/dify-knowledge";
+import { buildResourceTextContent } from "@/lib/dify-doc-builders";
 
 function textValue(formData: FormData, key: string) {
   const raw = formData.get(key);
@@ -88,60 +99,156 @@ export async function createFaculty(formData: FormData): Promise<MutationResult>
   const prisma = getPrismaClient();
   const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
   const data = {
-    name: requiredText(formData, "name"), code: requiredText(formData, "code").toUpperCase(), codeStatus: requiredText(formData, "codeStatus"),
-    officialPageUrl: textValue(formData, "officialPageUrl"), supportPageUrl: textValue(formData, "supportPageUrl"), sourceUrl: textValue(formData, "sourceUrl"),
-    lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes"), aliases: textValue(formData, "aliases"),
+    name: requiredText(formData, "name"),
+    code: requiredText(formData, "code").toUpperCase(),
+    codeStatus: requiredText(formData, "codeStatus"),
+    officialPageUrl: textValue(formData, "officialPageUrl"),
+    supportPageUrl: textValue(formData, "supportPageUrl"),
+    sourceUrl: textValue(formData, "sourceUrl"),
+    lastVerified: optionalDate(formData, "lastVerified"),
+    notes: textValue(formData, "notes"),
+    aliases: textValue(formData, "aliases"),
   };
   const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
-    store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId, payload: data, kind: "create", write: async () => { throw new Error("transaction required"); },
-    transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
-      const existing = await tx.faculty.findUnique({ where: { code: data.code } });
-      const faculty = existing ? await tx.faculty.update({ where: { id: existing.id }, data }) : await tx.faculty.create({ data });
-      return { recordId: faculty.id, created: !existing };
-    })),
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId,
+    payload: data,
+    kind: "create",
+    write: async () => {
+      throw new Error("transaction required");
+    },
+    transaction: async (work) =>
+      prisma.$transaction(async (tx) =>
+        work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+          const existing = await tx.faculty.findUnique({ where: { code: data.code } });
+          const faculty = existing
+            ? await tx.faculty.update({ where: { id: existing.id }, data })
+            : await tx.faculty.create({ data });
+          return { recordId: faculty.id, created: !existing };
+        })
+      ),
   });
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after faculty save.");
-  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: result.recordId, action: result.created ? "create" : "update", contentKind: "text", payload: { name: data.name, text: `${data.code}: ${data.name}\n${data.notes ?? ""}` } });
-  await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
-  return { mutationId: receipt.id, requestId, kind: "create", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
+
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
+  try {
+    await syncFaculty(result.recordId, result.created ? "create" : "update");
+  } catch (e) {
+    syncStatus = "failed";
+    syncError = e instanceof Error ? e.message : String(e);
+  }
+
+  return {
+    mutationId: receipt.id,
+    requestId,
+    kind: "create",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
+  };
 }
 
 export async function updateFaculty(id: string, formData: FormData): Promise<MutationResult> {
   await requirePermission("faculty:update");
   const prisma = getPrismaClient();
   const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
-  const data = { name: requiredText(formData, "name"), code: requiredText(formData, "code").toUpperCase(), codeStatus: requiredText(formData, "codeStatus"), officialPageUrl: textValue(formData, "officialPageUrl"), supportPageUrl: textValue(formData, "supportPageUrl"), sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes"), aliases: textValue(formData, "aliases") };
+  const data = {
+    name: requiredText(formData, "name"),
+    code: requiredText(formData, "code").toUpperCase(),
+    codeStatus: requiredText(formData, "codeStatus"),
+    officialPageUrl: textValue(formData, "officialPageUrl"),
+    supportPageUrl: textValue(formData, "supportPageUrl"),
+    sourceUrl: textValue(formData, "sourceUrl"),
+    lastVerified: optionalDate(formData, "lastVerified"),
+    notes: textValue(formData, "notes"),
+    aliases: textValue(formData, "aliases"),
+  };
   const result = await executeMutationWithReceipt<{ recordId: string }>({
-    store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId, payload: { id, ...data }, kind: "update", write: async () => { throw new Error("transaction required"); },
-    transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
-      const faculty = await tx.faculty.update({ where: { id }, data });
-      return { recordId: faculty.id };
-    })),
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId,
+    payload: { id, ...data },
+    kind: "update",
+    write: async () => {
+      throw new Error("transaction required");
+    },
+    transaction: async (work) =>
+      prisma.$transaction(async (tx) =>
+        work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+          const faculty = await tx.faculty.update({ where: { id }, data });
+          return { recordId: faculty.id };
+        })
+      ),
   });
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after faculty update.");
-  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: result.recordId, action: "update", contentKind: "text", payload: { name: data.name, text: `${data.code}: ${data.name}\n${data.notes ?? ""}` } });
-  await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
-  return { mutationId: receipt.id, requestId, kind: "update", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
+
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
+  try {
+    await syncFaculty(result.recordId, "update");
+  } catch (e) {
+    syncStatus = "failed";
+    syncError = e instanceof Error ? e.message : String(e);
+  }
+
+  return {
+    mutationId: receipt.id,
+    requestId,
+    kind: "update",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
+  };
 }
 
 export async function deleteFaculty(id: string, requestId?: string): Promise<MutationResult> {
   await requirePermission("faculty:delete");
   const prisma = getPrismaClient();
   const request = requestId ?? crypto.randomUUID();
+
+  // Fetch existing document ID for deletion before deleting the record
+  const facultyRecord = await prisma.faculty.findUnique({ where: { id }, select: { difyDocumentId: true } });
+
   const result = await executeMutationWithReceipt<{ recordId: string }>({
-    store: prisma.mutationReceipt as unknown as MutationReceiptStore, requestId: request, payload: { id }, kind: "delete", write: async () => { throw new Error("transaction required"); },
-    transaction: async (work) => prisma.$transaction(async (tx) => work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
-      await tx.faculty.delete({ where: { id } });
-      return { recordId: id };
-    })),
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId: request,
+    payload: { id },
+    kind: "delete",
+    write: async () => {
+      throw new Error("transaction required");
+    },
+    transaction: async (work) =>
+      prisma.$transaction(async (tx) =>
+        work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+          await tx.faculty.delete({ where: { id } });
+          return { recordId: id };
+        })
+      ),
   });
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId: request } });
   if (!receipt) throw new Error("Mutation receipt was not found after faculty delete.");
-  const syncJob = await enqueueDifySyncJob({ sourceTable: "faculties", sourceId: id, action: "delete", contentKind: "text", payload: { name: id } });
-  await prisma.mutationReceipt.update({ where: { requestId: request }, data: { syncJobId: syncJob.id } });
-  return { mutationId: receipt.id, requestId: request, kind: "delete", recordId: result.recordId, persistence: "saved", sync: { status: "pending", jobId: syncJob.id } };
+
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
+  try {
+    if (facultyRecord?.difyDocumentId) {
+      await deleteDifyDocument(facultyRecord.difyDocumentId);
+    }
+  } catch (e) {
+    syncStatus = "failed";
+    syncError = e instanceof Error ? e.message : String(e);
+  }
+
+  return {
+    mutationId: receipt.id,
+    requestId: request,
+    kind: "delete",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
+  };
 }
 
 export async function createCoach(formData: FormData) {
@@ -169,6 +276,12 @@ export async function createCoach(formData: FormData) {
       notes: textValue(formData, "notes"),
     },
   });
+
+  try {
+    await syncCoach(coach.id, "create");
+  } catch (e) {
+    console.error("Dify sync failed for coach create:", e);
+  }
 
   redirectTo("coaches");
   redirect("/admin/coaches");
@@ -201,6 +314,12 @@ export async function updateCoach(id: string, formData: FormData) {
     },
   });
 
+  try {
+    await syncCoach(id, "update");
+  } catch (e) {
+    console.error("Dify sync failed for coach update:", e);
+  }
+
   redirectTo("coaches");
   redirect("/admin/coaches");
 }
@@ -208,6 +327,14 @@ export async function updateCoach(id: string, formData: FormData) {
 export async function deleteCoach(id: string) {
   await requirePermission("coach:delete");
   const prisma = getPrismaClient();
+  const coach = await prisma.ascCoach.findUnique({ where: { id }, select: { difyDocumentId: true } });
+  if (coach?.difyDocumentId) {
+    try {
+      await deleteDifyDocument(coach.difyDocumentId);
+    } catch (e) {
+      console.error("Failed to delete Dify document for coach:", e);
+    }
+  }
   await prisma.ascCoach.delete({ where: { id } });
   redirectTo("coaches");
   redirect("/admin/coaches");
@@ -233,6 +360,12 @@ export async function createProgramme(formData: FormData) {
       notes: textValue(formData, "notes"),
     },
   });
+
+  try {
+    await syncProgramme(programme.id, "create");
+  } catch (e) {
+    console.error("Dify sync failed for programme create:", e);
+  }
 
   redirectTo("programmes", programme.id);
   redirect(`/admin/programmes/${programme.id}`);
@@ -260,6 +393,12 @@ export async function updateProgramme(id: string, formData: FormData) {
     },
   });
 
+  try {
+    await syncProgramme(id, "update");
+  } catch (e) {
+    console.error("Dify sync failed for programme update:", e);
+  }
+
   redirectTo("programmes", id);
   redirect(`/admin/programmes/${id}`);
 }
@@ -267,6 +406,14 @@ export async function updateProgramme(id: string, formData: FormData) {
 export async function deleteProgramme(id: string) {
   await requirePermission("programme:delete");
   const prisma = getPrismaClient();
+  const programme = await prisma.programme.findUnique({ where: { id }, select: { difyDocumentId: true } });
+  if (programme?.difyDocumentId) {
+    try {
+      await deleteDifyDocument(programme.difyDocumentId);
+    } catch (e) {
+      console.error("Dify sync failed for programme delete:", e);
+    }
+  }
   await prisma.programme.delete({ where: { id } });
   redirectTo("programmes");
   redirect("/admin/programmes");
@@ -295,6 +442,12 @@ export async function createCourseModule(formData: FormData) {
     },
   });
 
+  try {
+    await syncCourseModule(courseModule.id, "create", programmeId);
+  } catch (e) {
+    console.error("Dify sync failed for course module create:", e);
+  }
+
   redirectTo("course-modules", courseModule.id);
   redirect(`/admin/course-modules/${courseModule.id}`);
 }
@@ -302,10 +455,11 @@ export async function createCourseModule(formData: FormData) {
 export async function updateCourseModule(id: string, formData: FormData) {
   await requirePermission("course-module:update");
   const prisma = getPrismaClient();
+  const programmeId = requiredText(formData, "programmeId");
   await prisma.courseModule.update({
     where: { id },
     data: {
-      programmeId: requiredText(formData, "programmeId"),
+      programmeId,
       facultyCode: textValue(formData, "facultyCode"),
       sourceFacultyCode: textValue(formData, "sourceFacultyCode"),
       programmeCode: requiredText(formData, "programmeCode"),
@@ -322,6 +476,12 @@ export async function updateCourseModule(id: string, formData: FormData) {
     },
   });
 
+  try {
+    await syncCourseModule(id, "update", programmeId);
+  } catch (e) {
+    console.error("Dify sync failed for course module update:", e);
+  }
+
   redirectTo("course-modules", id);
   redirect(`/admin/course-modules/${id}`);
 }
@@ -329,7 +489,17 @@ export async function updateCourseModule(id: string, formData: FormData) {
 export async function deleteCourseModule(id: string) {
   await requirePermission("course-module:delete");
   const prisma = getPrismaClient();
+  const mod = await prisma.courseModule.findUnique({ where: { id }, select: { programmeId: true } });
   await prisma.courseModule.delete({ where: { id } });
+
+  if (mod) {
+    try {
+      await syncProgramme(mod.programmeId, "update");
+    } catch (e) {
+      console.error("Dify sync failed for course module delete:", e);
+    }
+  }
+
   redirectTo("course-modules");
   redirect("/admin/course-modules");
 }
@@ -337,11 +507,23 @@ export async function deleteCourseModule(id: string) {
 export async function createResource(formData: FormData) {
   await requirePermission("resource:create");
   const prisma = getPrismaClient();
+  const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
   const category = requiredText(formData, "category");
   const url = requiredText(formData, "url");
+  const data = {
+    facultyId,
+    facultyCode,
+    title,
+    category,
+    url,
+    description: textValue(formData, "description"),
+    sourceUrl: textValue(formData, "sourceUrl"),
+    lastVerified: optionalDate(formData, "lastVerified"),
+    notes: textValue(formData, "notes"),
+  };
   const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title);
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.resource.findUnique({
@@ -351,63 +533,75 @@ export async function createResource(formData: FormData) {
     return Boolean(existing);
   });
 
-  const resource = await prisma.resource.create({
-    data: {
-      seedKey,
-      facultyId,
-      resourceType: "link",
-      category,
-      title,
-      description: textValue(formData, "description"),
-      url,
-      sourceUrl: textValue(formData, "sourceUrl"),
-      lastVerified: optionalDate(formData, "lastVerified"),
-      notes: textValue(formData, "notes"),
-      attachmentName: null,
-      attachmentMimeType: null,
-      attachmentSizeBytes: null,
-      attachmentStatus: "pending",
-      attachmentError: null,
+  const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId,
+    payload: data,
+    kind: "create",
+    write: async () => {
+      throw new Error("transaction required");
     },
+    transaction: async (work) =>
+      prisma.$transaction(async (tx) =>
+        work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+          const resource = await tx.resource.create({
+            data: {
+              seedKey,
+              facultyId,
+              resourceType: "link",
+              category,
+              title,
+              description: data.description,
+              url,
+              sourceUrl: data.sourceUrl,
+              lastVerified: data.lastVerified,
+              notes: data.notes,
+              attachmentName: null,
+              attachmentMimeType: null,
+              attachmentSizeBytes: null,
+              attachmentStatus: "pending",
+              attachmentError: null,
+            },
+          });
+          return { recordId: resource.id, created: true };
+        })
+      ),
   });
 
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
+  if (!receipt) throw new Error("Mutation receipt was not found after resource save.");
+
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
   try {
-    await enqueueDifySyncJob({
-      sourceTable: "resources",
-      sourceId: resource.id,
-      action: "create",
-      contentKind: "text",
-      inputChecksum: null,
-      payload: {
-        name: title,
-        text: buildResourceTextContent({
-          title,
-          category,
-          description: textValue(formData, "description"),
-          url,
-          sourceUrl: textValue(formData, "sourceUrl"),
-          notes: textValue(formData, "notes"),
-        }),
-      },
-    });
+    await syncResource(result.recordId, "create");
   } catch (error) {
+    syncStatus = "failed";
+    syncError = error instanceof Error ? error.message : String(error);
     await prisma.resource.update({
-      where: { id: resource.id },
+      where: { id: result.recordId },
       data: {
         attachmentStatus: "failed",
-        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
+        attachmentError: syncError,
       },
     });
-    console.error("Failed to queue Dify sync for resource create:", error);
+    console.error("Failed to sync resource to Dify:", error);
   }
 
-  redirectTo("resources", resource.id);
-  redirect("/admin/resources/" + resource.id);
+  return {
+    mutationId: receipt.id,
+    requestId,
+    kind: "create",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
+  } satisfies MutationResult;
 }
 
 export async function createResourceDocument(formData: FormData) {
   await requirePermission("resource:create");
   const prisma = getPrismaClient();
+  const requestId = textValue(formData, "requestId") ?? crypto.randomUUID();
   const facultyId = await facultyIdOrNull(formData);
   const facultyCode = await facultyCodeForId(prisma, facultyId);
   const title = requiredText(formData, "title");
@@ -419,6 +613,18 @@ export async function createResourceDocument(formData: FormData) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const data = {
+    facultyId,
+    facultyCode,
+    title,
+    category,
+    description: textValue(formData, "description"),
+    sourceUrl: textValue(formData, "sourceUrl"),
+    lastVerified: optionalDate(formData, "lastVerified"),
+    notes: textValue(formData, "notes"),
+    fileName: file.name || "uploaded-document",
+    mimeType: file.type || "application/octet-stream",
+  };
   const baseSeedKey = buildAdminSeedKey("resource", facultyCode, title + " document");
   const seedKey = await resolveUniqueAdminSeedKey(baseSeedKey, async (candidate) => {
     const existing = await prisma.resource.findUnique({
@@ -428,61 +634,90 @@ export async function createResourceDocument(formData: FormData) {
     return Boolean(existing);
   });
 
-  const resource = await prisma.resource.create({
-    data: {
-      seedKey,
-      facultyId,
-      resourceType: "document",
-      category,
-      title,
-      description: textValue(formData, "description"),
-      url: "/admin/resources",
-      sourceUrl: textValue(formData, "sourceUrl"),
-      lastVerified: optionalDate(formData, "lastVerified"),
-      notes: textValue(formData, "notes"),
-      attachmentName: file.name || "uploaded-document",
-      attachmentMimeType: file.type || "application/octet-stream",
-      attachmentSizeBytes: file.size,
-      attachmentStatus: "pending",
-      attachmentError: null,
+  const result = await executeMutationWithReceipt<{ recordId: string; created: boolean }>({
+    store: prisma.mutationReceipt as unknown as MutationReceiptStore,
+    requestId,
+    payload: data,
+    kind: "create",
+    write: async () => {
+      throw new Error("transaction required");
     },
+    transaction: async (work) =>
+      prisma.$transaction(async (tx) =>
+        work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+          const resource = await tx.resource.create({
+            data: {
+              seedKey,
+              facultyId,
+              resourceType: "document",
+              category,
+              title,
+              description: data.description,
+              url: "/admin/resources",
+              sourceUrl: data.sourceUrl,
+              lastVerified: data.lastVerified,
+              notes: data.notes,
+              attachmentName: data.fileName,
+              attachmentMimeType: data.mimeType,
+              attachmentSizeBytes: file.size,
+              attachmentStatus: "pending",
+              attachmentError: null,
+            },
+          });
+          return { recordId: resource.id, created: true };
+        })
+      ),
   });
 
-  const staged = await stageResourceUpload({
-    sourceTable: "resources",
-    sourceId: resource.id,
-    fileName: file.name || "uploaded-document",
-    mimeType: file.type || "application/octet-stream",
-    bytes: buffer,
-  });
+  const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
+  if (!receipt) throw new Error("Mutation receipt was not found after resource upload.");
 
+  const tempDir = join(process.cwd(), ".tmp", "dify-sync");
+  await mkdir(tempDir, { recursive: true });
+  const tempFilePath = join(tempDir, `${result.recordId}_${data.fileName}`);
+  await writeFile(tempFilePath, buffer);
+
+  let difyDocumentId: string | null = null;
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
   try {
-    await enqueueDifySyncJob({
-      sourceTable: "resources",
-      sourceId: resource.id,
-      action: "create",
-      contentKind: "file",
-      inputChecksum: null,
-      payload: {
-        name: title,
-        filePath: staged.filePath,
-        fileName: file.name || "uploaded-document",
-        mimeType: file.type || "application/octet-stream",
+    difyDocumentId = await createDifyDocumentFromFile({
+      name: title,
+      fileName: data.fileName,
+      filePath: tempFilePath,
+      mimeType: data.mimeType,
+    });
+    await prisma.resource.update({
+      where: { id: result.recordId },
+      data: {
+        difyDocumentId,
+        attachmentStatus: "synced",
+        attachmentError: null,
       },
     });
   } catch (error) {
+    syncStatus = "failed";
+    syncError = error instanceof Error ? error.message : String(error);
     await prisma.resource.update({
-      where: { id: resource.id },
+      where: { id: result.recordId },
       data: {
         attachmentStatus: "failed",
-        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
+        attachmentError: syncError,
       },
     });
-    console.error("Failed to queue Dify sync for resource upload:", error);
+    console.error("Failed to sync document to Dify:", error);
+  } finally {
+    await unlink(tempFilePath).catch(() => {});
   }
 
-  redirectTo("resources", resource.id);
-  redirect("/admin/resources/" + resource.id);
+  return {
+    mutationId: receipt.id,
+    requestId,
+    kind: "create",
+    recordId: result.recordId,
+    persistence: "saved",
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
+  } satisfies MutationResult;
 }
 
 export async function updateResource(id: string, formData: FormData) {
@@ -530,33 +765,17 @@ export async function updateResource(id: string, formData: FormData) {
   });
 
   try {
-    await enqueueDifySyncJob({
-      sourceTable: "resources",
-      sourceId: id,
-      action: "update",
-      contentKind: "text",
-      inputChecksum: null,
-      payload: {
-        name: title,
-        text: buildResourceTextContent({
-          title,
-          category,
-          description: textValue(formData, "description"),
-          url,
-          sourceUrl: textValue(formData, "sourceUrl"),
-          notes: textValue(formData, "notes"),
-        }),
-      },
-    });
+    await syncResource(id, "update");
   } catch (error) {
+    const syncError = error instanceof Error ? error.message : String(error);
     await prisma.resource.update({
       where: { id },
       data: {
         attachmentStatus: "failed",
-        attachmentError: error instanceof Error ? error.message : "Failed to queue Dify sync",
+        attachmentError: syncError,
       },
     });
-    console.error("Failed to queue Dify sync for resource update:", error);
+    console.error("Failed to sync resource update to Dify:", error);
   }
 
   redirectTo("resources", id);
@@ -566,25 +785,15 @@ export async function updateResource(id: string, formData: FormData) {
 export async function deleteResource(id: string) {
   await requirePermission("resource:delete");
   const prisma = getPrismaClient();
-  const existingResource = await prisma.resource.findUnique({ where: { id } });
-  await prisma.resource.delete({ where: { id } });
-
-  if (existingResource) {
+  const existingResource = await prisma.resource.findUnique({ where: { id }, select: { difyDocumentId: true } });
+  if (existingResource?.difyDocumentId) {
     try {
-      await enqueueDifySyncJob({
-        sourceTable: "resources",
-        sourceId: id,
-        action: "delete",
-        contentKind: "text",
-        inputChecksum: null,
-        payload: {
-          name: existingResource.title,
-        },
-      });
+      await deleteDifyDocument(existingResource.difyDocumentId);
     } catch (error) {
-      console.error("Failed to queue Dify sync for resource delete:", error);
+      console.error("Failed to delete Dify document for resource:", error);
     }
   }
+  await prisma.resource.delete({ where: { id } });
 
   redirectTo("resources");
   redirect("/admin/resources");
@@ -617,19 +826,53 @@ export async function createFaq(formData: FormData) {
         requestId,
         payload,
         kind: "create",
-        write: async () => { throw new Error("FAQ write must run inside transaction"); },
-        transaction: async (work) => prisma.$transaction(async (tx) => work(
-          tx.mutationReceipt as unknown as MutationReceiptStore,
-          async () => {
-            const identity = faqIdentity({ facultyId, category, question });
-            const candidates = await tx.faq.findMany({ where: { facultyId } });
-            const existing = candidates.find((candidate) => faqIdentity({ facultyId: candidate.facultyId, category: candidate.category, question: candidate.question }) === identity);
-            const faq = existing
-              ? await tx.faq.update({ where: { id: existing.id }, data: { answer, question, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } })
-              : await tx.faq.create({ data: { seedKey, facultyId, question, answer, category, priority: payload.priority, sourceUrl: textValue(formData, "sourceUrl"), lastVerified: optionalDate(formData, "lastVerified"), notes: textValue(formData, "notes") } });
-            return { recordId: faq.id, created: !existing };
-          },
-        ), { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }),
+        write: async () => {
+          throw new Error("FAQ write must run inside transaction");
+        },
+        transaction: async (work) =>
+          prisma.$transaction(
+            async (tx) =>
+              work(tx.mutationReceipt as unknown as MutationReceiptStore, async () => {
+                const identity = faqIdentity({ facultyId, category, question });
+                const candidates = await tx.faq.findMany({ where: { facultyId } });
+                const existing = candidates.find(
+                  (candidate) =>
+                    faqIdentity({
+                      facultyId: candidate.facultyId,
+                      category: candidate.category,
+                      question: candidate.question,
+                    }) === identity
+                );
+                const faq = existing
+                  ? await tx.faq.update({
+                      where: { id: existing.id },
+                      data: {
+                        answer,
+                        question,
+                        category,
+                        priority: payload.priority,
+                        sourceUrl: textValue(formData, "sourceUrl"),
+                        lastVerified: optionalDate(formData, "lastVerified"),
+                        notes: textValue(formData, "notes"),
+                      },
+                    })
+                  : await tx.faq.create({
+                      data: {
+                        seedKey,
+                        facultyId,
+                        question,
+                        answer,
+                        category,
+                        priority: payload.priority,
+                        sourceUrl: textValue(formData, "sourceUrl"),
+                        lastVerified: optionalDate(formData, "lastVerified"),
+                        notes: textValue(formData, "notes"),
+                      },
+                    });
+                return { recordId: faq.id, created: !existing };
+              }),
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+          ),
       });
     } catch (error) {
       const retryable = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034";
@@ -639,34 +882,23 @@ export async function createFaq(formData: FormData) {
   if (!result) throw new Error("FAQ mutation did not complete.");
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after FAQ save.");
-  if (receipt.syncJobId && receipt.result) {
-    const previous = receipt.result as { recordId?: string };
-    if (previous.recordId) {
-      return {
-        mutationId: receipt.id,
-        requestId,
-        kind: "create",
-        recordId: previous.recordId,
-        persistence: "saved",
-        sync: { status: "pending", jobId: receipt.syncJobId },
-      } satisfies MutationResult;
-    }
+
+  let syncStatus: "synced" | "failed" = "synced";
+  let syncError: string | null = null;
+  try {
+    await syncFaq(result.recordId, result.created ? "create" : "update");
+  } catch (error) {
+    syncStatus = "failed";
+    syncError = error instanceof Error ? error.message : String(error);
   }
-  const syncJob = await enqueueDifySyncJob({
-    sourceTable: "faqs",
-    sourceId: result.recordId,
-    action: result.created ? "create" : "update",
-    contentKind: "text",
-    payload: { name: question, text: `${question}\n\n${answer}` },
-  });
-  await prisma.mutationReceipt.update({ where: { requestId }, data: { syncJobId: syncJob.id } });
+
   return {
     mutationId: receipt.id,
     requestId,
     kind: "create",
     recordId: result.recordId,
     persistence: "saved",
-    sync: { status: "pending", jobId: syncJob.id },
+    sync: syncStatus === "synced" ? { status: "synced", jobId: "" } : { status: "failed", jobId: syncError ?? "Dify sync failed" },
   } satisfies MutationResult;
 }
 
@@ -700,6 +932,12 @@ export async function updateFaq(id: string, formData: FormData) {
     },
   });
 
+  try {
+    await syncFaq(id, "update");
+  } catch (e) {
+    console.error("Dify sync failed for FAQ update:", e);
+  }
+
   redirectTo("faqs");
   redirect("/admin/faqs");
 }
@@ -707,6 +945,14 @@ export async function updateFaq(id: string, formData: FormData) {
 export async function deleteFaq(id: string) {
   await requirePermission("faq:delete");
   const prisma = getPrismaClient();
+  const faq = await prisma.faq.findUnique({ where: { id }, select: { difyDocumentId: true } });
+  if (faq?.difyDocumentId) {
+    try {
+      await deleteDifyDocument(faq.difyDocumentId);
+    } catch (e) {
+      console.error("Dify sync failed for FAQ delete:", e);
+    }
+  }
   await prisma.faq.delete({ where: { id } });
   redirectTo("faqs");
   redirect("/admin/faqs");

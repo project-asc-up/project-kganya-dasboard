@@ -5,6 +5,7 @@ import { Modal } from '@/components/modal';
 import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
 import { displayFacultyName } from '@/lib/faculty-display';
 import { createResource } from '@/lib/admin-actions';
+import { MutationForm } from '@/components/mutation-form';
 
 interface CreateResourceModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
@@ -12,19 +13,6 @@ interface CreateResourceModalProps {
 
 export function CreateResourceModal({ faculties }: CreateResourceModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (formData: FormData) => {
-    try {
-      setIsSubmitting(true);
-      await createResource(formData);
-      setIsOpen(false);
-      setIsSubmitting(false);
-    } catch (error) {
-      setIsSubmitting(false);
-      console.error('Failed to create resource:', error);
-    }
-  };
 
   return (
     <>
@@ -38,7 +26,7 @@ export function CreateResourceModal({ faculties }: CreateResourceModalProps) {
         title="Create New Resource"
         size="lg"
       >
-        <form action={handleSubmit} className="space-y-5">
+        <MutationForm action={createResource} className="space-y-5" onComplete={() => setIsOpen(false)}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Faculty">
               <Select name="facultyId" defaultValue="">
@@ -86,19 +74,17 @@ export function CreateResourceModal({ faculties }: CreateResourceModalProps) {
               type="button"
               tone="secondary"
               onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
             >
               Cancel
             </ActionButton>
             <ActionButton
               type="submit"
-              loading={isSubmitting}
               loadingText="Creating..."
             >
               Create Resource
             </ActionButton>
           </div>
-        </form>
+        </MutationForm>
       </Modal>
     </>
   );

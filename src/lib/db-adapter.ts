@@ -1,9 +1,5 @@
-import { neonConfig, Pool } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
+import pg from "pg";
 
 function isLocalHost(hostname: string) {
   return (
@@ -37,10 +33,6 @@ export function resolveDatabaseTransport(
 export function createDatabaseAdapter(connectionString: string) {
   const normalizedConnectionString = normalizeConnectionString(connectionString);
 
-  if (resolveDatabaseTransport(normalizedConnectionString) === "neon") {
-    const pool = new Pool({ connectionString: normalizedConnectionString });
-    return new PrismaNeon(pool);
-  }
-
-  return new PrismaPg({ connectionString: normalizedConnectionString });
+  const pool = new pg.Pool({ connectionString: normalizedConnectionString });
+  return new PrismaPg(pool);
 }

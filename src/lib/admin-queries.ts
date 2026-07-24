@@ -427,14 +427,17 @@ const getResourceByIdCached = unstable_cache(
       return null;
     }
 
-    const difySyncMap = await prisma.difySyncMap.findUnique({
-      where: {
-        sourceTable_sourceId: {
-          sourceTable: 'resources',
-          sourceId: id,
-        },
-      },
-    });
+    const difySyncMap = resource.difyDocumentId ? {
+      syncStatus: "synced",
+      difyDocumentId: resource.difyDocumentId,
+      lastSyncedAt: resource.updatedAt,
+      lastError: null,
+    } : (resource.attachmentStatus === "failed" ? {
+      syncStatus: "failed",
+      difyDocumentId: null,
+      lastSyncedAt: null,
+      lastError: resource.attachmentError,
+    } : null);
 
     return {
       ...resource,

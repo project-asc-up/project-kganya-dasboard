@@ -25,6 +25,7 @@ model Faculty {
   lastVerified    DateTime?    @map("last_verified") @db.Date
   notes           String?
   aliases         String?
+  difyDocumentId  String?      @map("dify_document_id")
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
   ascCoaches      AscCoach[]
@@ -55,6 +56,7 @@ model AscCoach {
   lastVerified       DateTime?   @map("last_verified") @db.Date
   verificationStatus String?     @map("verification_status")
   notes              String?
+  difyDocumentId     String?     @map("dify_document_id")
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
   faculty            Faculty     @relation(fields: [facultyId], references: [id], onDelete: Restrict)
@@ -83,6 +85,7 @@ model Programme {
   sourceFile        String?        @map("source_file")
   lastVerified      DateTime?      @map("last_verified") @db.Date
   notes             String?
+  difyDocumentId    String?        @map("dify_document_id")
   createdAt         DateTime       @default(now()) @map("created_at")
   updatedAt         DateTime       @updatedAt @map("updated_at")
   faculty           Faculty        @relation(fields: [facultyId], references: [id], onDelete: Restrict)
@@ -141,6 +144,7 @@ model Resource {
   attachmentSizeBytes Int?      @map("attachment_size_bytes")
   attachmentStatus   String?   @map("attachment_status")
   attachmentError    String?   @map("attachment_error")
+  difyDocumentId     String?   @map("dify_document_id")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   faculty            Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
@@ -151,50 +155,12 @@ model Resource {
   @@map("resources")
 }
 
-model DifySyncMap {
-  sourceTable    String    @map("source_table")
-  sourceId       String    @map("source_id")
-  difyDocumentId String?   @map("dify_document_id")
-  syncStatus     String    @default("pending") @map("sync_status")
-  lastSyncedAt   DateTime? @map("last_synced_at") @db.Timestamptz(6)
-  lastError      String?   @map("last_error")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  @@id([sourceTable, sourceId])
-  @@index([syncStatus])
-  @@map("dify_sync_map")
-}
-
-model DifySyncJob {
-  id             String    @id @default(uuid()) @db.Uuid
-  sourceTable    String    @map("source_table")
-  sourceId       String    @map("source_id")
-  syncAction     String    @map("sync_action")
-  contentKind    String    @map("content_kind")
-  dedupeKey      String?   @unique @map("dedupe_key")
-  status         String    @default("pending")
-  payload        Json?     @map("payload")
-  attemptCount   Int       @default(0) @map("attempt_count")
-  nextRetryAt    DateTime? @map("next_retry_at") @db.Timestamptz(6)
-  lastError      String?   @map("last_error")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  @@index([status, nextRetryAt])
-  @@index([sourceTable, sourceId])
-  @@index([syncAction])
-  @@index([dedupeKey, status])
-  @@map("dify_sync_jobs")
-}
-
 model MutationReceipt {
   id          String    @id @default(uuid()) @db.Uuid
   requestId   String    @unique @map("request_id")
   payloadHash String    @map("payload_hash")
   kind        String
   recordId    String?   @map("record_id")
-  syncJobId   String?   @map("sync_job_id")
   status      String    @default("processing")
   result      Json?
   errorMessage String?  @map("error_message")
@@ -217,6 +183,7 @@ model Faq {
   sourceUrl    String?   @map("source_url")
   lastVerified DateTime? @map("last_verified") @db.Date
   notes        String?
+  difyDocumentId String?   @map("dify_document_id")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   faculty      Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)

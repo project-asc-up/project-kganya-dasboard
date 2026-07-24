@@ -6,6 +6,7 @@ import { Modal } from "@/components/modal";
 import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from "@/components/admin-form";
 import { displayFacultyName } from "@/lib/faculty-display";
 import { createResourceDocument } from "@/lib/admin-actions";
+import { MutationForm } from "@/components/mutation-form";
 
 interface CreateResourceDocumentModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
@@ -13,19 +14,6 @@ interface CreateResourceDocumentModalProps {
 
 export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumentModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (formData: FormData) => {
-    try {
-      setIsSubmitting(true);
-      await createResourceDocument(formData);
-      setIsOpen(false);
-      setIsSubmitting(false);
-    } catch (error) {
-      setIsSubmitting(false);
-      console.error("Failed to Upload Resource Document:", error);
-    }
-  };
 
   return (
     <>
@@ -42,7 +30,7 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
         title="Upload Resource Document"
         size="lg"
       >
-        <form action={handleSubmit} className="space-y-5">
+        <MutationForm action={createResourceDocument} className="space-y-5" onComplete={() => setIsOpen(false)}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Faculty">
               <Select name="facultyId" defaultValue="">
@@ -100,21 +88,18 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
               type="button"
               tone="secondary"
               onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
             >
               Cancel
             </ActionButton>
             <ActionButton
               type="submit"
-              loading={isSubmitting}
               loadingText="Uploading..."
             >
               Upload File
             </ActionButton>
           </div>
-        </form>
+        </MutationForm>
       </Modal>
     </>
   );
 }
-
