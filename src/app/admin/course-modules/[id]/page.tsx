@@ -7,8 +7,12 @@ import { canAccess, getCurrentAuthorization } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
-function formatDate(value: Date | null) {
-  return value ? value.toISOString().slice(0, 10) : "";
+function formatDate(value: Date | string | null) {
+  if (!value) return "";
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  return typeof value === "string" ? value.slice(0, 10) : "";
 }
 
 export default async function CourseModuleDetailPage({
