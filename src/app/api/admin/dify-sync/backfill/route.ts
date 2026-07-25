@@ -71,7 +71,7 @@ async function runReconcileAndBackfill() {
 
   // Now run inline sync for any record that still does not have a difyDocumentId
   console.log("Backfilling missing records to Dify...");
-  let syncedCounts = { faculties: 0, coaches: 0, programmes: 0, resources: 0, faqs: 0 };
+  const syncedCounts = { faculties: 0, coaches: 0, programmes: 0, resources: 0, faqs: 0 };
 
   // Synced Faculties
   const pendingFaculties = await prisma.faculty.findMany({ where: { difyDocumentId: null } });

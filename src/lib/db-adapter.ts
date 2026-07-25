@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
+import { execSync } from "node:child_process";
 
 function isLocalHost(hostname: string) {
   return (
@@ -9,30 +10,65 @@ function isLocalHost(hostname: string) {
   );
 }
 
-function normalizeConnectionString(connectionString: string) {
-  const url = new URL(connectionString);
-
-  if (isLocalHost(url.hostname)) {
-    url.searchParams.delete("sslmode");
+function resolveHostnameSync(hostname: string): string {
+  if (isLocalHost(hostname)) {
+    return hostname;
   }
 
-  // pg driver does not support channel_binding
-  url.searchParams.delete("channel_binding");
+  // Only resolve Neon database hostnames to IPv4 synchronously to avoid IPv6 routing ETIMEDOUT on local dev machines
+  if (!hostname.endsWith(".neon.tech")) {
+    return hostname;
+  }
 
-  return url.toString();
+  try {
+    const cmd = `node -e "require('node:dns').resolve4('${hostname}', (err, addrs) => console.log(addrs ? addrs[0] : ''))"`;
+    const ip = execSync(cmd, { encoding: "utf8" }).trim();
+    if (ip && ip.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+      return ip;
+    }
+  } catch (e) {
+    console.error(`[Prisma Database Adapter] Synchronous DNS resolution failed for hostname ${hostname}:`, e);
+  }
+  return hostname;
 }
 
 export function resolveDatabaseTransport(
   connectionString: string,
 ): "neon" | "pg" {
   const { hostname } = new URL(connectionString);
-
   return hostname.endsWith(".neon.tech") ? "neon" : "pg";
 }
 
 export function createDatabaseAdapter(connectionString: string) {
-  const normalizedConnectionString = normalizeConnectionString(connectionString);
+  const url = new URL(connectionString);
+  const originalHostname = url.hostname;
 
-  const pool = new pg.Pool({ connectionString: normalizedConnectionString });
+  // Resolve to IPv4 synchronously if it's a Neon hostname
+  const resolvedIp = resolveHostnameSync(originalHostname);
+
+  const parsed = new URL(connectionString);
+  
+  // Remove channel_binding because pg driver doesn't support it
+  parsed.searchParams.delete("channel_binding");
+  // Remove sslmode from connection string when using an IP to prevent pg from overriding our ssl config
+  if (resolvedIp !== originalHostname) {
+    parsed.searchParams.delete("sslmode");
+    parsed.hostname = resolvedIp;
+  }
+
+  if (isLocalHost(parsed.hostname)) {
+    parsed.searchParams.delete("sslmode");
+  }
+
+  const normalizedConnectionString = parsed.toString();
+
+  // Create pg pool
+  const pool = new pg.Pool({
+    connectionString: normalizedConnectionString,
+    ssl: resolvedIp !== originalHostname ? {
+      servername: originalHostname,
+    } : undefined
+  });
+
   return new PrismaPg(pool);
 }

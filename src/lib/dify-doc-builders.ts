@@ -1,4 +1,51 @@
+const METADATA_CONFIGS = {
+  faculties: {
+    tableName: "faculties",
+    tableRole: "Organization Divisions",
+    tableDescription: "Academic divisions (Faculties) of the university, containing support URLs and contact hubs."
+  },
+  asc_coaches: {
+    tableName: "asc_coaches",
+    tableRole: "Support Personnel",
+    tableDescription: "Contact details, office locations, appointment links, and levels for Academic Success Coaches."
+  },
+  programmes: {
+    tableName: "programmes",
+    tableRole: "Academic Curriculums",
+    tableDescription: "Degree programs offered by the university, including credit requirements, duration, and course modules."
+  },
+  resources: {
+    tableName: "resources",
+    tableRole: "Support Links",
+    tableDescription: "Stores external web links and support document URLs grouped by category (e.g. Registration, Fees)."
+  },
+  faqs: {
+    tableName: "faqs",
+    tableRole: "Standard Q&As",
+    tableDescription: "Stores frequently asked questions and answers for academic advising and general queries."
+  }
+} as const;
+
+function formatMetadataHeader(tableKey: keyof typeof METADATA_CONFIGS, recordId: string) {
+  const config = METADATA_CONFIGS[tableKey];
+  return [
+    `<!--`,
+    `SOURCE DATABASE TABLE: ${config.tableName}`,
+    `TABLE ROLE: ${config.tableRole}`,
+    `TABLE DESCRIPTION: ${config.tableDescription}`,
+    `RECORD IDENTIFIER (UUID): ${recordId}`,
+    `-->`,
+    `*System Note for AI Agent: This content represents a single row from the '${config.tableName}' database table. Use the metadata below for resolving references.*`,
+    `Database Table: ${config.tableName}`,
+    `Table Description: ${config.tableDescription}`,
+    `Record ID (UUID): ${recordId}`,
+    `---`,
+    ""
+  ].join("\n");
+}
+
 export function buildFacultyText(input: {
+  id: string;
   name: string;
   code: string;
   codeStatus: string;
@@ -7,6 +54,7 @@ export function buildFacultyText(input: {
   sourceUrl: string | null;
   notes: string | null;
 }) {
+  const metadataHeader = formatMetadataHeader("faculties", input.id);
   const lines = [
     `# Faculty: ${input.name}`,
     `- Code: ${input.code}`,
@@ -16,10 +64,11 @@ export function buildFacultyText(input: {
     input.sourceUrl ? `- Source URL: ${input.sourceUrl}` : null,
     input.notes ? `- Notes: ${input.notes}` : null,
   ].filter(Boolean);
-  return lines.join("\n").trim();
+  return metadataHeader + lines.join("\n").trim();
 }
 
 export function buildCoachText(input: {
+  id: string;
   name: string;
   email: string;
   titleRole: string | null;
@@ -35,6 +84,7 @@ export function buildCoachText(input: {
   facultyName?: string | null;
   facultyCode?: string | null;
 }) {
+  const metadataHeader = formatMetadataHeader("asc_coaches", input.id);
   const lines = [
     `# Coach: ${input.name}`,
     input.facultyName ? `- Faculty: ${input.facultyName} (${input.facultyCode ?? ""})` : null,
@@ -50,11 +100,12 @@ export function buildCoachText(input: {
     `- Level: ${input.level}`,
     input.notes ? `- Notes: ${input.notes}` : null,
   ].filter(Boolean);
-  return lines.join("\n").trim();
+  return metadataHeader + lines.join("\n").trim();
 }
 
 export function buildProgrammeText(
   programme: {
+    id: string;
     programmeName: string;
     programmeCode: string;
     degreeName: string | null;
@@ -73,6 +124,7 @@ export function buildProgrammeText(
     notes: string | null;
   }>
 ) {
+  const metadataHeader = formatMetadataHeader("programmes", programme.id);
   const lines = [
     `# Programme: ${programme.programmeName}`,
     `- Programme Code: ${programme.programmeCode}`,
@@ -98,10 +150,11 @@ export function buildProgrammeText(
     }
   }
 
-  return lines.join("\n").trim();
+  return metadataHeader + lines.join("\n").trim();
 }
 
 export function buildResourceTextContent(input: {
+  id: string;
   title: string;
   category: string;
   description: string | null;
@@ -109,6 +162,7 @@ export function buildResourceTextContent(input: {
   sourceUrl: string | null;
   notes: string | null;
 }) {
+  const metadataHeader = formatMetadataHeader("resources", input.id);
   const lines = [
     `# ${input.title}`,
     "",
@@ -120,13 +174,15 @@ export function buildResourceTextContent(input: {
     input.description ? input.description : null,
   ].filter((line): line is string => line !== null);
 
-  return lines.join("\n").trim();
+  return metadataHeader + lines.join("\n").trim();
 }
 
 export function buildFaqText(input: {
+  id: string;
   question: string;
   answer: string;
   category: string;
 }) {
-  return `# FAQ: ${input.question}\n- Category: ${input.category}\n\nAnswer:\n${input.answer}`;
+  const metadataHeader = formatMetadataHeader("faqs", input.id);
+  return metadataHeader + `# FAQ: ${input.question}\n- Category: ${input.category}\n\nAnswer:\n${input.answer}`;
 }

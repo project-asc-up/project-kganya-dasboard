@@ -1,4 +1,5 @@
 import { PageHeader, Section } from "@/components/admin-form";
+import { DifySyncPanel } from "@/components/dify-sync-panel";
 
 const importFiles = [
   "docs/seed-faculties.csv",
@@ -17,12 +18,19 @@ const importSteps = [
 ];
 
 export default function ImportsPage() {
+  const isDifyConfigured = !!(
+    process.env.DIFY_KB_API_KEY && 
+    process.env.DIFY_DATASET_ID
+  );
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Imports and sync notes"
         description="Reference the supported seed files and the editorial workflow used to keep the admin data current."
       />
+
+      <DifySyncPanel difyConfigured={isDifyConfigured} />
 
       <Section title="Import overview" description="These notes keep the seed workflow visible and repeatable.">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
