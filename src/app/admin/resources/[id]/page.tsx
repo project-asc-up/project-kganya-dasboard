@@ -33,9 +33,11 @@ export default async function ResourceDetailPage({
   }
 
   const updateAction = async (formData: FormData) => {
+    "use server";
     await updateResource(resource.id, formData);
   };
   const deleteAction = async () => {
+    "use server";
     await deleteResource(resource.id);
   };
   const canUpdate = canAccess(authz, "resource:update");

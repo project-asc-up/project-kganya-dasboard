@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 import { CoachLevel } from "@/generated/prisma/enums";
 import { Prisma } from "@/generated/prisma/client";
@@ -608,7 +609,7 @@ export async function createResourceDocument(formData: FormData) {
   const category = requiredText(formData, "category");
   const file = formData.get("documentFile");
 
-  if (!(file instanceof File)) {
+  if (!file || typeof file === "string" || !("arrayBuffer" in file)) {
     throw new Error("A document file is required.");
   }
 
@@ -672,7 +673,7 @@ export async function createResourceDocument(formData: FormData) {
   const receipt = await prisma.mutationReceipt.findUnique({ where: { requestId } });
   if (!receipt) throw new Error("Mutation receipt was not found after resource upload.");
 
-  const tempDir = join(process.cwd(), ".tmp", "dify-sync");
+  const tempDir = join(tmpdir(), "dify-sync");
   await mkdir(tempDir, { recursive: true });
   const tempFilePath = join(tempDir, `${result.recordId}_${data.fileName}`);
   await writeFile(tempFilePath, buffer);

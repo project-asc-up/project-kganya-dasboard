@@ -33,9 +33,11 @@ export default async function ProgrammeDetailPage({
   }
 
   const updateAction = async (formData: FormData) => {
+    "use server";
     await updateProgramme(programme.id, formData);
   };
   const deleteAction = async () => {
+    "use server";
     await deleteProgramme(programme.id);
   };
   const canUpdate = canAccess(authz, "programme:update");

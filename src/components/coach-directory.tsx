@@ -237,6 +237,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
                   <Button
                     key={item.key}
                     variant={statusFilter === item.key ? "primary" : "secondary"}
+                    aria-pressed={statusFilter === item.key}
                     size="sm"
                     rounded="full"
                     onClick={() => setStatusFilter(item.key)}
@@ -253,6 +254,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
         <div className="flex gap-2 overflow-x-auto pb-1">
           <Button
             variant={facultyFilter === "all" ? "primary" : "secondary"}
+            aria-pressed={facultyFilter === "all"}
             size="sm"
             rounded="full"
             onClick={() => setFacultyFilter("all")}
@@ -264,6 +266,7 @@ export function CoachDirectory({ coaches }: CoachDirectoryProps) {
             <Button
               key={faculty.id}
               variant={facultyFilter === faculty.id ? "primary" : "secondary"}
+              aria-pressed={facultyFilter === faculty.id}
               size="sm"
               rounded="full"
               onClick={() => setFacultyFilter(faculty.id)}

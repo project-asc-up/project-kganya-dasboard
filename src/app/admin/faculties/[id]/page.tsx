@@ -40,6 +40,7 @@ export default async function FacultyDetailPage({
   }
 
   const updateAction = async (formData: FormData) => {
+    "use server";
     await updateFaculty(faculty.id, formData);
   };
   const canUpdate = canAccess(authz, "faculty:update");

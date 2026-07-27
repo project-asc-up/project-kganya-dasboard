@@ -4,6 +4,7 @@ import { PageHeader, Section, TextInput } from "@/components/admin-form";
 import { CreateUserInviteModal } from "@/components/create-user-invite-modal";
 import { UserAccessEditor } from "@/components/user-access-editor";
 import { TabAccessEditor } from "@/components/tab-access-editor";
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { UserSearchAccordion } from "@/components/user-search-accordion";
 import { Button } from "@/components/ui/button";
 import { getManagedUserPage, RBAC_ROLES, ROLE_LABELS, getCurrentAuthorization } from "@/lib/rbac";
@@ -216,12 +217,12 @@ export default async function UserManagementPage({
       </Section>
 
       {canManageTabAccess ? (
-        <Section
+        <CollapsibleSection
           title="Role-based access control"
           description="Select which tabs are visible and accessible to Users and Admins. Super Admins always retain unrestricted access and do not require manual configuration."
         >
           <TabAccessEditor adminAllowed={adminAllowed} userAllowed={userAllowed} />
-        </Section>
+        </CollapsibleSection>
       ) : null}
     </div>
   );

@@ -42,9 +42,11 @@ export default async function FaqDetailPage({
   }
 
   const updateAction = async (formData: FormData) => {
+    "use server";
     await updateFaq(faq.id, formData);
   };
   const deleteAction = async () => {
+    "use server";
     await deleteFaq(faq.id);
   };
   const canUpdate = canAccess(authz, "faq:update");

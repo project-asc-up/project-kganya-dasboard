@@ -42,9 +42,11 @@ export default async function CoachDetailPage({
   }
 
   const updateAction = async (formData: FormData) => {
+    "use server";
     await updateCoach(coach.id, formData);
   };
   const deleteAction = async () => {
+    "use server";
     await deleteCoach(coach.id);
   };
   const canUpdate = canAccess(authz, "coach:update");
