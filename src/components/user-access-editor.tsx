@@ -10,6 +10,7 @@ import {
   suspendUserAction,
   unsuspendUserAction,
   banUserAction,
+  unbanUserAction,
 } from "@/lib/user-management-actions";
 import { initialUserAccessActionState } from "@/lib/user-management-types";
 
@@ -54,8 +55,9 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
   const [suspendState, suspendAction] = useActionState(suspendUserAction, initialUserAccessActionState);
   const [unsuspendState, unsuspendAction] = useActionState(unsuspendUserAction, initialUserAccessActionState);
   const [banState, banAction] = useActionState(banUserAction, initialUserAccessActionState);
+  const [unbanState, unbanAction] = useActionState(unbanUserAction, initialUserAccessActionState);
 
-  const [activeAction, setActiveAction] = useState<"suspend" | "ban" | "unsuspend" | null>(null);
+  const [activeAction, setActiveAction] = useState<"suspend" | "ban" | "unsuspend" | "unban" | null>(null);
   const [reason, setReason] = useState("");
 
   const confirmationRef = useRef<HTMLInputElement>(null);
@@ -72,7 +74,8 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
   const moderationState = 
     suspendState.status !== "idle" ? suspendState :
     unsuspendState.status !== "idle" ? unsuspendState :
-    banState.status !== "idle" ? banState : null;
+    banState.status !== "idle" ? banState :
+    unbanState.status !== "idle" ? unbanState : null;
 
   return (
     <div className="space-y-6">
@@ -208,9 +211,59 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
           ) : (
             <div className="space-y-4">
               {user.isBanned && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 space-y-1">
-                  <p className="font-semibold">This user is permanently banned.</p>
-                  <p className="text-xs">Reason: {user.banReason || "No reason provided."}</p>
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 space-y-3">
+                  <div className="space-y-1">
+                    <p className="font-semibold">This user is permanently banned.</p>
+                    <p className="text-xs">Reason: {user.banReason || "No reason provided."}</p>
+                  </div>
+                  
+                  {activeAction !== "unban" ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setActiveAction("unban");
+                        setReason("");
+                      }}
+                    >
+                      Unban User
+                    </Button>
+                  ) : (
+                    <form
+                      action={unbanAction}
+                      onSubmit={() => {
+                        setActiveAction(null);
+                      }}
+                      className="space-y-3 pt-2 border-t border-rose-200/50 animate-slide-up"
+                    >
+                      <input type="hidden" name="userId" value={user.id} />
+                      <label className="block space-y-2">
+                        <span className="text-xs font-semibold text-rose-900">Administrative note (optional)</span>
+                        <input
+                          type="text"
+                          name="reason"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder="Provide an optional administrative note..."
+                          className="w-full rounded-xl border border-rose-300 bg-white px-3 py-2 text-xs text-rose-950 outline-none"
+                        />
+                      </label>
+                      <div className="flex gap-2">
+                        <Button type="submit" variant="primary" size="sm">
+                          Confirm Unban
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setActiveAction(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               )}
 
@@ -231,7 +284,7 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                         setReason("");
                       }}
                     >
-                      Lift Suspension
+                      Unsuspend User
                     </Button>
                   ) : (
                     <form
@@ -239,24 +292,23 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                       onSubmit={() => {
                         setActiveAction(null);
                       }}
-                      className="space-y-3 pt-2 border-t border-amber-200/50"
+                      className="space-y-3 pt-2 border-t border-amber-200/50 animate-slide-up"
                     >
                       <input type="hidden" name="userId" value={user.id} />
                       <label className="block space-y-2">
-                        <span className="text-xs font-semibold text-amber-900">Reason for lifting suspension *</span>
+                        <span className="text-xs font-semibold text-amber-900">Administrative note (optional)</span>
                         <input
                           type="text"
                           name="reason"
                           value={reason}
                           onChange={(e) => setReason(e.target.value)}
-                          required
-                          placeholder="Provide a mandatory reason..."
+                          placeholder="Provide an optional administrative note..."
                           className="w-full rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs text-amber-950 outline-none"
                         />
                       </label>
                       <div className="flex gap-2">
                         <Button type="submit" variant="primary" size="sm">
-                          Confirm Lift
+                          Confirm Unsuspend
                         </Button>
                         <Button
                           type="button"

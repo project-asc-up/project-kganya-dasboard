@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { Modal } from '@/components/modal';
 import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
@@ -12,6 +13,7 @@ interface CreateCoachModalProps {
 }
 
 export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +24,10 @@ export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
       setError(null);
       setIsSubmitting(true);
       await createCoach(formData);
-      setIsOpen(false);
       setIsSubmitting(false);
       setShowSuccess(true);
+      setIsOpen(false);
+      router.refresh();
       setTimeout(() => {
         setShowSuccess(false);
       }, 4000);
@@ -49,7 +52,7 @@ export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
       {showSuccess && (
         <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span>Coach successfully created.</span>
+          <span>Coach created successfully.</span>
         </div>
       )}
 

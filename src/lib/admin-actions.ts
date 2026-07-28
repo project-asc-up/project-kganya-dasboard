@@ -285,7 +285,6 @@ export async function createCoach(formData: FormData) {
   }
 
   redirectTo("coaches");
-  redirect("/admin/coaches");
 }
 
 export async function updateCoach(id: string, formData: FormData) {
