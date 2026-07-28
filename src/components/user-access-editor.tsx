@@ -194,16 +194,16 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                 {user.roleLabel}
               </span>
             </div>
-            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <dl className="mt-4 flex flex-col gap-3 text-sm">
               <div>
                 <dt className="font-semibold text-[var(--color-text)]">Email</dt>
-                <dd className="mt-1 text-[var(--color-text-muted)]">{user.email ?? "No primary email"}</dd>
+                <dd className="mt-1 break-all text-[var(--color-text-muted)]">{user.email ?? "No primary email"}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-[var(--color-text)]">Username</dt>
-                <dd className="mt-1 text-[var(--color-text-muted)]">{user.username ?? "No username"}</dd>
+                <dd className="mt-1 break-all text-[var(--color-text-muted)]">{user.username ?? "No username"}</dd>
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <dt className="font-semibold text-[var(--color-text)]">Clerk user ID</dt>
                 <dd className="mt-1 break-all font-mono text-xs text-[var(--color-text-muted)]">{user.id}</dd>
               </div>
