@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 
 import { ActionButton, CreateButton, Field, Select, TextInput } from "@/components/admin-form";
 import { Modal } from "@/components/modal";
@@ -17,18 +19,27 @@ type CreateUserInviteModalProps = {
 };
 
 export function CreateUserInviteModal({ roles }: CreateUserInviteModalProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<UserAccessActionState>(initialUserInviteActionState);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (formData: FormData) => {
     try {
       setIsSubmitting(true);
+      setFeedback(initialUserInviteActionState);
       const result = await createUserInvitation(feedback, formData);
-      setFeedback(result);
       setIsSubmitting(false);
       if (result.status === "success") {
+        setShowSuccess(true);
         setIsOpen(false);
+        router.refresh();
+        setTimeout(() => {
+          setShowSuccess(false);
+        }, 4000);
+      } else {
+        setFeedback(result);
       }
     } catch (error) {
       setIsSubmitting(false);
@@ -39,11 +50,23 @@ export function CreateUserInviteModal({ roles }: CreateUserInviteModalProps) {
     }
   };
 
+  const handleClose = () => {
+    setFeedback(initialUserInviteActionState);
+    setIsOpen(false);
+  };
+
   return (
     <>
       <CreateButton onClick={() => setIsOpen(true)}>Invite User</CreateButton>
 
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Invite New User" size="md">
+      {showSuccess && (
+        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <span>Invitation sent successfully.</span>
+        </div>
+      )}
+
+      <Modal isOpen={isOpen} onClose={handleClose} title="Invite New User" size="md">
         <form action={handleSubmit} className="space-y-5">
           {feedback.status !== "idle" ? (
             <div
@@ -92,7 +115,7 @@ export function CreateUserInviteModal({ roles }: CreateUserInviteModalProps) {
             <ActionButton
               type="button"
               tone="secondary"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               disabled={isSubmitting}
             >
               Cancel

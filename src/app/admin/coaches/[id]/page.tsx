@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import {
   ActionButton,
@@ -58,7 +60,17 @@ export default async function CoachDetailPage({
   const canDelete = canAccess(authz, "coach:delete");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <div className="animate-slide-up">
+        <Link
+          href="/admin/coaches"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-brand)] hover:text-[var(--color-brand-soft-foreground)] transition"
+        >
+          <ArrowLeft className="h-4 w-3.5" />
+          <span>Back to coaches</span>
+        </Link>
+      </div>
+
       <PageHeader
         eyebrow="Coach detail"
         title={coach.name}

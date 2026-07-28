@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 
 import { ActionButton } from "@/components/admin-form";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,27 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
   );
 }
 
+function ModerationSubmitButton({ label, loadingLabel }: { label: string; loadingLabel: string }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      variant="primary"
+      size="sm"
+      disabled={pending}
+      className="inline-flex items-center gap-2"
+    >
+      {pending && (
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      )}
+      <span>{pending ? loadingLabel : label}</span>
+    </Button>
+  );
+}
+
 export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAccessEditorProps) {
+  const router = useRouter();
   const [state, formAction] = useActionState(updateUserAccess, initialUserAccessActionState);
   
   const [suspendState, suspendAction] = useActionState(suspendUserAction, initialUserAccessActionState);
@@ -70,6 +91,42 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
     setActiveAction(null);
     setReason("");
   }, [user.id]);
+
+  // Watch suspendState for success
+  useEffect(() => {
+    if (suspendState.status === "success") {
+      router.refresh();
+      setActiveAction(null);
+      setReason("");
+    }
+  }, [suspendState, router]);
+
+  // Watch unsuspendState for success
+  useEffect(() => {
+    if (unsuspendState.status === "success") {
+      router.refresh();
+      setActiveAction(null);
+      setReason("");
+    }
+  }, [unsuspendState, router]);
+
+  // Watch banState for success
+  useEffect(() => {
+    if (banState.status === "success") {
+      router.refresh();
+      setActiveAction(null);
+      setReason("");
+    }
+  }, [banState, router]);
+
+  // Watch unbanState for success
+  useEffect(() => {
+    if (unbanState.status === "success") {
+      router.refresh();
+      setActiveAction(null);
+      setReason("");
+    }
+  }, [unbanState, router]);
 
   const moderationState = 
     suspendState.status !== "idle" ? suspendState :
@@ -232,9 +289,6 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                   ) : (
                     <form
                       action={unbanAction}
-                      onSubmit={() => {
-                        setActiveAction(null);
-                      }}
                       className="space-y-3 pt-2 border-t border-rose-200/50 animate-slide-up"
                     >
                       <input type="hidden" name="userId" value={user.id} />
@@ -250,9 +304,7 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                         />
                       </label>
                       <div className="flex gap-2">
-                        <Button type="submit" variant="primary" size="sm">
-                          Confirm Unban
-                        </Button>
+                        <ModerationSubmitButton label="Confirm Unban" loadingLabel="Unbanning..." />
                         <Button
                           type="button"
                           variant="ghost"
@@ -289,9 +341,6 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                   ) : (
                     <form
                       action={unsuspendAction}
-                      onSubmit={() => {
-                        setActiveAction(null);
-                      }}
                       className="space-y-3 pt-2 border-t border-amber-200/50 animate-slide-up"
                     >
                       <input type="hidden" name="userId" value={user.id} />
@@ -307,9 +356,7 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                         />
                       </label>
                       <div className="flex gap-2">
-                        <Button type="submit" variant="primary" size="sm">
-                          Confirm Unsuspend
-                        </Button>
+                        <ModerationSubmitButton label="Confirm Unsuspend" loadingLabel="Unsuspending..." />
                         <Button
                           type="button"
                           variant="ghost"
@@ -354,9 +401,6 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                   ) : (
                     <form
                       action={activeAction === "suspend" ? suspendAction : banAction}
-                      onSubmit={() => {
-                        setActiveAction(null);
-                      }}
                       className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 animate-slide-up"
                     >
                       <input type="hidden" name="userId" value={user.id} />
@@ -375,9 +419,10 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
                         />
                       </label>
                       <div className="flex gap-2 pt-2">
-                        <Button type="submit" variant="primary" size="sm">
-                          Confirm {activeAction === "suspend" ? "Suspension" : "Ban"}
-                        </Button>
+                        <ModerationSubmitButton
+                          label={activeAction === "suspend" ? "Confirm Suspension" : "Confirm Ban"}
+                          loadingLabel={activeAction === "suspend" ? "Suspending..." : "Banning..."}
+                        />
                         <Button
                           type="button"
                           variant="ghost"

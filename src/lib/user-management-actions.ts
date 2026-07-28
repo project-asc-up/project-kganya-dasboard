@@ -53,7 +53,7 @@ export async function createUserInvitation(
     // Notify base44 agent to send an invitation email
     try {
       const roleLabel = role.replace("_", " ");
-      const invitationUrl = invitation.url || `https://up-asc-chatbot.vercel.app/sign-up`;
+      const invitationUrl = "https://up-asc-chatbot.vercel.app/admin";
       const messageText = `Please send an email to ${email} with the invitation link: ${invitationUrl} to join our team as a ${roleLabel}.`;
       await fetch(
         "https://app.base44.com/api/agents/6a00597ec92cb8615f50b66d/conversations/6a005983777455158d138471/messages",
@@ -78,10 +78,19 @@ export async function createUserInvitation(
       status: "success",
       message: `Invitation sent to ${email} with the ${role.replace("_", " ")} role.`,
     };
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Clerk invitation error:", error);
+    let errorMsg = "Unable to create the user invitation.";
+    if (error && typeof error === "object") {
+      if (Array.isArray(error.errors) && error.errors.length > 0) {
+        errorMsg = error.errors[0].longMessage || error.errors[0].message || errorMsg;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+    }
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Unable to create the user invitation.",
+      message: errorMsg,
     };
   }
 }
@@ -223,7 +232,7 @@ export async function unsuspendUserAction(
 
     return {
       status: "success",
-      message: "User suspension was lifted successfully.",
+      message: "User successfully unsuspended.",
     };
   } catch (error) {
     return {
@@ -392,7 +401,7 @@ export async function unbanUserAction(
 
     return {
       status: "success",
-      message: "User was unbanned successfully.",
+      message: "User successfully unbanned.",
     };
   } catch (error) {
     return {
