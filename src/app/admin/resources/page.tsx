@@ -1,4 +1,5 @@
-import { PageHeader, Section } from "@/components/admin-form";
+import { PageHeader } from "@/components/admin-form";
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { CreateResourceDocumentModal } from "@/components/create-resource-document-modal";
 import { CreateResourceModal } from "@/components/create-resource-modal";
 import { ResourceExplorer } from "@/components/resource-explorer";
@@ -29,9 +30,9 @@ export default async function ResourcesPage() {
         }
       />
 
-      <Section title="Resource atlas" description="Scrollable cards grouped by faculty, with external links and verification status.">
+      <CollapsibleSection title="Resource atlas" description="Scrollable cards grouped by faculty, with external links and verification status." defaultExpanded={true}>
         <ResourceExplorer resources={resources} />
-      </Section>
+      </CollapsibleSection>
     </div>
   );
 }
