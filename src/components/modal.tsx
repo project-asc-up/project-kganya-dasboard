@@ -68,10 +68,10 @@ export function Modal({
       ref={dialogRef}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
-      className="fixed inset-0 z-50 m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-5xl rounded-2xl border border-[color:var(--color-border)] shadow-2xl backdrop:bg-black/35 backdrop:backdrop-blur-sm open:animate-modal-in"
+      className={`fixed inset-0 z-50 m-auto max-h-[90vh] w-[calc(100%-2rem)] ${sizeClasses[size]} rounded-2xl border border-[color:var(--color-border)] bg-[var(--color-surface-raised)] shadow-2xl backdrop:bg-black/35 backdrop:backdrop-blur-sm open:animate-modal-in`}
     >
       <div className="max-h-[90vh] w-full overflow-y-auto">
-        <div className={`${sizeClasses[size]} flex flex-col bg-white`}>
+        <div className="flex flex-col w-full">
           {/* Header */}
           <div className="border-b border-[color:var(--color-border)] px-6 py-5 sm:px-8">
             <div className="flex items-center justify-between gap-4">

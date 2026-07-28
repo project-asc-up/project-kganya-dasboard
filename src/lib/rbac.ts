@@ -134,6 +134,10 @@ export type ManagedUser = {
   createdAt: number;
   lastSignInAt: number | null;
   isCurrentUser: boolean;
+  isSuspended: boolean;
+  isBanned: boolean;
+  suspensionReason: string | null;
+  banReason: string | null;
 };
 
 export type ManagedUserPage = {
@@ -255,6 +259,8 @@ async function getDevelopmentAuthorization(): Promise<CurrentAuthorization | nul
 
 function toManagedUser(user: User, currentUserId: string): ManagedUser {
   const role = roleForUser(user);
+  const isSuspended = Boolean(user.publicMetadata?.isSuspended);
+  const isBanned = Boolean(user.publicMetadata?.isBanned || user.banned);
 
   return {
     id: user.id,
@@ -267,6 +273,10 @@ function toManagedUser(user: User, currentUserId: string): ManagedUser {
     createdAt: user.createdAt,
     lastSignInAt: user.lastSignInAt,
     isCurrentUser: user.id === currentUserId,
+    isSuspended,
+    isBanned,
+    suspensionReason: (user.publicMetadata?.suspensionReason as string) ?? null,
+    banReason: (user.publicMetadata?.banReason as string) ?? null,
   };
 }
 
@@ -279,6 +289,10 @@ export async function getCurrentAuthorization(): Promise<CurrentAuthorization | 
 
   const user = await currentUser();
   if (!user) return null;
+
+  if (user.publicMetadata?.isSuspended || user.publicMetadata?.isBanned) {
+    return null;
+  }
 
   const role = roleForUser(user);
   const email = primaryEmailForUser(user);

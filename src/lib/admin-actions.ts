@@ -11,7 +11,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { ADMIN_CACHE_TAGS } from "@/lib/admin-cache-tags";
 import { buildAdminSeedKey, resolveUniqueAdminSeedKey } from "@/lib/admin-seed-keys";
 import { getPrismaClient } from "@/lib/prisma";
-import { requirePermission } from "@/lib/rbac";
+import { requirePermission, canAccess, getCurrentAuthorization } from "@/lib/rbac";
 import { executeMutationWithReceipt, type MutationReceiptStore } from "@/lib/mutation-receipts";
 import { faqIdentity } from "@/lib/mutation-identities";
 import type { MutationResult } from "@/lib/mutation-types";
@@ -289,8 +289,27 @@ export async function createCoach(formData: FormData) {
 }
 
 export async function updateCoach(id: string, formData: FormData) {
-  await requirePermission("coach:update");
   const prisma = getPrismaClient();
+  const coach = await prisma.ascCoach.findUnique({
+    where: { id },
+  });
+
+  if (!coach) {
+    throw new Error("Coach not found.");
+  }
+
+  const authz = await getCurrentAuthorization();
+  const hasPermission = canAccess(authz, "coach:update");
+  const isOwner = Boolean(
+    authz?.email &&
+    coach.email &&
+    authz.email.toLowerCase() === coach.email.toLowerCase()
+  );
+
+  if (!hasPermission && !isOwner) {
+    throw new Error("You do not have permission to edit this coach profile.");
+  }
+
   const facultyId = requiredText(formData, "facultyId");
   await prisma.ascCoach.update({
     where: { id },
@@ -611,6 +630,11 @@ export async function createResourceDocument(formData: FormData) {
 
   if (!file || typeof file === "string" || !("arrayBuffer" in file)) {
     throw new Error("A document file is required.");
+  }
+
+  const fileObj = file as unknown as { size: number; name?: string; type?: string; arrayBuffer: () => Promise<ArrayBuffer> };
+  if (fileObj.size > 4 * 1024 * 1024) {
+    throw new Error("File size exceeds the 4 MB limit.");
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

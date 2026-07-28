@@ -6,7 +6,21 @@ import type { MutationPhase, MutationResult } from "@/lib/mutation-types";
 
 export type MutationAction = (formData: FormData) => Promise<MutationResult>;
 
-export function MutationForm({ action, children, className, onComplete }: { action: MutationAction; children: ReactNode; className?: string; onComplete?: () => void }) {
+export function MutationForm({
+  action,
+  children,
+  className,
+  onComplete,
+  validate,
+  onSuccess,
+}: {
+  action: MutationAction;
+  children: ReactNode;
+  className?: string;
+  onComplete?: () => void;
+  validate?: (formData: FormData) => string | null;
+  onSuccess?: () => void;
+}) {
   const [phase, setPhase] = useState<MutationPhase>("idle");
   const [result, setResult] = useState<MutationResult>();
   const [error, setError] = useState<string>();
@@ -17,13 +31,25 @@ export function MutationForm({ action, children, className, onComplete }: { acti
   const submit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (submittingRef.current || submitting) return;
+    const formElement = event.currentTarget;
     submittingRef.current = true;
     requestId.current = crypto.randomUUID();
     setError(undefined);
     setPhase("submitting");
     try {
-      const formData = new FormData(event.currentTarget);
+      const formData = new FormData(formElement);
       formData.set("requestId", requestId.current);
+      
+      if (validate) {
+        const validationError = validate(formData);
+        if (validationError) {
+          setError(validationError);
+          setPhase("error");
+          submittingRef.current = false;
+          return;
+        }
+      }
+
       const saved = await action(formData);
       setResult(saved);
       if (saved.sync.status === "failed") {
@@ -31,6 +57,8 @@ export function MutationForm({ action, children, className, onComplete }: { acti
         setPhase("error");
       } else {
         setPhase("complete");
+        formElement.reset();
+        onSuccess?.();
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save changes.");
@@ -38,7 +66,7 @@ export function MutationForm({ action, children, className, onComplete }: { acti
     } finally {
       submittingRef.current = false;
     }
-  }, [action, submitting]);
+  }, [action, submitting, validate, onSuccess]);
 
   const retry = async () => {
     // Retry is no longer needed since actions are inline and immediate.

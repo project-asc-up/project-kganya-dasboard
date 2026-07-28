@@ -205,6 +205,7 @@ export default async function UserManagementPage({
                   key={userPage.selectedUser.id}
                   user={userPage.selectedUser}
                   roles={roleOptions}
+                  isSuperAdmin={authz?.isSuperAdmin || false}
                 />
               ) : (
                 <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-sm leading-6 text-[var(--color-text-muted)]">

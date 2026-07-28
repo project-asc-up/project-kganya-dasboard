@@ -41,6 +41,14 @@ export function MutationFeedbackModal({ open, phase, result, error, onDone, onRe
     document.addEventListener("keydown", handleKeyDown);
     return () => { document.removeEventListener("keydown", handleKeyDown); };
   }, [open, onDone, phase]);
+  useEffect(() => {
+    if (phase === "complete" && open) {
+      const timer = setTimeout(() => {
+        onDone();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, open, onDone]);
   if (!open) return null;
   const message = typeof error === "string" ? error : error?.message;
   const isBusy = phase === "submitting" || phase === "saved" || phase === "syncing";

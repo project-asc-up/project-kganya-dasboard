@@ -41,7 +41,15 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--color-surface)] text-[var(--color-text)]">
-        <ClerkProvider>
+        <ClerkProvider
+          localization={{
+            signIn: {
+              start: {
+                title: "Sign in to our admin workspace",
+              },
+            },
+          }}
+        >
           <ThemeProvider>
             {children}
             <ChatwootWidget />

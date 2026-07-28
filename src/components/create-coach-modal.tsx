@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { Modal } from '@/components/modal';
 import { Field, TextInput, TextArea, Select, ActionButton, CreateButton } from '@/components/admin-form';
 import { createCoach } from '@/lib/admin-actions';
@@ -13,17 +14,30 @@ interface CreateCoachModalProps {
 export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (formData: FormData) => {
     try {
+      setError(null);
       setIsSubmitting(true);
       await createCoach(formData);
       setIsOpen(false);
       setIsSubmitting(false);
-    } catch (error) {
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 4000);
+    } catch (err) {
       setIsSubmitting(false);
-      console.error('Failed to create coach:', error);
+      setError(err instanceof Error ? err.message : 'Failed to create coach. Please try again.');
+      console.error('Failed to create coach:', err);
     }
+  };
+
+  const handleClose = () => {
+    setError(null);
+    setIsOpen(false);
   };
 
   return (
@@ -32,13 +46,26 @@ export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
         Create Coach
       </CreateButton>
 
+      {showSuccess && (
+        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          <span>Coach successfully created.</span>
+        </div>
+      )}
+
       <Modal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
         title="Create New Coach"
         size="lg"
       >
         <form action={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 flex items-start gap-3">
+              <XCircle className="h-5 w-5 mt-0.5 text-red-600 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Faculty" hint="*Required">
               <Select name="facultyId" required defaultValue="">
@@ -140,7 +167,7 @@ export function CreateCoachModal({ faculties }: CreateCoachModalProps) {
             <ActionButton
               type="button"
               tone="secondary"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               disabled={isSubmitting}
             >
               Cancel

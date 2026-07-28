@@ -49,7 +49,12 @@ export default async function CoachDetailPage({
     "use server";
     await deleteCoach(coach.id);
   };
-  const canUpdate = canAccess(authz, "coach:update");
+  const isOwner = Boolean(
+    authz?.email &&
+    coach.email &&
+    authz.email.toLowerCase() === coach.email.toLowerCase()
+  );
+  const canUpdate = canAccess(authz, "coach:update") || isOwner;
   const canDelete = canAccess(authz, "coach:delete");
 
   return (
