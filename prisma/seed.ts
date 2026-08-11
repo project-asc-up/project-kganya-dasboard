@@ -127,15 +127,11 @@ async function main() {
   const [
     facultyRows,
     coachRows,
-    programmeRows,
-    moduleRows,
     resourceRows,
     faqRows,
   ] = await Promise.all([
     readCsv("seed-faculties.csv"),
     readCsv("seed-asc-coaches.csv"),
-    readCsv("seed-programmes.csv"),
-    readCsv("seed-course-modules.csv"),
     readCsv("seed-resources.csv"),
     readCsv("seed-faqs.csv"),
   ]);
@@ -226,106 +222,6 @@ async function main() {
     });
   }
 
-  for (const row of programmeRows) {
-    const facultyId = facultyIdByCode.get(row.faculty_code);
-    if (!facultyId) {
-      throw new Error(
-        `Missing faculty for programme row: ${row.programme_code} (${row.faculty_code})`,
-      );
-    }
-
-    await prisma.programme.upsert({
-      where: { programmeCode: row.programme_code },
-      update: {
-        facultyId,
-        sourceFacultyCode: nullableString(row.source_faculty_code),
-        programmeName: row.programme_name,
-        degreeName: nullableString(row.degree_name),
-        academicLevel: nullableString(row.academic_level),
-        qualificationType: nullableString(row.qualification_type),
-        programmeCredits: nullableInt(row.programme_credits),
-        durationYears: nullableInt(row.duration_years),
-        yearLevels: nullableString(row.year_levels),
-        sourceFile: nullableString(row.source_file),
-        lastVerified: nullableDate(row.last_verified),
-        notes: nullableString(row.notes),
-      },
-      create: {
-        facultyId,
-        sourceFacultyCode: nullableString(row.source_faculty_code),
-        programmeCode: row.programme_code,
-        programmeName: row.programme_name,
-        degreeName: nullableString(row.degree_name),
-        academicLevel: nullableString(row.academic_level),
-        qualificationType: nullableString(row.qualification_type),
-        programmeCredits: nullableInt(row.programme_credits),
-        durationYears: nullableInt(row.duration_years),
-        yearLevels: nullableString(row.year_levels),
-        sourceFile: nullableString(row.source_file),
-        lastVerified: nullableDate(row.last_verified),
-        notes: nullableString(row.notes),
-      },
-    });
-  }
-
-  const programmes = await prisma.programme.findMany({
-    select: { id: true, programmeCode: true },
-  });
-  const programmeIdByCode = new Map(
-    programmes.map((programme: { programmeCode: string; id: string }) => [
-      programme.programmeCode,
-      programme.id,
-    ]),
-  );
-
-  const moduleCreates: Array<{
-    programmeId: string;
-    facultyCode: string | null;
-    sourceFacultyCode: string | null;
-    programmeCode: string;
-    programmeName: string | null;
-    yearLevelRaw: string;
-    yearLevelSort: number | null;
-    moduleCode: string;
-    moduleName: string | null;
-    moduleType: string;
-    moduleUnits: number;
-    sourceFile: string | null;
-    lastVerified: Date | null;
-    notes: string | null;
-  }> = [];
-
-  for (const row of moduleRows) {
-    const programmeId = programmeIdByCode.get(row.programme_code);
-    if (!programmeId) {
-      throw new Error(`Missing programme for module row: ${row.programme_code} ${row.module_code}`);
-    }
-
-    moduleCreates.push({
-      programmeId,
-      facultyCode: nullableString(row.faculty_code),
-      sourceFacultyCode: nullableString(row.source_faculty_code),
-      programmeCode: row.programme_code,
-      programmeName: nullableString(row.programme_name),
-      yearLevelRaw: requiredString(row.year_level_raw, "UNSPECIFIED"),
-      yearLevelSort: nullableInt(row.year_level_sort),
-      moduleCode: row.module_code,
-      moduleName: nullableString(row.module_name),
-      moduleType: requiredString(row.module_type, "Unknown"),
-      moduleUnits: requiredInt(row.module_units, 0),
-      sourceFile: nullableString(row.source_file),
-      lastVerified: nullableDate(row.last_verified),
-      notes: nullableString(row.notes),
-    });
-  }
-
-  await prisma.courseModule.deleteMany();
-  for (const batch of chunkArray(moduleCreates, 1000)) {
-    await prisma.courseModule.createMany({
-      data: batch,
-      skipDuplicates: true,
-    });
-  }
 
   for (const row of resourceRows) {
     const facultyId = nullableString(row.faculty_code)
@@ -391,12 +287,10 @@ async function main() {
     });
   }
 
-  const [facultyCount, coachCount, programmeCount, moduleCount, resourceCount, faqCount] =
+  const [facultyCount, coachCount, resourceCount, faqCount] =
     await Promise.all([
       prisma.faculty.count(),
       prisma.ascCoach.count(),
-      prisma.programme.count(),
-      prisma.courseModule.count(),
       prisma.resource.count(),
       prisma.faq.count(),
     ]);
@@ -406,8 +300,6 @@ async function main() {
       {
         faculties: facultyCount,
         ascCoaches: coachCount,
-        programmes: programmeCount,
-        courseModules: moduleCount,
         resources: resourceCount,
         faqs: faqCount,
       },

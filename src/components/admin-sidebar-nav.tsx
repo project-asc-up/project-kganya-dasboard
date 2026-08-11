@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
-import { BarChart3, BookOpen, HelpCircle, Link as LinkIcon, Settings, Users, BookMarked, Upload, Home, ShieldCheck, Menu, X } from "lucide-react";
+import { BarChart3, HelpCircle, Link as LinkIcon, Settings, Users, Upload, Home, ShieldCheck, Menu, X } from "lucide-react";
 
 import { isAdminNavItemActive, normalizeAdminPathname, type AdminNavItem } from "@/lib/admin-nav";
 import { IconButton } from "@/components/ui/icon-button";
@@ -14,8 +14,7 @@ const navItems: Array<AdminNavItem & { icon?: ReactNode }> = [
   { label: "Overview", href: "/admin", icon: <Home size={18} /> },
   { label: "Faculties", href: "/admin/faculties", icon: <Settings size={18} /> },
   { label: "ASC Coaches", href: "/admin/coaches", icon: <Users size={18} /> },
-  { label: "Programmes", href: "/admin/programmes", icon: <BookMarked size={18} /> },
-  { label: "Course Modules", href: "/admin/course-modules", icon: <BookOpen size={18} /> },
+
   { label: "Resources", href: "/admin/resources", icon: <LinkIcon size={18} /> },
   { label: "FAQs", href: "/admin/faqs", icon: <HelpCircle size={18} /> },
   { label: "Analytics", href: "/admin/health", icon: <BarChart3 size={18} /> },

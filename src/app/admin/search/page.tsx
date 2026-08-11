@@ -6,10 +6,8 @@ import { AdminSearchForm } from "@/components/admin-search-form";
 import { MetricCard, MetricGrid } from "@/components/metric-card";
 import {
   searchCoachRows,
-  searchCourseModuleRows,
   searchFaqRows,
   searchFacultyRows,
-  searchProgrammeRows,
   searchResourceRows,
 } from "@/lib/admin-queries";
 import { coachMatchesQuery } from "@/lib/coach-search";
@@ -124,7 +122,7 @@ export default async function SearchPage({
         <PageHeader
           eyebrow="Admin Search"
           title="Search across the admin knowledge base"
-          description="Find faculties, coaches, programmes, course modules, resources, and FAQs from one place."
+          description="Find faculties, coaches, resources, and FAQs from one place."
         />
 
         <Section title="Search editor" description="Use the form below to search the live admin index.">
@@ -151,7 +149,7 @@ export default async function SearchPage({
             <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] p-5">
               <p className="text-sm font-semibold text-[color:var(--color-primary-dark)]">Best searches</p>
               <p className="mt-2 text-sm leading-6 text-[color:var(--color-text-muted)]">
-                Use faculty names, coach names, programme codes, resource titles, FAQ keywords, or module codes.
+                Use faculty names, coach names, resource titles, or FAQ keywords.
               </p>
             </div>
             <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] p-5">
@@ -172,13 +170,11 @@ export default async function SearchPage({
     );
   }
 
-  const [faculties, coaches, programmes, resources, faqs, modules] = await Promise.all([
+  const [faculties, coaches, resources, faqs] = await Promise.all([
     searchFacultyRows(query, SEARCH_RESULT_LIMIT),
     searchCoachRows(query, SEARCH_RESULT_LIMIT),
-    searchProgrammeRows(query, SEARCH_RESULT_LIMIT),
     searchResourceRows(query, SEARCH_RESULT_LIMIT),
     searchFaqRows(query, SEARCH_RESULT_LIMIT),
-    searchCourseModuleRows(query, SEARCH_RESULT_LIMIT),
   ]);
 
   const facultyResults: ResultItem[] = faculties
@@ -204,7 +200,6 @@ export default async function SearchPage({
       badge: "Faculty",
       meta: [
         `${faculty._count.ascCoaches} coaches`,
-        `${faculty._count.programmes} programmes`,
         `${faculty._count.resources} resources`,
       ],
     }));
@@ -231,31 +226,6 @@ export default async function SearchPage({
       subtitle: coach.titleRole ?? coach.level ?? displayFacultyName(coach.faculty.name),
       badge: "Coach",
       meta: [coach.faculty.code, displayFacultyName(coach.faculty.name), coach.isActive ? "Active" : "Inactive"],
-    }));
-
-  const programmeResults: ResultItem[] = programmes
-    .filter((programme) => {
-      return [
-        programme.programmeCode,
-        programme.programmeName,
-        programme.degreeName,
-        programme.academicLevel,
-        programme.qualificationType,
-        programme.faculty.name,
-        programme.faculty.code,
-      ].some((value) => includesText(value, lowerQuery));
-    })
-    .map((programme) => ({
-      key: programme.id,
-      href: `/admin/programmes/${programme.id}`,
-      title: `${programme.programmeCode} - ${programme.programmeName}`,
-      subtitle: programme.degreeName ?? programme.qualificationType ?? "Programme record",
-      badge: "Programme",
-      meta: [
-        programme.faculty.code,
-        displayFacultyName(programme.faculty.name),
-        programme.durationYears ? `${programme.durationYears} years` : "No duration",
-      ],
     }));
 
   const resourceResults: ResultItem[] = resources
@@ -293,42 +263,18 @@ export default async function SearchPage({
       meta: [faq.category, faq.faculty ? displayFacultyName(faq.faculty.name) : "General", `Priority ${faq.priority}`],
     }));
 
-  const moduleResults: ResultItem[] = modules
-    .filter((module) => {
-      return [
-        module.moduleCode,
-        module.moduleName,
-        module.yearLevelRaw,
-        module.moduleType,
-        module.programmeCode,
-        module.programmeName,
-        module.programme.faculty.name,
-        module.programme.faculty.code,
-      ].some((value) => includesText(value, lowerQuery));
-    })
-    .map((module) => ({
-      key: module.id,
-      href: `/admin/course-modules/${module.id}`,
-      title: `${module.moduleCode} - ${module.moduleName ?? "Not set"}`,
-      subtitle: `${module.programmeCode} - ${module.programmeName}`,
-      badge: "Module",
-      meta: [module.programme.faculty.code, displayFacultyName(module.programme.faculty.name), `Year ${module.yearLevelRaw}`],
-    }));
-
   const totalMatches =
     facultyResults.length +
     coachResults.length +
-    programmeResults.length +
     resourceResults.length +
-    faqResults.length +
-    moduleResults.length;
+    faqResults.length;
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Admin Search"
         title={`Search: ${query}`}
-        description="Find faculties, coaches, programmes, course modules, resources, and FAQs from one place."
+        description="Find faculties, coaches, resources, and FAQs from one place."
       />
 
       <Section title="Search editor" description="Use the form below to search the live admin index.">
@@ -339,10 +285,8 @@ export default async function SearchPage({
         <MetricCard label="Matches" value={totalMatches} detail="All result groups combined." />
         <MetricCard label="Faculties" value={facultyResults.length} detail="Faculty records in scope." />
         <MetricCard label="Coaches" value={coachResults.length} detail="ASC contacts in scope." />
-        <MetricCard label="Programmes" value={programmeResults.length} detail="Programme records in scope." />
         <MetricCard label="Resources" value={resourceResults.length} detail="Support resources in scope." />
-        <MetricCard label="Modules" value={moduleResults.length} detail="Course modules in scope." />
-      </MetricGrid>
+        </MetricGrid>
 
       <Section title="Search results" description="Grouped by content type for fast scanning and editing.">
         <div className="space-y-8">
@@ -359,12 +303,6 @@ export default async function SearchPage({
             emptyMessage="No coaches matched this search."
           />
           <ResultGroup
-            title="Programmes"
-            description="Programme master data with faculty context and duration."
-            items={programmeResults}
-            emptyMessage="No programmes matched this search."
-          />
-          <ResultGroup
             title="Resources"
             description="Support links and reference material."
             items={resourceResults}
@@ -375,12 +313,6 @@ export default async function SearchPage({
             description="Knowledge-base answers surfaced for quick editing."
             items={faqResults}
             emptyMessage="No FAQs matched this search."
-          />
-          <ResultGroup
-            title="Course modules"
-            description="Curriculum rows found in the current module slice."
-            items={moduleResults}
-            emptyMessage="No course modules matched this search."
           />
         </div>
       </Section>

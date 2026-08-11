@@ -3,10 +3,8 @@ import { NextResponse } from "next/server";
 import { displayFacultyName } from "@/lib/faculty-display";
 import {
   searchCoachRows,
-  searchCourseModuleRows,
   searchFaqRows,
   searchFacultyRows,
-  searchProgrammeRows,
   searchResourceRows,
 } from "@/lib/admin-queries";
 import type { SearchSuggestion } from "@/lib/search-suggestions";
@@ -19,13 +17,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ suggestions: [] satisfies SearchSuggestion[] });
   }
 
-  const [faculties, coaches, programmes, resources, faqs, modules] = await Promise.all([
+  const [faculties, coaches, resources, faqs] = await Promise.all([
     searchFacultyRows(query, 4),
     searchCoachRows(query, 4),
-    searchProgrammeRows(query, 4),
     searchResourceRows(query, 3),
     searchFaqRows(query, 3),
-    searchCourseModuleRows(query, 3),
   ]);
 
   const suggestions: SearchSuggestion[] = [
@@ -45,14 +41,6 @@ export async function GET(request: Request) {
       badge: coach.faculty.code,
       href: `/admin/coaches/${coach.id}`,
     })),
-    ...programmes.map((programme) => ({
-      id: `programme:${programme.id}`,
-      title: `${programme.programmeCode} · ${programme.programmeName}`,
-      value: programme.programmeName,
-      detail: `${displayFacultyName(programme.faculty.name)} · ${programme.degreeName ?? programme.qualificationType ?? "Programme"}`,
-      badge: "Programme",
-      href: `/admin/programmes/${programme.id}`,
-    })),
     ...resources.map((resource) => ({
       id: `resource:${resource.id}`,
       title: resource.title,
@@ -68,14 +56,6 @@ export async function GET(request: Request) {
       detail: `${faq.category} · ${faq.faculty ? displayFacultyName(faq.faculty.name) : "General"}`,
       badge: "FAQ",
       href: `/admin/faqs/${faq.id}`,
-    })),
-    ...modules.map((module) => ({
-      id: `module:${module.id}`,
-      title: `${module.moduleCode} · ${module.moduleName ?? "Not set"}`,
-      value: module.moduleCode,
-      detail: `${module.programmeCode} · ${displayFacultyName(module.programme.faculty.name)}`,
-      badge: "Module",
-      href: `/admin/course-modules/${module.id}`,
     })),
   ];
 

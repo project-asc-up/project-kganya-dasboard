@@ -39,17 +39,7 @@ export function FaqExplorer({ faqs }: { faqs: FaqRow[] }) {
 
   return (
     <div className="space-y-6">
-      <MetricGrid className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard compact label="Total FAQs" value={faqs.length} detail="All FAQ entries." className="bg-[color:var(--color-bg-light)]" />
-        <MetricCard
-          compact
-          label="Faculty linked"
-          value={faqs.length - generalCount}
-          detail="Assigned to a faculty."
-          className="bg-[color:var(--color-bg-light)]"
-        />
-        <MetricCard compact label="General answers" value={generalCount} detail="Shared support responses." className="bg-[color:var(--color-bg-light)]" />
-      </MetricGrid>
+
 
       <div className="space-y-8">
         {sections.map(([facultyName, items]) => (

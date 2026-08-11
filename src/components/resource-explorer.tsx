@@ -73,17 +73,7 @@ export function ResourceExplorer({ resources }: { resources: ResourceRow[] }) {
         </Select>
       </Field>
 
-      <MetricGrid className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard compact label="Total resources" value={filteredResources.length} detail="All support links." className="bg-[color:var(--color-bg-light)]" />
-        <MetricCard
-          compact
-          label="Faculty linked"
-          value={filteredResources.length - generalCount}
-          detail="Scoped to a faculty."
-          className="bg-[color:var(--color-bg-light)]"
-        />
-        <MetricCard compact label="General library" value={generalCount} detail="Shared support links." className="bg-[color:var(--color-bg-light)]" />
-      </MetricGrid>
+
 
       <div className="space-y-8">
         {sections.map(([facultyName, items]) => (

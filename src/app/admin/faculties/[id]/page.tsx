@@ -50,7 +50,7 @@ export default async function FacultyDetailPage({
       <PageHeader
         eyebrow="Faculty detail"
         title={displayFacultyName(faculty.name)}
-        description={`Code ${faculty.code} | ${faculty._count.ascCoaches} coaches | ${faculty._count.programmes} programmes`}
+        description={`Code ${faculty.code} | ${faculty._count.ascCoaches} coaches`}
       />
 
       {canUpdate ? (
@@ -101,7 +101,7 @@ export default async function FacultyDetailPage({
       )}
 
       <section className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] p-5 text-sm leading-6 text-[color:var(--color-text-muted)]">
-        Faculty deletion is intentionally not exposed in the UI because linked coaches and programmes use
+        Faculty deletion is intentionally not exposed in the UI because linked coaches use
         restrictive relationships. Keep this record and update it instead of removing it.
       </section>
 
@@ -126,27 +126,7 @@ export default async function FacultyDetailPage({
           </div>
         </Section>
 
-        <Section title="Linked programmes" description="Programme records that belong to this faculty.">
-          <div className="space-y-3">
-            {faculty.programmes.length > 0 ? (
-              faculty.programmes.map((programme) => (
-                <div
-                  key={programme.id}
-                  className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] p-4"
-                >
-                  <div className="font-semibold text-[color:var(--color-primary-dark)]">
-                    {programme.programmeName}
-                  </div>
-                  <div className="text-sm text-[color:var(--color-text-muted)]">
-                    {programme.programmeCode} | {programme.qualificationType ?? "Qualification type not set"}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-[color:var(--color-text-muted)]">No programmes linked yet.</p>
-            )}
-          </div>
-        </Section>
+        
       </div>
     </div>
   );

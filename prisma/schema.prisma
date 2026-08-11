@@ -7,52 +7,59 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CoachLevel {
+  UNDERGRADUATE
+  POSTGRADUATE
+  BOTH
+  UNKNOWN
+}
+
 model Faculty {
-  id              String      @id @default(uuid()) @db.Uuid
+  id              String       @id @default(uuid()) @db.Uuid
   name            String
-  code            String      @unique
-  codeStatus      String      @map("code_status")
-  officialPageUrl String?     @map("official_page_url")
-  supportPageUrl  String?     @map("support_page_url")
-  sourceUrl       String?     @map("source_url")
-  lastVerified    DateTime?   @map("last_verified") @db.Date
+  code            String       @unique
+  codeStatus      String       @map("code_status")
+  officialPageUrl String?      @map("official_page_url")
+  supportPageUrl  String?      @map("support_page_url")
+  sourceUrl       String?      @map("source_url")
+  lastVerified    DateTime?    @map("last_verified") @db.Date
   notes           String?
   aliases         String?
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  difyDocumentId  String?     @map("dify_document_id")
+  difyDocumentId  String?      @map("dify_document_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
   ascCoaches      AscCoach[]
-  faqs            Faq[]
   programmes      Programme[]
   resources       Resource[]
+  faqs            Faq[]
 
   @@index([name])
   @@map("faculties")
 }
 
 model AscCoach {
-  id                 String     @id @default(uuid()) @db.Uuid
-  facultyId          String     @map("faculty_id") @db.Uuid
+  id                 String      @id @default(uuid()) @db.Uuid
+  facultyId          String      @map("faculty_id") @db.Uuid
   name               String
-  titleRole          String?    @map("title_role")
+  titleRole          String?     @map("title_role")
   email              String
   phone              String?
   cell               String?
-  officeLocation     String?    @map("office_location")
+  officeLocation     String?     @map("office_location")
   building           String?
-  appointmentLink    String?    @map("appointment_link")
-  level              CoachLevel @default(UNKNOWN)
+  appointmentLink    String?     @map("appointment_link")
+  level              CoachLevel  @default(UNKNOWN)
   cluster            String?
   responsibilities   String?
-  isActive           Boolean    @default(true) @map("is_active")
-  sourceUrl          String?    @map("source_url")
-  lastVerified       DateTime?  @map("last_verified") @db.Date
-  verificationStatus String?    @map("verification_status")
+  isActive           Boolean     @default(true) @map("is_active")
+  sourceUrl          String?     @map("source_url")
+  lastVerified       DateTime?   @map("last_verified") @db.Date
+  verificationStatus String?     @map("verification_status")
   notes              String?
-  createdAt          DateTime   @default(now()) @map("created_at")
-  updatedAt          DateTime   @updatedAt @map("updated_at")
-  difyDocumentId     String?    @map("dify_document_id")
-  faculty            Faculty    @relation(fields: [facultyId], references: [id])
+  difyDocumentId     String?     @map("dify_document_id")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  faculty            Faculty     @relation(fields: [facultyId], references: [id], onDelete: Restrict)
 
   @@unique([facultyId, email])
   @@index([facultyId])
@@ -121,26 +128,26 @@ model CourseModule {
 }
 
 model Resource {
-  id                  String    @id @default(uuid()) @db.Uuid
-  seedKey             String    @unique @map("seed_key")
-  facultyId           String?   @map("faculty_id") @db.Uuid
-  category            String
-  title               String
-  description         String?
-  url                 String
-  sourceUrl           String?   @map("source_url")
-  lastVerified        DateTime? @map("last_verified") @db.Date
-  notes               String?
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
-  resourceType        String    @default("link") @map("resource_type")
-  attachmentName      String?   @map("attachment_name")
-  attachmentMimeType  String?   @map("attachment_mime_type")
+  id                 String    @id @default(uuid()) @db.Uuid
+  seedKey            String    @unique @map("seed_key")
+  facultyId          String?   @map("faculty_id") @db.Uuid
+  resourceType       String    @default("link") @map("resource_type")
+  category           String
+  title              String
+  description        String?
+  url                String
+  sourceUrl          String?   @map("source_url")
+  lastVerified       DateTime? @map("last_verified") @db.Date
+  notes              String?
+  attachmentName     String?   @map("attachment_name")
+  attachmentMimeType String?   @map("attachment_mime_type")
   attachmentSizeBytes Int?      @map("attachment_size_bytes")
-  attachmentStatus    String?   @map("attachment_status")
-  attachmentError     String?   @map("attachment_error")
-  difyDocumentId      String?   @map("dify_document_id")
-  faculty             Faculty?  @relation(fields: [facultyId], references: [id])
+  attachmentStatus   String?   @map("attachment_status")
+  attachmentError    String?   @map("attachment_error")
+  difyDocumentId     String?   @map("dify_document_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  faculty            Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([category])
@@ -149,16 +156,16 @@ model Resource {
 }
 
 model MutationReceipt {
-  id           String   @id @default(uuid()) @db.Uuid
-  requestId    String   @unique @map("request_id")
-  payloadHash  String   @map("payload_hash")
-  kind         String
-  recordId     String?  @map("record_id")
-  status       String   @default("processing")
-  result       Json?
+  id          String    @id @default(uuid()) @db.Uuid
+  requestId   String    @unique @map("request_id")
+  payloadHash String    @map("payload_hash")
+  kind        String
+  recordId    String?   @map("record_id")
+  status      String    @default("processing")
+  result      Json?
   errorMessage String?  @map("error_message")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([recordId])
@@ -166,20 +173,20 @@ model MutationReceipt {
 }
 
 model Faq {
-  id             String    @id @default(uuid()) @db.Uuid
-  seedKey        String    @unique @map("seed_key")
-  facultyId      String?   @map("faculty_id") @db.Uuid
-  question       String
-  answer         String
-  category       String
-  priority       Int?
-  sourceUrl      String?   @map("source_url")
-  lastVerified   DateTime? @map("last_verified") @db.Date
-  notes          String?
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  seedKey      String    @unique @map("seed_key")
+  facultyId    String?   @map("faculty_id") @db.Uuid
+  question     String
+  answer       String
+  category     String
+  priority     Int?
+  sourceUrl    String?   @map("source_url")
+  lastVerified DateTime? @map("last_verified") @db.Date
+  notes        String?
   difyDocumentId String?   @map("dify_document_id")
-  faculty        Faculty?  @relation(fields: [facultyId], references: [id])
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  faculty      Faculty?  @relation(fields: [facultyId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([category])
@@ -189,12 +196,12 @@ model Faq {
 }
 
 model AuthUser {
-  id           String    @id @default(uuid()) @db.Uuid
-  universityId String    @unique @map("university_id")
-  passwordHash String    @map("password_hash")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  lastLoginAt  DateTime? @map("last_login_at")
+  id             String    @id @default(uuid()) @db.Uuid
+  universityId   String    @unique @map("university_id")
+  passwordHash   String    @map("password_hash")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastLoginAt    DateTime? @map("last_login_at")
 
   @@index([createdAt])
   @@map("auth_users")
@@ -202,15 +209,15 @@ model AuthUser {
 
 model UserAccessAuditLog {
   id                  String   @id @default(uuid()) @db.Uuid
-  actorUserId         String   @map("actor_user_id")
-  actorEmail          String?  @map("actor_email")
-  targetUserId        String   @map("target_user_id")
-  targetEmail         String?  @map("target_email")
-  previousRole        String   @map("previous_role")
-  newRole             String   @map("new_role")
-  previousPermissions Json     @map("previous_permissions")
-  newPermissions      Json     @map("new_permissions")
-  createdAt           DateTime @default(now()) @map("created_at")
+  actorUserId          String   @map("actor_user_id")
+  actorEmail           String?  @map("actor_email")
+  targetUserId         String   @map("target_user_id")
+  targetEmail          String?  @map("target_email")
+  previousRole         String   @map("previous_role")
+  newRole              String   @map("new_role")
+  previousPermissions  Json     @map("previous_permissions")
+  newPermissions       Json     @map("new_permissions")
+  createdAt            DateTime @default(now()) @map("created_at")
 
   @@index([actorUserId])
   @@index([targetUserId])
@@ -220,8 +227,8 @@ model UserAccessAuditLog {
 
 model RoleTabAccess {
   id        String   @id @default(uuid()) @db.Uuid
-  role      String
-  tab       String
+  role      String   // "admin" or "user"
+  tab       String   // e.g. "/admin/faculties"
   isAllowed Boolean  @default(true) @map("is_allowed")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -231,295 +238,11 @@ model RoleTabAccess {
 
 model UserTabAccess {
   id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id")
-  tab       String
+  userId    String   @map("user_id") // Clerk User ID
+  tab       String   // e.g. "/admin/faculties"
   isAllowed Boolean  @map("is_allowed")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([userId, tab])
   @@map("user_tab_access")
-}
-
-model access_audit_logs {
-  id                   String        @id @db.Uuid
-  organization_id      String        @db.Uuid
-  actor_user_id        String
-  target_user_id       String
-  actor_email          String?
-  target_email         String?
-  previous_role        String
-  new_role             String
-  previous_permissions Json
-  new_permissions      Json
-  created_at           DateTime      @default(now())
-  organizations        organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@index([actor_user_id])
-  @@index([organization_id])
-  @@index([target_user_id])
-}
-
-model chatwoot_org_links {
-  id                  String        @id @db.Uuid
-  organization_id     String        @db.Uuid
-  chatwoot_account_id String
-  chatwoot_inbox_id   String
-  channel             String
-  active              Boolean       @default(true)
-  created_at          DateTime      @default(now())
-  updated_at          DateTime
-  organizations       organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@unique([organization_id, channel])
-  @@index([organization_id])
-}
-
-model document_chunks {
-  id                  String                 @id @db.Uuid
-  organization_id     String                 @db.Uuid
-  knowledge_source_id String                 @db.Uuid
-  source_record_id    String                 @db.Uuid
-  version             Int
-  chunk_index         Int
-  chunk_type          String
-  source_family       String
-  topic               String
-  title               String
-  section_path        String?
-  chunk_text          String
-  chunk_hash          String
-  embedding           Unsupported("vector")?
-  embedding_model     String
-  active              Boolean                @default(true)
-  retired_at          DateTime?              @db.Timestamptz(6)
-  created_at          DateTime               @default(now())
-  updated_at          DateTime
-  knowledge_sources   knowledge_sources      @relation(fields: [knowledge_source_id], references: [id], onDelete: Cascade)
-  organizations       organizations          @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  source_records      source_records         @relation(fields: [source_record_id], references: [id], onDelete: Cascade)
-
-  @@unique([organization_id, source_record_id, version, chunk_index])
-  @@index([organization_id])
-  @@index([organization_id, knowledge_source_id, active])
-  @@index([organization_id, topic, active])
-  @@index([source_record_id])
-}
-
-model evaluation_cases {
-  id                    String          @id @db.Uuid
-  evaluation_set_id     String          @db.Uuid
-  prompt_text           String
-  expected_category     String
-  expected_answer_trait String
-  expected_source_key   String?
-  expected_chunk_hint   String?
-  status                String          @default("active")
-  created_at            DateTime        @default(now())
-  updated_at            DateTime
-  evaluation_sets       evaluation_sets @relation(fields: [evaluation_set_id], references: [id], onDelete: Cascade)
-
-  @@index([evaluation_set_id])
-  @@index([expected_category])
-}
-
-model evaluation_sets {
-  id               String             @id @db.Uuid
-  organization_id  String             @db.Uuid
-  name             String
-  source_name      String?
-  status           String             @default("draft")
-  created_at       DateTime           @default(now())
-  updated_at       DateTime
-  evaluation_cases evaluation_cases[]
-  organizations    organizations      @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@index([organization_id])
-}
-
-model ingestion_jobs {
-  id                  String            @id @db.Uuid
-  organization_id     String            @db.Uuid
-  knowledge_source_id String            @db.Uuid
-  source_record_id    String?           @db.Uuid
-  job_type            String
-  state               String
-  input_checksum      String?
-  output_checksum     String?
-  error_message       String?
-  retry_count         Int               @default(0)
-  started_at          DateTime?         @db.Timestamptz(6)
-  finished_at         DateTime?         @db.Timestamptz(6)
-  created_at          DateTime          @default(now())
-  updated_at          DateTime
-  knowledge_sources   knowledge_sources @relation(fields: [knowledge_source_id], references: [id], onDelete: Cascade)
-  organizations       organizations     @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  source_records      source_records?   @relation(fields: [source_record_id], references: [id])
-
-  @@index([source_record_id], map: "idx_ingestion_jobs_source_record_id")
-  @@index([organization_id])
-  @@index([organization_id, knowledge_source_id, state])
-  @@index([state])
-}
-
-model knowledge_sources {
-  id               String            @id @db.Uuid
-  organization_id  String            @db.Uuid
-  source_key       String
-  source_family    String
-  source_type      String
-  title            String
-  canonical_ref    String?
-  original_uri     String?
-  original_path    String?
-  status           String            @default("active")
-  last_verified_at DateTime?         @db.Timestamptz(6)
-  created_at       DateTime          @default(now())
-  updated_at       DateTime
-  document_chunks  document_chunks[]
-  ingestion_jobs   ingestion_jobs[]
-  organizations    organizations     @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-  source_records   source_records[]
-
-  @@unique([organization_id, source_key])
-  @@index([organization_id])
-  @@index([source_family])
-  @@index([source_type])
-}
-
-model organization_memberships {
-  id              String        @id @db.Uuid
-  organization_id String        @db.Uuid
-  clerk_user_id   String
-  email           String
-  role            String
-  status          String
-  created_at      DateTime      @default(now())
-  updated_at      DateTime
-  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@unique([organization_id, clerk_user_id])
-  @@index([email])
-}
-
-model organizations {
-  id                       String                     @id @db.Uuid
-  clerk_org_id             String                     @unique
-  name                     String
-  slug                     String                     @unique
-  status                   String                     @default("active")
-  created_at               DateTime                   @default(now())
-  updated_at               DateTime
-  access_audit_logs        access_audit_logs[]
-  chatwoot_org_links       chatwoot_org_links[]
-  document_chunks          document_chunks[]
-  evaluation_sets          evaluation_sets[]
-  ingestion_jobs           ingestion_jobs[]
-  knowledge_sources        knowledge_sources[]
-  organization_memberships organization_memberships[]
-  prompt_packs             prompt_packs[]
-  retrieval_metrics        retrieval_metrics[]
-  source_records           source_records[]
-}
-
-model prompt_packs {
-  id              String        @id @db.Uuid
-  organization_id String        @db.Uuid
-  name            String
-  channel         String
-  system_prompt   String
-  style_prompt    String?
-  fallback_prompt String?
-  active          Boolean       @default(true)
-  version         Int           @default(1)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime
-  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@unique([organization_id, name, version])
-  @@index([organization_id])
-}
-
-model retrieval_metrics {
-  id              String        @id @db.Uuid
-  organization_id String        @db.Uuid
-  metric_key      String
-  metric_value    Float
-  threshold_value Float?
-  observed_at     DateTime      @db.Timestamptz(6)
-  created_at      DateTime      @default(now())
-  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@index([metric_key])
-  @@index([organization_id])
-}
-
-model source_record_fields {
-  id               String         @id @db.Uuid
-  source_record_id String         @db.Uuid
-  field_name       String
-  field_value      String
-  field_type       String
-  field_order      Int
-  is_key           Boolean        @default(false)
-  created_at       DateTime       @default(now())
-  updated_at       DateTime
-  source_records   source_records @relation(fields: [source_record_id], references: [id], onDelete: Cascade)
-
-  @@index([source_record_id, field_name])
-  @@index([source_record_id, field_order])
-}
-
-model source_records {
-  id                   String                 @id @db.Uuid
-  organization_id      String                 @db.Uuid
-  knowledge_source_id  String                 @db.Uuid
-  record_key           String
-  topic                String
-  source_kind          String
-  title                String
-  body_markdown        String?
-  body_json            Json?
-  source_url           String?
-  source_anchor        String?
-  version              Int
-  status               String                 @default("draft")
-  active               Boolean                @default(true)
-  checksum             String?
-  created_by           String?
-  created_at           DateTime               @default(now())
-  updated_at           DateTime
-  document_chunks      document_chunks[]
-  ingestion_jobs       ingestion_jobs[]
-  source_record_fields source_record_fields[]
-  knowledge_sources    knowledge_sources      @relation(fields: [knowledge_source_id], references: [id], onDelete: Cascade)
-  organizations        organizations          @relation(fields: [organization_id], references: [id], onDelete: Cascade)
-
-  @@unique([organization_id, knowledge_source_id, record_key, version])
-  @@index([organization_id])
-  @@index([organization_id, knowledge_source_id, record_key, active])
-  @@index([source_kind])
-  @@index([status])
-  @@index([topic])
-}
-
-enum CoachLevel {
-  UNDERGRADUATE
-  POSTGRADUATE
-  BOTH
-  UNKNOWN
-}
-
-model UserModerationRecord {
-  id           String   @id @default(uuid()) @db.Uuid
-  actorUserId  String   @map("actor_user_id")
-  actorEmail   String?  @map("actor_email")
-  targetUserId String   @map("target_user_id")
-  targetEmail  String?  @map("target_email")
-  actionType   String   @map("action_type") // "SUSPEND", "BAN", "UNSUSPEND"
-  reason       String
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  @@index([targetUserId])
-  @@index([createdAt])
-  @@map("user_moderation_records")
 }

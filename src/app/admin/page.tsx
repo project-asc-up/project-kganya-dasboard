@@ -19,11 +19,7 @@ const shortcuts = [
     label: "ASC Coaches",
     description: "Maintain coach contact details and active assignments.",
   },
-  {
-    href: "/admin/programmes",
-    label: "Programmes",
-    description: "Review programme metadata and curriculum links.",
-  },
+
 ];
 
 export default async function AdminHomePage() {
@@ -68,14 +64,14 @@ async function AdminOverviewMetrics() {
   const { totals: counts, error } = await getHealthOverview()
     .then((data) => ({ totals: data.totals, error: null as string | null }))
     .catch((caught) => ({
-      totals: { faculties: 0, coaches: 0, programmes: 0, resources: 0, faqs: 0 },
+      totals: { faculties: 0, coaches: 0, resources: 0, faqs: 0 },
       error: caught instanceof Error ? caught.message : "Unknown database error",
     }));
 
   const metricItems = [
     { label: "Faculties", value: counts.faculties, detail: "Master faculty records in the workspace." },
     { label: "ASC Coaches", value: counts.coaches, detail: "Faculty-linked contact records." },
-    { label: "Programmes", value: counts.programmes, detail: "Programme master records and links." },
+
     { label: "Resources", value: counts.resources, detail: "Support links and reference material." },
     { label: "FAQs", value: counts.faqs, detail: "Searchable knowledge-base entries." },
   ];
@@ -118,7 +114,7 @@ async function AdminOverviewMetrics() {
 function AdminMetricsFallback() {
   return (
     <MetricGrid className="md:grid-cols-2 xl:grid-cols-5 animate-slide-up">
-      {["Faculties", "ASC Coaches", "Programmes", "Resources", "FAQs"].map((label) => (
+      {["Faculties", "ASC Coaches", "Resources", "FAQs"].map((label) => (
         <MetricCard
           key={label}
           label={label}

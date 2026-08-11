@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/prisma";
 import { getDifyDocuments } from "@/lib/dify-knowledge";
-import { syncFaculty, syncCoach, syncProgramme, syncResource, syncFaq } from "@/lib/dify-inline-sync";
+import { syncFaculty, syncCoach, syncResource, syncFaq } from "@/lib/dify-inline-sync";
 
 async function runReconcileAndBackfill() {
   const prisma = getPrismaClient();
@@ -41,16 +41,6 @@ async function runReconcileAndBackfill() {
       await prisma.ascCoach.update({ where: { id: c.id }, data: { difyDocumentId: docId } });
     }
   }
-
-  // 4. Reconcile Programmes
-  const programmes = await prisma.programme.findMany();
-  for (const p of programmes) {
-    const docId = difyDocsMap.get(p.programmeName);
-    if (docId) {
-      await prisma.programme.update({ where: { id: p.id }, data: { difyDocumentId: docId } });
-    }
-  }
-
   // 5. Reconcile Resources
   const resources = await prisma.resource.findMany();
   for (const r of resources) {
@@ -71,7 +61,7 @@ async function runReconcileAndBackfill() {
 
   // Now run inline sync for any record that still does not have a difyDocumentId
   console.log("Backfilling missing records to Dify...");
-  const syncedCounts = { faculties: 0, coaches: 0, programmes: 0, resources: 0, faqs: 0 };
+  const syncedCounts = { faculties: 0, coaches: 0, resources: 0, faqs: 0 };
 
   // Synced Faculties
   const pendingFaculties = await prisma.faculty.findMany({ where: { difyDocumentId: null } });
@@ -86,14 +76,6 @@ async function runReconcileAndBackfill() {
     await syncCoach(c.id, "create");
     syncedCounts.coaches++;
   }
-
-  // Synced Programmes
-  const pendingProgrammes = await prisma.programme.findMany({ where: { difyDocumentId: null } });
-  for (const p of pendingProgrammes) {
-    await syncProgramme(p.id, "create");
-    syncedCounts.programmes++;
-  }
-
   // Synced Resources
   const pendingResources = await prisma.resource.findMany({ where: { difyDocumentId: null } });
   for (const r of pendingResources) {

@@ -52,42 +52,6 @@ export async function syncCoach(id: string, action: "create" | "update" | "delet
   }
 }
 
-export async function syncProgramme(id: string, action: "create" | "update" | "delete") {
-  const prisma = getPrismaClient();
-  if (action === "delete") return;
-
-  const programme = await prisma.programme.findUnique({
-    where: { id },
-    include: { courseModules: true },
-  });
-  if (!programme) return;
-
-  const text = buildProgrammeText(programme, programme.courseModules);
-  if (programme.difyDocumentId) {
-    try {
-      await updateDifyDocument(programme.difyDocumentId, programme.programmeName, text);
-    } catch (e) {
-      const newId = await createDifyDocument(programme.programmeName, text);
-      await prisma.programme.update({ where: { id }, data: { difyDocumentId: newId } });
-    }
-  } else {
-    const newId = await createDifyDocument(programme.programmeName, text);
-    await prisma.programme.update({ where: { id }, data: { difyDocumentId: newId } });
-  }
-}
-
-export async function syncCourseModule(id: string, action: "create" | "update" | "delete", programmeId?: string) {
-  const prisma = getPrismaClient();
-  let progId = programmeId;
-  if (!progId) {
-    const mod = await prisma.courseModule.findUnique({ where: { id } });
-    if (!mod) return;
-    progId = mod.programmeId;
-  }
-
-  await syncProgramme(progId, "update");
-}
-
 export async function syncResource(id: string, action: "create" | "update" | "delete") {
   const prisma = getPrismaClient();
   if (action === "delete") return;

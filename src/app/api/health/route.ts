@@ -18,12 +18,10 @@ export async function GET() {
 
   try {
     const prisma = getPrismaClient();
-    const [facultyCount, coachCount, programmeCount, moduleCount, resourceCount, faqCount] =
+    const [facultyCount, coachCount, resourceCount, faqCount] =
       await Promise.all([
         prisma.faculty.count(),
         prisma.ascCoach.count(),
-        prisma.programme.count(),
-        prisma.courseModule.count(),
         prisma.resource.count(),
         prisma.faq.count(),
       ]);
@@ -35,8 +33,6 @@ export async function GET() {
         counts: {
           faculties: facultyCount,
           ascCoaches: coachCount,
-          programmes: programmeCount,
-          courseModules: moduleCount,
           resources: resourceCount,
           faqs: faqCount,
         },

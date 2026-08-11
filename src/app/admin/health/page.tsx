@@ -25,8 +25,6 @@ export default async function HealthPage() {
         totals: {
           faculties: 0,
           coaches: 0,
-          programmes: 0,
-          modules: 0,
           resources: 0,
           faqs: 0,
         },
@@ -34,8 +32,6 @@ export default async function HealthPage() {
           facultyNeedsReview: 0,
           coachInactive: 0,
           coachNeedReview: 0,
-          programmeNoDuration: 0,
-          moduleNoYearSort: 0,
           resourceNoVerification: 0,
           faqNoVerification: 0,
         },
@@ -66,18 +62,6 @@ export default async function HealthPage() {
       value: data.risk.coachNeedReview,
       tone: data.risk.coachNeedReview > 0 ? "warn" : "good",
       detail: "Missing verification or a non-standard verification status.",
-    },
-    {
-      label: "Programmes needing duration review",
-      value: data.risk.programmeNoDuration,
-      tone: data.risk.programmeNoDuration > 0 ? "warn" : "good",
-      detail: "Programme records missing duration or verification metadata.",
-    },
-    {
-      label: "Modules needing year review",
-      value: data.risk.moduleNoYearSort,
-      tone: data.risk.moduleNoYearSort > 0 ? "warn" : "good",
-      detail: "Course modules missing year sort or verification metadata.",
     },
     {
       label: "Resources missing verification",
@@ -116,8 +100,6 @@ export default async function HealthPage() {
       <MetricGrid className="items-stretch md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <MetricCard label="Faculties" value={data.totals.faculties} detail="Master faculty records." />
         <MetricCard label="Coaches" value={data.totals.coaches} detail="Faculty-linked ASC contacts." />
-        <MetricCard label="Programmes" value={data.totals.programmes} detail="Programme master data." />
-        <MetricCard label="Modules" value={data.totals.modules} detail="Curriculum rows by programme." />
         <MetricCard label="Resources" value={data.totals.resources} detail="General and faculty resources." />
         <MetricCard label="FAQs" value={data.totals.faqs} detail="Support questions and answers." />
       </MetricGrid>
