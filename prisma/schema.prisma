@@ -225,6 +225,23 @@ model UserAccessAuditLog {
   @@map("user_access_audit_logs")
 }
 
+model UserModerationRecord {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorUserId   String   @map("actor_user_id")
+  actorEmail    String?  @map("actor_email")
+  targetUserId  String   @map("target_user_id")
+  targetEmail   String?  @map("target_email")
+  actionType    String   @map("action_type")   // SUSPEND, UNSUSPEND, BAN, UNBAN
+  reason        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([actorUserId])
+  @@index([targetUserId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("user_moderation_records")
+}
+
 model RoleTabAccess {
   id        String   @id @default(uuid()) @db.Uuid
   role      String   // "admin" or "user"
