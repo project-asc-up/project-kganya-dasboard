@@ -343,17 +343,17 @@ export default function Home() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Pillar 1: Academic Success Coaches */}
-          <div className="group rounded-3xl border border-white/20 bg-[#0e1724]/85 p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1724] hover:-translate-y-1 backdrop-blur-xl shadow-lg">
-            <div className="h-12 w-12 rounded-2xl bg-[#005baa]/30 text-[#7cc2ff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <div className="group rounded-3xl border-2 border-white/25 bg-[#0b1626] p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1d32] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
               <Users size={24} />
             </div>
-            <h3 className="text-2xl font-black text-white mb-3 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#ffffff] mb-3 tracking-tight drop-shadow-md">
               1. Academic Success Coaches
             </h3>
-            <p className="text-sm text-slate-100 leading-relaxed mb-6 font-semibold">
+            <p className="text-sm text-[#ffffff] leading-relaxed mb-6 font-semibold opacity-95">
               Manage complete coach directories, faculty allocations, title roles, office locations, appointment links, and undergrad/postgrad level responsibilities.
             </p>
-            <ul className="space-y-2.5 text-xs text-white font-bold">
+            <ul className="space-y-2.5 text-xs text-[#ffffff] font-bold">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#7cc2ff]" />
                 <span>Per-faculty ASC coach directory</span>
@@ -370,17 +370,17 @@ export default function Home() {
           </div>
 
           {/* Pillar 2: Department of Student Affairs (DSA) */}
-          <div id="dsa-units" className="group rounded-3xl border border-white/20 bg-[#0e1724]/85 p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1724] hover:-translate-y-1 backdrop-blur-xl shadow-lg">
-            <div className="h-12 w-12 rounded-2xl bg-[#005baa]/30 text-[#7cc2ff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <div id="dsa-units" className="group rounded-3xl border-2 border-white/25 bg-[#0b1626] p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1d32] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
               <HeartPulse size={24} />
             </div>
-            <h3 className="text-2xl font-black text-white mb-3 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#ffffff] mb-3 tracking-tight drop-shadow-md">
               2. Department of Student Affairs
             </h3>
-            <p className="text-sm text-slate-100 leading-relaxed mb-6 font-semibold">
+            <p className="text-sm text-[#ffffff] leading-relaxed mb-6 font-semibold opacity-95">
               Maintain official support guides, policies, and contacts across all DSA units so student queries are resolved correctly.
             </p>
-            <ul className="space-y-2.5 text-xs text-white font-bold">
+            <ul className="space-y-2.5 text-xs text-[#ffffff] font-bold">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#7cc2ff]" />
                 <span>Student Counselling & Health Services</span>
@@ -397,17 +397,17 @@ export default function Home() {
           </div>
 
           {/* Pillar 3: UP General Information */}
-          <div className="group rounded-3xl border border-white/20 bg-[#0e1724]/85 p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1724] hover:-translate-y-1 backdrop-blur-xl shadow-lg">
-            <div className="h-12 w-12 rounded-2xl bg-[#005baa]/30 text-[#7cc2ff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          <div className="group rounded-3xl border-2 border-white/25 bg-[#0b1626] p-8 transition-all hover:border-[#005baa] hover:bg-[#0e1d32] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
               <Building2 size={24} />
             </div>
-            <h3 className="text-2xl font-black text-white mb-3 tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#ffffff] mb-3 tracking-tight drop-shadow-md">
               3. UP General Information
             </h3>
-            <p className="text-sm text-slate-100 leading-relaxed mb-6 font-semibold">
+            <p className="text-sm text-[#ffffff] leading-relaxed mb-6 font-semibold opacity-95">
               Publish and verify general University of Pretoria academic rules, module requirements, admissions criteria, fees, and campus FAQs.
             </p>
-            <ul className="space-y-2.5 text-xs text-white font-bold">
+            <ul className="space-y-2.5 text-xs text-[#ffffff] font-bold">
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#7cc2ff]" />
                 <span>Faculties & Programme curriculums</span>
