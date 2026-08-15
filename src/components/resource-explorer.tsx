@@ -3,18 +3,31 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  BarChart2,
+  BookOpen,
+  Briefcase,
+  Building2,
   Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  Cog,
   ExternalLink,
   FileText,
+  Filter,
+  GraduationCap,
+  Heart,
+  Landmark,
+  LayoutGrid,
+  PawPrint,
+  Scale,
+  User,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { formatReadableDate, type DisplayDateValue } from "@/lib/date-display";
-import { displayFacultyName } from "@/lib/faculty-display";
 import {
   buildResourceFacultyOptions,
   filterResourcesByFaculty,
@@ -41,10 +54,106 @@ type SortDir = "asc" | "desc";
 
 const ROWS_OPTIONS = [5, 10, 20, 50];
 
+// ─── Faculty Color & Icon Helper ──────────────────────────────────────────────
+
+function getFacultyTheme(sectionName: string) {
+  const name = sectionName.toLowerCase();
+  if (name.includes("dsa")) {
+    return {
+      bg: "bg-purple-100",
+      text: "text-purple-600",
+      icon: Landmark,
+    };
+  }
+  if (
+    name.includes("economic") ||
+    name.includes("management") ||
+    name.includes("ems")
+  ) {
+    return {
+      bg: "bg-emerald-100",
+      text: "text-emerald-600",
+      icon: BarChart2,
+    };
+  }
+  if (name.includes("education")) {
+    return {
+      bg: "bg-amber-100",
+      text: "text-amber-600",
+      icon: GraduationCap,
+    };
+  }
+  if (
+    name.includes("engineering") ||
+    name.includes("built environment") ||
+    name.includes("information technology") ||
+    name.includes("ebit")
+  ) {
+    return {
+      bg: "bg-blue-100",
+      text: "text-blue-600",
+      icon: Cog,
+    };
+  }
+  if (name.includes("health")) {
+    return {
+      bg: "bg-rose-100",
+      text: "text-rose-600",
+      icon: Heart,
+    };
+  }
+  if (name.includes("law")) {
+    return {
+      bg: "bg-indigo-100",
+      text: "text-indigo-600",
+      icon: Scale,
+    };
+  }
+  if (name.includes("theology") || name.includes("religion")) {
+    return {
+      bg: "bg-teal-100",
+      text: "text-teal-600",
+      icon: BookOpen,
+    };
+  }
+  if (name.includes("veterinary")) {
+    return {
+      bg: "bg-orange-100",
+      text: "text-orange-600",
+      icon: PawPrint,
+    };
+  }
+  if (name.includes("gordon") || name.includes("gibs")) {
+    return {
+      bg: "bg-slate-100",
+      text: "text-slate-700",
+      icon: Briefcase,
+    };
+  }
+  return {
+    bg: "bg-blue-100",
+    text: "text-blue-600",
+    icon: Building2,
+  };
+}
+
+function getFacultyIcon(facultyName: string) {
+  const name = facultyName.toLowerCase();
+  if (name.includes("engineering") || name.includes("built environment") || name.includes("ebit")) return Cog;
+  if (name.includes("education")) return GraduationCap;
+  if (name.includes("economic") || name.includes("management") || name.includes("ems")) return BarChart2;
+  if (name.includes("gordon") || name.includes("gibs")) return Briefcase;
+  if (name.includes("health")) return Heart;
+  if (name.includes("law")) return Scale;
+  if (name.includes("theology") || name.includes("religion")) return BookOpen;
+  if (name.includes("veterinary")) return PawPrint;
+  return Building2;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getFacultyLabel(resource: ResourceRow) {
-  return resource.faculty ? resource.faculty.code : "General";
+  return resource.faculty ? resource.faculty.name : "DSA";
 }
 
 function sortResources(
@@ -89,7 +198,7 @@ function SortButton({
       type="button"
       onClick={() => onSort(sortKey)}
       className={cn(
-        "inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors cursor-pointer",
+        "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] transition-colors cursor-pointer",
         active
           ? "text-[var(--color-brand)]"
           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
@@ -99,7 +208,7 @@ function SortButton({
       <ChevronsUpDown
         size={12}
         className={cn(
-          "shrink-0 transition-opacity",
+          "transition-opacity",
           active ? "opacity-100" : "opacity-40"
         )}
       />
@@ -108,15 +217,15 @@ function SortButton({
 }
 
 function FacultyBadge({ resource }: { resource: ResourceRow }) {
-  const label = resource.faculty ? resource.faculty.code : "GENERAL";
+  const label = resource.faculty ? resource.faculty.name : "DSA";
+  const theme = getFacultyTheme(label);
+
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[var(--radius-full)] px-2.5 py-0.5",
-        "text-[10px] font-bold uppercase tracking-[0.12em] whitespace-nowrap",
-        resource.faculty
-          ? "bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
-          : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap",
+        theme.bg,
+        theme.text
       )}
     >
       {label}
@@ -139,109 +248,56 @@ function PaginationBar({
 }) {
   const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
   const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
-  const to = Math.min(page * rowsPerPage, total);
-
-  const pages: (number | "…")[] = [];
-  if (totalPages <= 6) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (page > 3) pages.push("…");
-    for (
-      let i = Math.max(2, page - 1);
-      i <= Math.min(totalPages - 1, page + 1);
-      i++
-    )
-      pages.push(i);
-    if (page < totalPages - 2) pages.push("…");
-    pages.push(totalPages);
-  }
+  const to = Math.min(total, page * rowsPerPage);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-t border-[var(--color-border)] text-sm text-[var(--color-text-muted)]">
-      <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
-        {total === 0
-          ? "No resources"
-          : `Showing ${from} to ${to} of ${total} resource${total === 1 ? "" : "s"}`}
-      </span>
-
-      <div className="flex items-center gap-1.5">
-        {/* Prev */}
-        <button
-          type="button"
-          aria-label="Previous page"
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+    <div className="flex flex-col gap-3 border-t border-[var(--color-border)] bg-[var(--color-surface-sunken)]/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between text-xs">
+      <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+        <span>Rows per page:</span>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => onRowsPerPage(Number(e.target.value))}
+          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-2 py-1 font-semibold text-[var(--color-text)] outline-none cursor-pointer"
         >
-          <ChevronLeft size={14} />
-        </button>
-
-        {pages.map((p, i) =>
-          p === "…" ? (
-            <span key={`ellipsis-${i}`} className="px-1 text-[var(--color-text-muted)]">
-              …
-            </span>
-          ) : (
-            <button
-              key={p}
-              type="button"
-              aria-label={`Page ${p}`}
-              aria-current={p === page ? "page" : undefined}
-              onClick={() => onPage(p as number)}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border text-[13px] font-semibold transition cursor-pointer",
-                p === page
-                  ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white"
-                  : "border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)] hover:bg-[var(--color-surface-sunken)]"
-              )}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        {/* Next */}
-        <button
-          type="button"
-          aria-label="Next page"
-          disabled={page >= totalPages}
-          onClick={() => onPage(page + 1)}
-          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
-        >
-          <ChevronRight size={14} />
-        </button>
+          {ROWS_OPTIONS.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+        <span className="ml-2 font-medium">
+          {from}–{to} of {total}
+        </span>
       </div>
 
-      {/* Rows per page */}
-      <div className="flex items-center gap-2 text-[13px]">
-        <span className="text-[var(--color-text-muted)] font-medium">Rows per page</span>
-        <div className="relative">
-          <select
-            value={rowsPerPage}
-            onChange={(e) => {
-              onRowsPerPage(Number(e.target.value));
-              onPage(1);
-            }}
-            className="h-8 appearance-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-0 pl-3 pr-7 text-[13px] font-semibold text-[var(--color-text)] transition hover:border-[var(--color-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] cursor-pointer"
-          >
-            {ROWS_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={12}
-            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-          />
-        </div>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          className="h-7 w-7 p-0"
+        >
+          <ChevronLeft size={14} />
+        </Button>
+        <span className="px-2 font-semibold text-[var(--color-text)]">
+          {page} / {totalPages}
+        </span>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onPage(page + 1)}
+          className="h-7 w-7 p-0"
+        >
+          <ChevronRight size={14} />
+        </Button>
       </div>
     </div>
   );
 }
 
-// ─── Collapsible Table Section ────────────────────────────────────────────────
+// ─── Table Section ─────────────────────────────────────────────────────────────
 
 function TableSection({
   sectionName,
@@ -276,30 +332,43 @@ function TableSection({
     return sorted.slice(start, start + rowsPerPage);
   }, [sorted, page, rowsPerPage]);
 
+  const theme = getFacultyTheme(sectionName);
+  const IconComponent = theme.icon;
+
   return (
     <section aria-label={sectionName} className="space-y-3">
-      {/* Collapsible Section Header */}
+      {/* Collapsible Bar Card matching reference image */}
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
         aria-expanded={!isCollapsed}
-        className="w-full flex items-center justify-between gap-4 p-3 -mx-3 rounded-2xl hover:bg-[var(--color-surface-sunken)]/60 transition-colors text-left group cursor-pointer"
+        className="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:border-slate-300 transition-all flex items-center justify-between gap-4 text-left group cursor-pointer"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <h3 className="text-xl font-bold tracking-tight text-[var(--color-text)]">
-            {sectionName}
-          </h3>
-          <span className="inline-flex items-center rounded-full bg-[var(--color-brand-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--color-brand-soft-foreground)]">
-            {items.length} resource{items.length === 1 ? "" : "s"}
-          </span>
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* Round Icon Circle */}
+          <div className={cn("p-2.5 rounded-full shrink-0", theme.bg, theme.text)}>
+            <IconComponent size={20} />
+          </div>
+
+          {/* Title and Count Badge */}
+          <div className="flex items-center gap-3 min-w-0">
+            <h3 className="text-base sm:text-lg font-extrabold text-[#0b1521] tracking-tight truncate">
+              {sectionName}
+            </h3>
+            <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-0.5 text-xs font-extrabold text-[#005baa] whitespace-nowrap">
+              {items.length} {items.length === 1 ? "resource" : "resources"}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-muted)] group-hover:text-[var(--color-text)]">
+
+        {/* Expand / Collapse Toggle */}
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 group-hover:text-[#005baa] transition-colors shrink-0">
           <span>{isCollapsed ? "Expand" : "Collapse"}</span>
           <ChevronDown
-            size={20}
+            size={18}
             className={cn(
-              "transition-transform duration-200 text-[var(--color-text-muted)] group-hover:text-[var(--color-text)]",
-              isCollapsed && "-rotate-90"
+              "transition-transform duration-200 text-slate-500 group-hover:text-[#005baa]",
+              !isCollapsed && "rotate-180"
             )}
           />
         </div>
@@ -307,12 +376,12 @@ function TableSection({
 
       {/* Table container (collapsible) */}
       {!isCollapsed && (
-        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] overflow-hidden shadow-[var(--shadow-xs)] transition-all">
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs transition-all">
           {/* Column headers */}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
               <thead>
-                <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-sunken)]">
+                <tr className="border-b border-slate-200 bg-slate-50">
                   <th className="py-3 pl-4 pr-3 text-left w-[32%]">
                     <SortButton
                       label="Title"
@@ -322,7 +391,7 @@ function TableSection({
                       onSort={handleSort}
                     />
                   </th>
-                  <th className="py-3 px-3 text-left w-[14%]">
+                  <th className="py-3 px-3 text-left w-[18%]">
                     <SortButton
                       label="Faculty / Unit"
                       sortKey="faculty"
@@ -331,7 +400,7 @@ function TableSection({
                       onSort={handleSort}
                     />
                   </th>
-                  <th className="py-3 px-3 text-left w-[28%]">
+                  <th className="py-3 px-3 text-left w-[24%]">
                     <SortButton
                       label="Description"
                       sortKey="description"
@@ -356,12 +425,12 @@ function TableSection({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
+              <tbody className="divide-y divide-slate-200">
                 {paginated.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
-                      className="py-12 text-center text-sm font-medium text-[var(--color-text-muted)]"
+                      className="py-12 text-center text-sm font-medium text-slate-500"
                     >
                       No resources in this section.
                     </td>
@@ -370,16 +439,16 @@ function TableSection({
                   paginated.map((resource) => (
                     <tr
                       key={resource.id}
-                      className="group bg-[var(--color-surface-raised)] transition-colors hover:bg-[var(--color-surface-sunken)]/50"
+                      className="group bg-white transition-colors hover:bg-slate-50"
                     >
                       {/* Title */}
-                      <td className="py-3 pl-4 pr-3 align-middle">
+                      <td className="py-3.5 pl-4 pr-3 align-middle">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
-                            <FileText size={13} />
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#e6f0fa] text-[#005baa]">
+                            <FileText size={14} />
                           </span>
                           <span
-                            className="font-bold text-[var(--color-text)] truncate"
+                            className="font-bold text-slate-900 truncate"
                             title={resource.title}
                           >
                             {resource.title}
@@ -388,15 +457,15 @@ function TableSection({
                       </td>
 
                       {/* Faculty / Unit badge */}
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3.5 px-3 align-middle">
                         <FacultyBadge resource={resource} />
                       </td>
 
                       {/* Description */}
-                      <td className="py-3 px-3 align-middle">
+                      <td className="py-3.5 px-3 align-middle">
                         {resource.description ? (
                           <span
-                            className="block text-[13px] text-[var(--color-text-muted)] leading-5 overflow-hidden font-normal"
+                            className="block text-[13px] text-slate-600 leading-5 overflow-hidden font-medium"
                             style={{
                               display: "-webkit-box",
                               WebkitLineClamp: 2,
@@ -407,28 +476,28 @@ function TableSection({
                             {resource.description}
                           </span>
                         ) : (
-                          <span className="text-[13px] text-[var(--color-text-muted)] italic opacity-60">
+                          <span className="text-[13px] text-slate-400 italic">
                             No description
                           </span>
                         )}
                       </td>
 
                       {/* Date */}
-                      <td className="py-3 px-3 align-middle">
-                        <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">
-                          <Calendar size={13} className="shrink-0 text-[var(--color-text-subtle)]" />
+                      <td className="py-3.5 px-3 align-middle">
+                        <div className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-600 whitespace-nowrap">
+                          <Calendar size={13} className="shrink-0 text-slate-400" />
                           <span>{formatReadableDate(resource.lastVerified) || "—"}</span>
                         </div>
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3 pl-3 pr-4 align-middle">
+                      <td className="py-3.5 pl-3 pr-4 align-middle">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             asChild
                             variant="secondary"
                             size="sm"
-                            className="h-7 px-2.5 text-[12px] font-bold text-[var(--color-text)] border border-[var(--color-border-strong)] hover:bg-[var(--color-surface-sunken)] whitespace-nowrap"
+                            className="h-7 px-2.5 text-[12px] font-bold text-slate-800 border border-slate-300 hover:bg-slate-100 whitespace-nowrap"
                           >
                             <Link href={`/admin/resources/${resource.id}`}>
                               View / edit
@@ -438,7 +507,7 @@ function TableSection({
                             asChild
                             variant="primary"
                             size="sm"
-                            className="h-7 px-2.5 text-[12px] font-bold text-white bg-[var(--color-brand)] hover:bg-[var(--color-brand-strong)] whitespace-nowrap"
+                            className="h-7 px-2.5 text-[12px] font-bold text-white bg-[#005baa] hover:bg-[#00457f] whitespace-nowrap"
                           >
                             <a
                               href={resource.url}
@@ -514,37 +583,41 @@ export function ResourceExplorer({
 
   return (
     <div className="space-y-6">
-      {/* Faculty Filter Chips */}
-      <div className="space-y-2.5">
+      {/* Top Faculty Filter Box matching exact reference image */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+        {/* Header Row */}
         <div className="flex items-center justify-between gap-3">
-          <label className="text-sm font-bold text-[var(--color-text)]">
-            Faculty filter
-          </label>
-          <span className="text-xs text-[var(--color-text-muted)]">
-            All or a specific faculty
-          </span>
+          <div className="flex items-center gap-2 font-extrabold text-slate-900 text-sm">
+            <Filter size={16} className="text-slate-700" />
+            <span>Filter by faculty</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+            <User size={14} className="text-slate-400" />
+            <span>All or a specific faculty</span>
+          </div>
         </div>
 
-        {/* Filter Chips Container */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Filter Chips Container matching reference image */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* "All faculties" Chip */}
           <button
             type="button"
             onClick={() => setFacultyFilter("all")}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+              "inline-flex items-center gap-2.5 rounded-[1.25rem] px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
               facultyFilter === "all"
-                ? "bg-[var(--color-brand)] text-white shadow-sm"
-                : "bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                ? "bg-[#005baa] text-white border-[#005baa] shadow-sm"
+                : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200"
             )}
           >
+            <LayoutGrid size={15} />
             <span>All faculties</span>
             <span
               className={cn(
-                "inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold leading-none",
+                "inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-black leading-none",
                 facultyFilter === "all"
                   ? "bg-white/20 text-white"
-                  : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
+                  : "bg-slate-100 text-slate-600"
               )}
             >
               {allCount}
@@ -558,6 +631,7 @@ export function ResourceExplorer({
               (r) => r.faculty?.id === faculty.id
             ).length;
             const label = faculty.name;
+            const ChipIcon = getFacultyIcon(label);
 
             return (
               <button
@@ -565,19 +639,20 @@ export function ResourceExplorer({
                 type="button"
                 onClick={() => setFacultyFilter(faculty.id)}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                  "inline-flex items-center gap-2.5 rounded-[1.25rem] px-4 py-2.5 text-xs font-extrabold transition-all cursor-pointer border",
                   isSelected
-                    ? "bg-[var(--color-brand)] text-white shadow-sm"
-                    : "bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] border border-[var(--color-border)]"
+                    ? "bg-[#005baa] text-white border-[#005baa] shadow-sm"
+                    : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200"
                 )}
               >
+                <ChipIcon size={15} />
                 <span>{label}</span>
                 <span
                   className={cn(
-                    "inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold leading-none",
+                    "inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-[11px] font-black leading-none",
                     isSelected
                       ? "bg-white/20 text-white"
-                      : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)]"
+                      : "bg-slate-100 text-slate-600"
                   )}
                 >
                   {count}
@@ -588,14 +663,14 @@ export function ResourceExplorer({
         </div>
       </div>
 
-      {/* Table Sections */}
-      <div className="space-y-8 pt-2">
+      {/* Table Sections matching reference image */}
+      <div className="space-y-4 pt-1">
         {sections.map(([sectionName, items]) => (
           <TableSection key={sectionName} sectionName={sectionName} items={items} />
         ))}
 
         {sections.length === 0 && (
-          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-16 text-center text-sm font-medium text-[var(--color-text-muted)]">
+          <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center text-sm font-semibold text-slate-500">
             No resources match the selected filter.
           </div>
         )}
