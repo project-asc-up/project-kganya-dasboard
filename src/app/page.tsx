@@ -132,9 +132,9 @@ export default function Home() {
 
         {/* Hero Subtitle */}
         <p className="mt-8 text-lg sm:text-xl text-slate-700 max-w-2xl leading-relaxed font-semibold">
-          Update <strong className="text-[#002855] font-black underline decoration-[#005baa] decoration-2 underline-offset-4">Academic Success Coaches</strong> details,{" "}
-          <strong className="text-[#002855] font-black underline decoration-[#005baa] decoration-2 underline-offset-4">Department of Student Affairs (DSA)</strong> units, and{" "}
-          <strong className="text-[#002855] font-black underline decoration-[#005baa] decoration-2 underline-offset-4">General UP Guidelines</strong> in one central console.
+          Update <strong className="text-[#002855] font-black">Academic Success Coaches</strong> details,{" "}
+          <strong className="text-[#002855] font-black">Department of Student Affairs (DSA)</strong> units, and{" "}
+          <strong className="text-[#002855] font-black">General UP Guidelines</strong> in one central console.
           Every change automatically updates the <strong className="text-[#005baa] font-black">Leaf chatbot</strong> so UP students get instant, accurate assistance.
         </p>
 
