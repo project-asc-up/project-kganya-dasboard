@@ -8,9 +8,13 @@ import {
   CheckCircle2,
   Database,
   FileText,
+  Folder,
   GraduationCap,
   HeartPulse,
+  Layers,
   LayoutDashboard,
+  Link2,
+  Lock,
   MessageSquare,
   RefreshCw,
   ShieldCheck,
@@ -19,83 +23,63 @@ import {
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-white text-[#334155] font-sans antialiased selection:bg-[#002B49] selection:text-white">
-      {/* ─── Background Subtle UP Navy Vector Pattern ───────────────────── */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.04]">
-        <svg
-          className="h-full w-full"
-          xmlns="http://www.w3.org/2000/svg"
-          width="100%"
-          height="100%"
-          fill="none"
-        >
-          <pattern
-            id="up-grid-pattern"
-            width="40"
-            height="40"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 40 0 L 0 0 0 40"
-              fill="none"
-              stroke="#002B49"
-              strokeWidth="1"
-            />
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#up-grid-pattern)" />
-        </svg>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#f8fafc] text-[#0b1521] selection:bg-[#005baa]/20 selection:text-[#002855] font-sans antialiased">
+      {/* ─── Background Ambient Motion, Video & Glows ──────────────────────── */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {/* Animated Floating UP Blue Radial Mesh Top Center */}
+        <div className="absolute -top-40 left-1/2 animate-float-slow h-[700px] w-[1000px] rounded-full bg-gradient-to-b from-[#005baa]/20 via-[#00457f]/10 to-transparent blur-3xl" />
+        {/* Animated Secondary Ochre Glow Orb Right */}
+        <div className="absolute top-1/3 -right-40 animate-float-reverse h-[600px] w-[600px] rounded-full bg-[#b45309]/15 blur-3xl" />
+        {/* Looping Ambient Motion Video Overlay */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-20 mix-blend-multiply pointer-events-none"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4"
+        />
       </div>
 
-      {/* ─── 1. Sticky Navigation Header ───────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md transition-colors">
+      {/* Guide lines */}
+      <div className="hidden md:block pointer-events-none fixed inset-y-0 left-1/2 -translate-x-[calc(50%+36rem)] w-px bg-slate-200/80 z-[5]" />
+      <div className="hidden md:block pointer-events-none fixed inset-y-0 left-1/2 translate-x-[calc(-50%+36rem)] w-px bg-slate-200/80 z-[5]" />
+
+      {/* ─── Navigation Header ────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-900 backdrop-blur-2xl transition-all shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           {/* Brand Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-3 group focus-visible:outline-2 focus-visible:outline-[#002B49] rounded-lg p-1 transition-colors"
-          >
+          <Link href="/" className="flex items-center gap-3 group">
             <Image
               src="/up-logo.png"
               alt="University of Pretoria"
               width={40}
               height={40}
               priority
-              className="h-10 w-10 rounded-lg bg-white object-contain p-1 border border-slate-200"
+              className="h-10 w-10 rounded-xl bg-white object-contain p-1 shadow-md border border-slate-100 transition group-hover:scale-105"
             />
             <div className="min-w-0">
-              <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#002B49]">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#005baa]">
                 University of Pretoria
               </span>
-              <p className="text-sm font-bold tracking-tight text-[#002B49]">
+              <p className="text-sm font-extrabold tracking-tight text-[#002855] group-hover:text-[#005baa] transition-colors">
                 Academic Support Workspace
               </p>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-700">
-            <a
-              href="#about"
-              className="hover:text-[#002B49] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[#002B49] rounded px-2 py-1"
-            >
+          <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-700">
+            <a href="#about" className="hover:text-[#005baa] transition-colors">
               Workspace Overview
             </a>
-            <a
-              href="#dsa-units"
-              className="hover:text-[#002B49] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[#002B49] rounded px-2 py-1"
-            >
+            <a href="#dsa-units" className="hover:text-[#005baa] transition-colors">
               DSA Units
             </a>
-            <a
-              href="#coaches"
-              className="hover:text-[#002B49] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[#002B49] rounded px-2 py-1"
-            >
+            <a href="#coaches" className="hover:text-[#005baa] transition-colors">
               ASC Directory
             </a>
-            <a
-              href="#chatbot-sync"
-              className="hover:text-[#002B49] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-[#002B49] rounded px-2 py-1"
-            >
+            <a href="#chatbot-sync" className="hover:text-[#005baa] transition-colors">
               Leaf Chatbot Sync
             </a>
           </nav>
@@ -105,10 +89,10 @@ export default function Home() {
             <Show when="signed-out">
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#002B49] px-5 py-2.5 text-xs font-semibold text-white transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
+                className="group inline-flex items-center gap-2 rounded-full bg-[#005baa] px-6 py-2.5 text-xs font-bold text-white transition-all hover:bg-[#00457f] hover:shadow-lg active:scale-95"
               >
                 <span>Sign In</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Show>
 
@@ -117,11 +101,11 @@ export default function Home() {
                 <UserButton />
                 <Link
                   href="/admin"
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#002B49] px-5 py-2.5 text-xs font-semibold text-white transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
+                  className="group inline-flex items-center gap-2 rounded-full bg-[#005baa] px-6 py-2.5 text-xs font-bold text-white transition-all hover:bg-[#00457f] hover:shadow-lg active:scale-95"
                 >
                   <LayoutDashboard size={14} />
                   <span>Open Console</span>
-                  <ArrowRight size={14} />
+                  <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
             </Show>
@@ -129,196 +113,196 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ─── 2. Hero Section ───────────────────────────────────────────── */}
-      <section className="relative z-10 bg-[#F8FAFC] border-b border-slate-200/80 pt-16 md:pt-24 pb-20 text-center flex flex-col items-center">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center">
-          {/* Subtle Tag */}
-          <div className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-[#002B49] mb-6 shadow-xs">
-            <GraduationCap size={15} className="text-[#BA1C21]" />
-            <span>Official UP Content Management & AI Knowledge Workspace</span>
-          </div>
-
-          {/* Headline in Solid UP Navy */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#002B49] leading-[1.12]">
-            One workspace for UP support.
-            <br />
-            Instant knowledge for Leaf Chatbot.
-          </h1>
-
-          {/* Hero Subtitle in Slate */}
-          <p className="mt-6 text-base sm:text-lg text-[#334155] max-w-2xl leading-relaxed">
-            Manage Academic Success Coaches information, Department of Student
-            Affairs (DSA) units, and general UP guidelines in one central
-            workspace. Any information updated on the platform automatically
-            updates the Leaf chatbot in real time.
-          </p>
-
-          {/* CTA Buttons Row - Strictly Flat Styling */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Show when="signed-out">
-              <Link
-                href="/sign-in"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002B49] text-white font-semibold text-sm px-6 py-3 transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
-              >
-                <span>Sign In to Admin Workspace</span>
-                <ArrowRight size={16} />
-              </Link>
-            </Show>
-
-            <Show when="signed-in">
-              <Link
-                href="/admin"
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002B49] text-white font-semibold text-sm px-6 py-3 transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
-              >
-                <LayoutDashboard size={16} />
-                <span>Go to Admin Console</span>
-                <ArrowRight size={16} />
-              </Link>
-            </Show>
-
-            <a
-              href="#chatbot-sync"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white text-[#002B49] font-semibold text-sm px-6 py-3 transition-colors duration-150 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-[#002B49]"
-            >
-              <Database size={16} className="text-[#002B49]" />
-              <span>How Leaf Sync Works</span>
-            </a>
-          </div>
-
-          {/* Security Indicator */}
-          <p className="mt-6 text-xs text-slate-500 flex items-center gap-1.5 justify-center">
-            <ShieldCheck size={14} className="text-[#10B981]" />
-            <span>Clerk Enterprise Authentication & RBAC Enforced</span>
-          </p>
+      {/* ─── Hero Section ─────────────────────────────────────────────── */}
+      <section className="relative z-10 pt-20 md:pt-28 pb-20 text-center flex flex-col items-center max-w-5xl mx-auto px-6">
+        {/* Eyebrow Pill */}
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#005baa]/30 bg-[#005baa]/10 px-5 py-2 text-xs font-extrabold text-[#003d73] backdrop-blur-md mb-8 shadow-sm">
+          <GraduationCap size={16} className="text-[#005baa]" />
+          <span>Official Academic & Student Affairs Content Console</span>
         </div>
+
+        {/* Main Headline - Pure Light High Contrast */}
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.08] text-[#002855] drop-shadow-sm">
+          One workspace for UP support.
+          <br />
+          <span className="text-[#005baa] font-black">
+            Instant knowledge for Leaf Chatbot.
+          </span>
+        </h1>
+
+        {/* Hero Subtitle */}
+        <p className="mt-8 text-lg sm:text-xl text-slate-700 max-w-2xl leading-relaxed font-semibold">
+          Update <strong className="text-[#002855] font-black">Academic Success Coaches</strong> details,{" "}
+          <strong className="text-[#002855] font-black">Department of Student Affairs (DSA)</strong> units, and{" "}
+          <strong className="text-[#002855] font-black">General UP Guidelines</strong> in one central console.
+          Every change automatically updates the <strong className="text-[#005baa] font-black">Leaf chatbot</strong> so UP students get instant, accurate assistance.
+        </p>
+
+        {/* CTA Buttons Row */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <Show when="signed-out">
+            <Link
+              href="/sign-in"
+              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-[#005baa] text-white font-black text-sm px-8 py-4 shadow-xl transition-all hover:bg-[#00457f] hover:scale-105 active:scale-[0.98]"
+            >
+              <span>Sign In to Admin Workspace</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Show>
+
+          <Show when="signed-in">
+            <Link
+              href="/admin"
+              className="group inline-flex items-center justify-center gap-2.5 rounded-full bg-[#005baa] text-white font-black text-sm px-8 py-4 shadow-xl transition-all hover:bg-[#00457f] hover:scale-105 active:scale-[0.98]"
+            >
+              <LayoutDashboard size={18} />
+              <span>Go to Admin Console</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Show>
+
+          <a
+            href="#chatbot-sync"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white text-slate-800 font-bold text-sm px-7 py-4 backdrop-blur-md transition-all hover:bg-slate-100 shadow-sm"
+          >
+            <Database size={16} className="text-[#005baa]" />
+            <span>How Leaf Chatbot Sync Works</span>
+          </a>
+        </div>
+
+        {/* Security badge */}
+        <p className="mt-5 text-xs font-bold text-slate-600 flex items-center gap-1.5 justify-center">
+          <ShieldCheck size={16} className="text-emerald-600" />
+          <span>Clerk Enterprise Auth & Role-Based Access Protected</span>
+        </p>
       </section>
 
-      {/* ─── 4. Interactive Preview / Dashboard Mockup ──────────────────── */}
-      <section id="chatbot-sync" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        <div className="rounded-xl border border-slate-800 bg-[#0B192C] text-white shadow-xl overflow-hidden">
-          {/* Terminal Window Header */}
-          <div className="h-10 bg-[#06101E] border-b border-slate-800 px-4 flex items-center justify-between text-xs text-slate-300">
+      {/* ─── macOS Style Live Sync Pipeline Showcase ──────────────────── */}
+      <section id="chatbot-sync" className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+        <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 backdrop-blur-2xl shadow-xl overflow-hidden">
+          {/* macOS Titlebar */}
+          <div className="h-10 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between text-xs text-slate-800">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#EF4444]" />
-              <span className="w-3 h-3 rounded-full bg-[#F59E0B]" />
-              <span className="w-3 h-3 rounded-full bg-[#10B981]" />
-              <span className="ml-3 font-mono text-xs font-semibold text-slate-200">
-                UP Admin Workspace ──► Leaf Chatbot Automated Pipeline
+              <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+              <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
+              <span className="w-3 h-3 rounded-full bg-[#28c840]" />
+              <span className="ml-3 font-mono text-[12px] font-bold text-slate-800">
+                UP Admin Console ──► Leaf Chatbot Realtime Pipeline
               </span>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs text-emerald-400 font-semibold">
-              <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
-              <span>DIFY VECTOR SYNC ACTIVE</span>
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#005baa]">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-extrabold">LIVE AUTOMATED SYNC ACTIVE</span>
             </div>
           </div>
 
-          {/* Showcase Split Grid */}
-          <div className="grid lg:grid-cols-12 min-h-[440px]">
-            {/* Left: Admin Actions (7 cols) */}
-            <div className="lg:col-span-7 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-800 space-y-5 bg-[#0D1E36]">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                  <LayoutDashboard size={14} className="text-[#60A5FA]" />
-                  Admin Content Console
+          {/* Showcase Content Split Grid */}
+          <div className="grid lg:grid-cols-12 min-h-[460px]">
+            {/* Left: Admin Workspace Actions (7 cols) */}
+            <div className="lg:col-span-7 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-200 space-y-6 bg-slate-50/60">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-[#005baa] flex items-center gap-2">
+                  <LayoutDashboard size={15} />
+                  Content Management Workspace
                 </span>
-                <span className="text-xs text-slate-400 font-mono">Step 1: Admin Mutation</span>
+                <span className="text-xs text-slate-600 font-mono font-bold">Step 1: Admin Update</span>
               </div>
 
-              <div className="space-y-3">
-                {/* Record 1: ASC Coach */}
-                <div className="rounded-lg border border-slate-700 bg-[#0B192C] p-4 space-y-1.5">
+              <div className="space-y-4">
+                {/* Demo Record Item 1: ASC Coach */}
+                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 transition hover:border-[#005baa] shadow-sm">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-200 flex items-center gap-2">
-                      <Users size={14} className="text-[#60A5FA]" />
+                    <span className="font-extrabold text-slate-900 flex items-center gap-2">
+                      <Users size={15} className="text-[#005baa]" />
                       ASC Coach Directory Record
                     </span>
-                    <span className="rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 text-[11px] font-mono font-semibold">
+                    <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 text-[10px] font-black">
                       UPDATED
                     </span>
                   </div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm text-slate-900 font-bold">
                     Dr. Sarah Khumalo — Senior Academic Coach (Faculty of EMS)
                   </p>
-                  <p className="text-xs text-slate-300 font-mono">
+                  <p className="text-xs text-slate-600 font-semibold">
                     Office: EMS Building Rm 2-14 · Appointment: up.ac.za/asc-ems-booking
                   </p>
                 </div>
 
-                {/* Record 2: DSA Unit */}
-                <div className="rounded-lg border border-slate-700 bg-[#0B192C] p-4 space-y-1.5">
+                {/* Demo Record Item 2: DSA Unit */}
+                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 transition hover:border-[#005baa] shadow-sm">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-200 flex items-center gap-2">
-                      <HeartPulse size={14} className="text-[#60A5FA]" />
+                    <span className="font-extrabold text-slate-900 flex items-center gap-2">
+                      <HeartPulse size={15} className="text-[#005baa]" />
                       DSA Unit: Student Counselling & Disability Unit
                     </span>
-                    <span className="rounded bg-emerald-950 text-emerald-300 border border-emerald-700/60 px-2 py-0.5 text-[11px] font-mono font-semibold">
+                    <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 text-[10px] font-black">
                       UPDATED
                     </span>
                   </div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm text-slate-900 font-bold">
                     2026 Examination Concessions & Extra Time Application Protocol
                   </p>
-                  <p className="text-xs text-slate-300 font-mono">
+                  <p className="text-xs text-slate-600 font-semibold">
                     Deadline: 30 September · Portal: up.ac.za/disability-unit
                   </p>
                 </div>
 
-                {/* Record 3: UP General Info */}
-                <div className="rounded-lg border border-slate-700 bg-[#0B192C] p-4 space-y-1.5">
+                {/* Demo Record Item 3: UP General Info */}
+                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 transition hover:border-[#005baa] shadow-sm">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-200 flex items-center gap-2">
-                      <Building2 size={14} className="text-[#60A5FA]" />
+                    <span className="font-extrabold text-slate-900 flex items-center gap-2">
+                      <Building2 size={15} className="text-[#005baa]" />
                       General UP Guidelines
                     </span>
-                    <span className="rounded bg-blue-950 text-blue-300 border border-blue-700/60 px-2 py-0.5 text-[11px] font-mono font-semibold">
-                      VECTOR SYNCED
+                    <span className="rounded-full bg-blue-100 text-blue-900 border border-blue-300 px-2 py-0.5 text-[10px] font-black">
+                      SYNCED TO VECTOR STORE
                     </span>
                   </div>
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm text-slate-900 font-bold">
                     2026 Second Semester Module Discontinuation & Fee Refund Policy
                   </p>
                 </div>
               </div>
 
-              {/* Receipt Bar */}
-              <div className="rounded-lg border border-slate-700 bg-[#06101E] p-3 flex items-center justify-between text-xs text-slate-300 font-mono">
-                <div className="flex items-center gap-2">
-                  <RefreshCw size={14} className="animate-spin text-[#60A5FA]" />
-                  <span>Dify Vector Ingestion: 3 Records Synced</span>
+              {/* Sync Receipt Bar */}
+              <div className="rounded-xl border border-[#005baa] bg-[#005baa]/10 p-3.5 flex items-center justify-between text-xs text-[#003d73]">
+                <div className="flex items-center gap-2 font-bold">
+                  <RefreshCw size={15} className="animate-spin text-[#005baa]" />
+                  <span>Vector Knowledge Sync: <strong>3 Records Processed</strong></span>
                 </div>
-                <span className="text-slate-400">#req-up-8842</span>
+                <span className="font-mono text-[11px] font-bold text-slate-900">Receipt #req-up-8842</span>
               </div>
             </div>
 
-            {/* Right: Leaf AI Chatbot Output (5 cols) */}
-            <div className="lg:col-span-5 bg-[#06101E] p-6 sm:p-8 flex flex-col justify-between space-y-6">
+            {/* Right: Leaf Chatbot Live Output (5 cols) */}
+            <div className="lg:col-span-5 bg-[#002855] text-white p-6 sm:p-8 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                    <MessageSquare size={15} />
-                    Leaf Chatbot Output
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                    <MessageSquare size={16} />
+                    Leaf Chatbot (Student View)
                   </span>
-                  <span className="text-[11px] font-mono text-slate-400">Step 2: Student Resolution</span>
+                  <span className="text-[11px] font-mono text-[#b0d8ff] font-bold">Step 2: Realtime Student Answer</span>
                 </div>
 
-                {/* Student Question */}
+                {/* Simulated Student Query */}
                 <div className="flex justify-end">
-                  <div className="max-w-[90%] rounded-lg bg-[#002B49] border border-blue-800 px-4 py-2.5 text-xs text-white">
+                  <div className="max-w-[85%] rounded-2xl rounded-tr-xs bg-[#005baa] px-4 py-3 text-xs text-white font-bold shadow-md">
                     "How do I contact an EMS Academic Coach and what is the Disability Unit extra time deadline?"
                   </div>
                 </div>
 
-                {/* Leaf AI Synced Answer */}
+                {/* Simulated Leaf Response with Instant Synced Data */}
                 <div className="flex justify-start">
-                  <div className="max-w-[95%] space-y-2 rounded-lg border border-slate-700 bg-[#0D1E36] p-4 text-xs text-slate-200">
-                    <div className="flex items-center gap-2 font-bold text-[#60A5FA]">
-                      <MessageSquare size={14} />
-                      <span>Leaf AI Assistant</span>
+                  <div className="max-w-[90%] space-y-2.5 rounded-2xl rounded-tl-xs border border-white/20 bg-white/10 p-4 text-xs text-white backdrop-blur-md shadow-lg">
+                    <div className="flex items-center gap-2 font-black text-[#b0d8ff]">
+                      <MessageSquare size={15} />
+                      <span>Leaf Assistant</span>
                     </div>
-                    <p className="leading-relaxed">
-                      Official verified information from the UP Admin Console:
+                    <p className="leading-relaxed font-bold">
+                      Here is the updated official information:
                     </p>
-                    <ul className="space-y-1.5 pl-3 list-disc text-white">
+                    <ul className="space-y-1.5 text-white pl-3 list-disc font-bold">
                       <li>
                         <strong>EMS Coach:</strong> Dr. Sarah Khumalo is available at EMS Building Rm 2-14. Book via up.ac.za/asc-ems-booking.
                       </li>
@@ -326,205 +310,199 @@ export default function Home() {
                         <strong>Disability Unit Deadline:</strong> Concession applications close 30 September 2026.
                       </li>
                     </ul>
-                    <div className="pt-2 border-t border-slate-700 text-[11px] text-emerald-400 flex items-center gap-1.5 font-semibold">
-                      <CheckCircle2 size={13} />
-                      <span>Verified UP Database Source</span>
+                    <div className="pt-2 border-t border-white/20 text-[11px] text-emerald-300 flex items-center gap-1.5 font-extrabold">
+                      <CheckCircle2 size={13} className="text-emerald-400" />
+                      <span>Verified from UP Admin Console · Live Sync</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <p className="text-center text-xs text-slate-400 border-t border-slate-800 pt-3">
-                Webchat & WhatsApp student queries reflect console updates immediately.
-              </p>
+              {/* Bot status footer */}
+              <div className="text-center text-xs text-[#b0d8ff] pt-4 border-t border-white/15 font-bold">
+                Leaf answers via Webchat & WhatsApp automatically reflect all changes.
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── 4. "3 Pillars of UP Support Knowledge" ─────────────────────── */}
-      <section id="about" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#002B49]">
-            Supported Domains
+      {/* ─── Core Pillars / Content Scope Section ─────────────────────── */}
+      <section id="about" className="relative z-10 max-w-6xl mx-auto px-6 py-20">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-[#005baa]">
+            What You Can Manage
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#002B49]">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#002855] drop-shadow-sm">
             The 3 Pillars of UP Support Knowledge
           </h2>
-          <p className="text-sm sm:text-base text-[#334155]">
-            A single institutional workspace governing all academic success, departmental, and general university guidelines across the University of Pretoria.
+          <p className="text-base sm:text-lg text-slate-700 font-bold">
+            A single unified interface governing all academic success, departmental, and institutional guidelines across the University of Pretoria.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Pillar 1 */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-sm transition-all duration-150 flex flex-col justify-between">
-            <div>
-              <div className="bg-slate-100 text-[#002B49] p-3 rounded-lg w-fit mb-4">
-                <Users size={22} />
-              </div>
-              <h3 className="text-[#002B49] text-xl font-bold mb-2">
-                1. Academic Success Coaches
-              </h3>
-              <p className="text-[#334155] text-sm leading-relaxed mb-6">
-                Manage complete coach directories, faculty allocations, title roles, office locations, appointment booking URLs, and student level clusters.
-              </p>
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Pillar 1: Academic Success Coaches */}
+          <div className="group rounded-3xl border-2 border-slate-200 bg-white text-slate-900 p-8 transition-all hover:border-[#005baa] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
+              <Users size={24} />
             </div>
-            <ul className="space-y-2 text-xs text-[#334155] font-medium border-t border-slate-100 pt-4">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#002855] mb-3 tracking-tight drop-shadow-sm">
+              1. Academic Success Coaches
+            </h3>
+            <p className="text-sm text-slate-700 leading-relaxed mb-6 font-semibold">
+              Manage complete coach directories, faculty allocations, title roles, office locations, appointment links, and undergrad/postgrad level responsibilities.
+            </p>
+            <ul className="space-y-2.5 text-xs text-slate-900 font-bold">
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Per-faculty ASC coach directory</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Live appointment link management</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
-                <span>Undergrad & Postgrad level clusters</span>
+                <CheckCircle2 size={16} className="text-[#005baa]" />
+                <span>Undergraduate & Postgraduate clusters</span>
               </li>
             </ul>
           </div>
 
-          {/* Pillar 2 */}
-          <div id="dsa-units" className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-sm transition-all duration-150 flex flex-col justify-between">
-            <div>
-              <div className="bg-slate-100 text-[#002B49] p-3 rounded-lg w-fit mb-4">
-                <HeartPulse size={22} />
-              </div>
-              <h3 className="text-[#002B49] text-xl font-bold mb-2">
-                2. Department of Student Affairs
-              </h3>
-              <p className="text-[#334155] text-sm leading-relaxed mb-6">
-                Maintain official support guides, unit contacts, and procedures across Student Counselling, Health, Disability Unit, Governance, ISFAP, and SNAPP.
-              </p>
+          {/* Pillar 2: Department of Student Affairs (DSA) */}
+          <div id="dsa-units" className="group rounded-3xl border-2 border-slate-200 bg-white text-slate-900 p-8 transition-all hover:border-[#005baa] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
+              <HeartPulse size={24} />
             </div>
-            <ul className="space-y-2 text-xs text-[#334155] font-medium border-t border-slate-100 pt-4">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#002855] mb-3 tracking-tight drop-shadow-sm">
+              2. Department of Student Affairs
+            </h3>
+            <p className="text-sm text-slate-700 leading-relaxed mb-6 font-semibold">
+              Maintain official support guides, policies, and contacts across all DSA units so student queries are resolved correctly.
+            </p>
+            <ul className="space-y-2.5 text-xs text-slate-900 font-bold">
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Student Counselling & Health Services</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Disability Unit & Concessions</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Governance, ISFAP & SNAPP Funding</span>
               </li>
             </ul>
           </div>
 
-          {/* Pillar 3 */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-300 hover:shadow-sm transition-all duration-150 flex flex-col justify-between">
-            <div>
-              <div className="bg-slate-100 text-[#002B49] p-3 rounded-lg w-fit mb-4">
-                <Building2 size={22} />
-              </div>
-              <h3 className="text-[#002B49] text-xl font-bold mb-2">
-                3. UP General Information
-              </h3>
-              <p className="text-[#334155] text-sm leading-relaxed mb-6">
-                Publish and verify general University of Pretoria academic rules, module requirements, admissions guidelines, fees, and institutional FAQs.
-              </p>
+          {/* Pillar 3: UP General Information */}
+          <div className="group rounded-3xl border-2 border-slate-200 bg-white text-slate-900 p-8 transition-all hover:border-[#005baa] hover:-translate-y-1 backdrop-blur-2xl shadow-xl">
+            <div className="h-12 w-12 rounded-2xl bg-[#005baa] text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-md">
+              <Building2 size={24} />
             </div>
-            <ul className="space-y-2 text-xs text-[#334155] font-medium border-t border-slate-100 pt-4">
+            <h3 className="text-2xl sm:text-3xl font-black text-[#002855] mb-3 tracking-tight drop-shadow-sm">
+              3. UP General Information
+            </h3>
+            <p className="text-sm text-slate-700 leading-relaxed mb-6 font-semibold">
+              Publish and verify general University of Pretoria academic rules, module requirements, admissions criteria, fees, and campus FAQs.
+            </p>
+            <ul className="space-y-2.5 text-xs text-slate-900 font-bold">
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Faculties & Programme curriculums</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
+                <CheckCircle2 size={16} className="text-[#005baa]" />
                 <span>Verified academic FAQ repository</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 size={14} className="text-[#002B49]" />
-                <span>Document upload & PDF indexing</span>
+                <CheckCircle2 size={16} className="text-[#005baa]" />
+                <span>Document upload & PDF guide indexing</span>
               </li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* ─── 4. Pipeline Section: "How Any Update Reaches Students" ────── */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 py-16 border-t border-slate-200">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#002B49]">
-            Automated Architecture
+      {/* ─── Automated Sync Process Section ────────────────────────── */}
+      <section className="relative z-10 max-w-6xl mx-auto px-6 py-20 border-t border-slate-200">
+        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-[#005baa]">
+            Automated Knowledge Pipeline
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#002B49]">
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#002855] drop-shadow-sm">
             How Any Update Reaches Students
           </h2>
-          <p className="text-sm sm:text-base text-[#334155]">
-            Zero manual retraining required. When administrators edit content in the workspace, the Leaf chatbot updates automatically.
+          <p className="text-base sm:text-lg text-slate-700 font-bold">
+            Zero manual retraining required. When administrators edit content in the console, the Leaf chatbot updates automatically.
           </p>
         </div>
 
-        {/* 4-Step Modular Horizontal Process Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Step 01 */}
-          <div className="border-t-4 border-[#002B49] bg-white border-x border-b border-slate-200 p-6 rounded-xl shadow-xs space-y-3">
-            <span className="text-2xl font-bold text-[#002B49]">01</span>
-            <h4 className="text-base font-bold text-[#002B49]">Admin Record Edit</h4>
-            <p className="text-xs text-[#334155] leading-relaxed">
-              Administrator updates a Coach, DSA Unit, or FAQ entry in the console workspace.
+          {/* Step 1 */}
+          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 space-y-3 relative shadow-md">
+            <span className="text-3xl font-black text-[#005baa]">01</span>
+            <h4 className="text-lg font-black text-[#002855]">Admin Record Edit</h4>
+            <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+              Administrator updates a Coach, DSA Unit, or FAQ entry in the UP Admin Console workspace.
             </p>
           </div>
 
-          {/* Step 02 */}
-          <div className="border-t-4 border-[#002B49] bg-white border-x border-b border-slate-200 p-6 rounded-xl shadow-xs space-y-3">
-            <span className="text-2xl font-bold text-[#002B49]">02</span>
-            <h4 className="text-base font-bold text-[#002B49]">Validation & Audit</h4>
-            <p className="text-xs text-[#334155] leading-relaxed">
-              Mutation receipts confirm payload hash integrity and verify role permissions.
+          {/* Step 2 */}
+          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 space-y-3 relative shadow-md">
+            <span className="text-3xl font-black text-[#005baa]">02</span>
+            <h4 className="text-lg font-black text-[#002855]">Validation & Audit</h4>
+            <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+              Mutation receipts confirm payload integrity and verify role permissions.
             </p>
           </div>
 
-          {/* Step 03 */}
-          <div className="border-t-4 border-[#002B49] bg-white border-x border-b border-slate-200 p-6 rounded-xl shadow-xs space-y-3">
-            <span className="text-2xl font-bold text-[#002B49]">03</span>
-            <h4 className="text-base font-bold text-[#002B49]">Vector Store Sync</h4>
-            <p className="text-xs text-[#334155] leading-relaxed">
-              Knowledge records are automatically indexed into the Dify vector database.
+          {/* Step 3 */}
+          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 space-y-3 relative shadow-md">
+            <span className="text-3xl font-black text-[#005baa]">03</span>
+            <h4 className="text-lg font-black text-[#002855]">Vector Store Sync</h4>
+            <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+              Knowledge records are automatically indexed into the Dify vector store.
             </p>
           </div>
 
-          {/* Step 04 */}
-          <div className="border-t-4 border-[#002B49] bg-white border-x border-b border-slate-200 p-6 rounded-xl shadow-xs space-y-3">
-            <span className="text-2xl font-bold text-[#002B49]">04</span>
-            <h4 className="text-base font-bold text-[#002B49]">Leaf Resolution</h4>
-            <p className="text-xs text-[#334155] leading-relaxed">
-              Leaf chatbot answers student questions on WhatsApp & Webchat using the updated data.
+          {/* Step 4 */}
+          <div className="rounded-2xl border border-slate-200 bg-white text-slate-900 p-6 space-y-3 relative shadow-md">
+            <span className="text-3xl font-black text-[#005baa]">04</span>
+            <h4 className="text-lg font-black text-[#002855]">Leaf Resolution</h4>
+            <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+              Leaf chatbot answers student questions on WhatsApp & Webchat using the newly updated data.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ─── 4. Metrics Bar ────────────────────────────────────────────── */}
-      <section className="relative z-10 max-w-6xl mx-auto px-6 py-10">
-        <div className="bg-[#002B49] text-white rounded-xl shadow-sm p-8">
+      {/* ─── Metrics Bar ─────────────────────────────────────────────── */}
+      <section className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+        <div className="rounded-3xl border border-slate-200 bg-[#005baa] text-white p-8 shadow-xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <p className="text-3xl font-extrabold text-white">9</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 mt-1">
+              <p className="text-3xl sm:text-5xl font-black text-white">9</p>
+              <p className="text-xs font-black uppercase tracking-wider text-[#b0d8ff] mt-1">
                 UP Faculties Covered
               </p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-white">6</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 mt-1">
+              <p className="text-3xl sm:text-5xl font-black text-[#b0d8ff]">6</p>
+              <p className="text-xs font-black uppercase tracking-wider text-[#b0d8ff] mt-1">
                 DSA Units Integrated
               </p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-[#10B981]">100%</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 mt-1">
+              <p className="text-3xl sm:text-5xl font-black text-emerald-300">100%</p>
+              <p className="text-xs font-black uppercase tracking-wider text-[#b0d8ff] mt-1">
                 Real-Time Leaf Sync
               </p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold text-white">50k+</p>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300 mt-1">
+              <p className="text-3xl sm:text-5xl font-black text-white">50k+</p>
+              <p className="text-xs font-black uppercase tracking-wider text-[#b0d8ff] mt-1">
                 UP Students Supported
               </p>
             </div>
@@ -533,42 +511,44 @@ export default function Home() {
       </section>
 
       {/* ─── Final CTA Section ────────────────────────────────────────── */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 py-16 text-center">
-        <div className="rounded-xl border border-slate-200 bg-[#F8FAFC] p-10 sm:p-14 shadow-sm">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#002B49]">
+      <section className="relative z-10 max-w-5xl mx-auto px-6 py-20 text-center">
+        <div className="rounded-3xl border-2 border-[#005baa]/30 bg-gradient-to-b from-[#005baa]/10 via-[#dcecf8]/40 to-white p-10 sm:p-16 relative overflow-hidden shadow-xl">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,91,170,0.15),transparent_70%)] pointer-events-none" />
+
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#002855] drop-shadow-sm relative z-10">
             Keep UP support content synchronized.
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-[#334155] max-w-xl mx-auto">
-            Log in to the workspace to update Academic Success Coaches, DSA guidelines, or general UP resources and empower the Leaf chatbot.
+          <p className="mt-4 text-base sm:text-lg text-slate-700 max-w-xl mx-auto font-bold relative z-10">
+            Log in to the console to update coaches, DSA guidelines, or general UP resources and empower the Leaf chatbot.
           </p>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex justify-center relative z-10">
             <Show when="signed-out">
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-2.5 rounded-lg bg-[#002B49] px-7 py-3.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-[#005baa] px-8 py-4 text-sm font-black text-white shadow-xl transition-all hover:bg-[#00457f] hover:scale-105"
               >
                 <span>Sign In to Access Console</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </Show>
 
             <Show when="signed-in">
               <Link
                 href="/admin"
-                className="inline-flex items-center gap-2.5 rounded-lg bg-[#002B49] px-7 py-3.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[#001F35] focus-visible:outline-2 focus-visible:outline-[#002B49]"
+                className="group inline-flex items-center gap-2.5 rounded-full bg-[#005baa] px-8 py-4 text-sm font-black text-white shadow-xl transition-all hover:bg-[#00457f] hover:scale-105"
               >
                 <LayoutDashboard size={18} />
                 <span>Open Admin Workspace</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </Show>
           </div>
         </div>
       </section>
 
-      {/* ─── 4. Footer ─────────────────────────────────────────────────── */}
-      <footer className="relative z-10 bg-[#001D33] text-slate-300 py-10 border-t border-slate-800 text-xs">
+      {/* ─── Footer ──────────────────────────────────────────────────── */}
+      <footer className="relative z-10 border-t border-[#003d73] bg-[#002855] text-white py-12 text-xs">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <Image
@@ -576,41 +556,27 @@ export default function Home() {
               alt="University of Pretoria"
               width={28}
               height={28}
-              className="h-7 w-7 rounded bg-white object-contain p-0.5"
+              className="h-7 w-7 rounded-md bg-white object-contain p-0.5 shadow-sm"
             />
-            <span className="font-semibold text-slate-200">
-              University of Pretoria · Academic Support Console
-            </span>
+            <span className="font-extrabold text-white">University of Pretoria · Academic Support Console</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-slate-300 font-medium">
-            <Link
-              href="/admin/faculties"
-              className="hover:text-white transition-colors duration-150"
-            >
+          <div className="flex flex-wrap items-center gap-6 text-[#b0d8ff] font-bold">
+            <Link href="/admin/faculties" className="hover:text-white transition-colors">
               Faculties
             </Link>
-            <Link
-              href="/admin/coaches"
-              className="hover:text-white transition-colors duration-150"
-            >
+            <Link href="/admin/coaches" className="hover:text-white transition-colors">
               ASC Coaches
             </Link>
-            <Link
-              href="/admin/resources"
-              className="hover:text-white transition-colors duration-150"
-            >
+            <Link href="/admin/resources" className="hover:text-white transition-colors">
               Resources & DSA
             </Link>
-            <Link
-              href="/admin/faqs"
-              className="hover:text-white transition-colors duration-150"
-            >
+            <Link href="/admin/faqs" className="hover:text-white transition-colors">
               FAQs
             </Link>
           </div>
 
-          <div className="text-slate-400">
+          <div className="font-semibold text-slate-300">
             © {new Date().getFullYear()} University of Pretoria. All rights reserved.
           </div>
         </div>
