@@ -123,7 +123,7 @@ export default async function ResourcesPage() {
       </div>
 
       <div className="rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-2 shadow-[0_12px_40px_rgba(0,32,80,0.04)] hover-lift animate-slide-up">
-        <ResourceExplorer resources={resources} />
+        <ResourceExplorer resources={resources} faculties={faculties} />
       </div>
     </div>
   );

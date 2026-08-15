@@ -11,9 +11,16 @@ import { MutationForm } from '@/components/mutation-form';
 interface CreateResourceModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
   className?: string;
+  defaultFacultyId?: string;
+  trigger?: React.ReactNode;
 }
 
-export function CreateResourceModal({ faculties, className }: CreateResourceModalProps) {
+export function CreateResourceModal({
+  faculties,
+  className,
+  defaultFacultyId,
+  trigger,
+}: CreateResourceModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -26,9 +33,21 @@ export function CreateResourceModal({ faculties, className }: CreateResourceModa
 
   return (
     <>
-      <CreateButton onClick={() => setIsOpen(true)} className={className}>
-        Create Resource
-      </CreateButton>
+      {trigger ? (
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+          className="inline-block"
+        >
+          {trigger}
+        </span>
+      ) : (
+        <CreateButton onClick={() => setIsOpen(true)} className={className}>
+          Create Resource
+        </CreateButton>
+      )}
 
       {showSuccess && (
         <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -51,7 +70,7 @@ export function CreateResourceModal({ faculties, className }: CreateResourceModa
         >
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Resource">
-              <Select name="facultyId" defaultValue="">
+              <Select name="facultyId" defaultValue={defaultFacultyId ?? ""}>
                 <option value="">DSA</option>
                 {faculties.map((faculty) => (
                   <option key={faculty.id} value={faculty.id}>

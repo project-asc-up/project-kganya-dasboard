@@ -21,12 +21,14 @@ import {
   Landmark,
   LayoutGrid,
   PawPrint,
+  Plus,
   Scale,
   User,
   Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CreateResourceModal } from "@/components/create-resource-modal";
 import { formatReadableDate, type DisplayDateValue } from "@/lib/date-display";
 import {
   buildResourceFacultyOptions,
@@ -48,6 +50,8 @@ type ResourceRow = {
   attachmentStatus?: string | null;
   faculty: { id: string; name: string; code: string } | null;
 };
+
+type FacultyOption = { id: string; name: string; code: string };
 
 type SortKey = "title" | "faculty" | "description" | "date";
 type SortDir = "asc" | "desc";
@@ -302,15 +306,25 @@ function PaginationBar({
 function TableSection({
   sectionName,
   items,
+  faculties,
 }: {
   sectionName: string;
   items: ResourceRow[];
+  faculties?: FacultyOption[];
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Collapsed by default as requested by user
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("title");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const targetFacultyId = useMemo(() => {
+    if (!faculties) return "";
+    if (sectionName.toUpperCase() === "DSA") return "";
+    const found = faculties.find((f) => f.name === sectionName);
+    return found ? found.id : "";
+  }, [faculties, sectionName]);
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -338,10 +352,8 @@ function TableSection({
   return (
     <section aria-label={sectionName} className="space-y-3">
       {/* Collapsible Bar Card matching reference image */}
-      <button
-        type="button"
+      <div
         onClick={() => setIsCollapsed(!isCollapsed)}
-        aria-expanded={!isCollapsed}
         className="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:border-slate-300 transition-all flex items-center justify-between gap-4 text-left group cursor-pointer"
       >
         <div className="flex items-center gap-3.5 min-w-0">
@@ -361,18 +373,37 @@ function TableSection({
           </div>
         </div>
 
-        {/* Expand / Collapse Toggle */}
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 group-hover:text-[#005baa] transition-colors shrink-0">
-          <span>{isCollapsed ? "Expand" : "Collapse"}</span>
-          <ChevronDown
-            size={18}
-            className={cn(
-              "transition-transform duration-200 text-slate-500 group-hover:text-[#005baa]",
-              !isCollapsed && "rotate-180"
-            )}
-          />
+        {/* Section Actions: + Add Resource Button + Expand/Collapse */}
+        <div className="flex items-center gap-3 shrink-0">
+          {faculties ? (
+            <CreateResourceModal
+              faculties={faculties}
+              defaultFacultyId={targetFacultyId}
+              trigger={
+                <button
+                  type="button"
+                  title={`Add resource to ${sectionName}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 hover:bg-[#005baa] hover:text-white px-3 py-1.5 text-xs font-bold text-slate-700 transition-all cursor-pointer border border-slate-200 shadow-2xs"
+                >
+                  <Plus size={14} />
+                  <span className="hidden sm:inline">Add resource</span>
+                </button>
+              }
+            />
+          ) : null}
+
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 group-hover:text-[#005baa] transition-colors">
+            <span>{isCollapsed ? "Expand" : "Collapse"}</span>
+            <ChevronDown
+              size={18}
+              className={cn(
+                "transition-transform duration-200 text-slate-500 group-hover:text-[#005baa]",
+                !isCollapsed && "rotate-180"
+              )}
+            />
+          </div>
         </div>
-      </button>
+      </div>
 
       {/* Table container (collapsible) */}
       {!isCollapsed && (
@@ -548,8 +579,10 @@ function TableSection({
 
 export function ResourceExplorer({
   resources,
+  faculties,
 }: {
   resources: ResourceRow[];
+  faculties?: FacultyOption[];
 }) {
   const [facultyFilter, setFacultyFilter] = useState("all");
 
@@ -666,7 +699,12 @@ export function ResourceExplorer({
       {/* Table Sections matching reference image */}
       <div className="space-y-4 pt-1">
         {sections.map(([sectionName, items]) => (
-          <TableSection key={sectionName} sectionName={sectionName} items={items} />
+          <TableSection
+            key={sectionName}
+            sectionName={sectionName}
+            items={items}
+            faculties={faculties}
+          />
         ))}
 
         {sections.length === 0 && (
