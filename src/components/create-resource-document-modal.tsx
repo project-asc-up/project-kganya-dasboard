@@ -11,9 +11,10 @@ import { MutationForm } from "@/components/mutation-form";
 
 interface CreateResourceDocumentModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
+  className?: string;
 }
 
-export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumentModalProps) {
+export function CreateResourceDocumentModal({ faculties, className }: CreateResourceDocumentModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -59,7 +60,7 @@ export function CreateResourceDocumentModal({ faculties }: CreateResourceDocumen
     <>
       <CreateButton
         onClick={() => setIsOpen(true)}
-        className="border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] text-[color:var(--color-primary)] hover:border-[color:var(--color-primary)] hover:bg-white"
+        className={className ?? "border border-[color:var(--color-border)] bg-[color:var(--color-bg-light)] text-[color:var(--color-primary)] hover:border-[color:var(--color-primary)] hover:bg-white"}
       >
         Upload Document or Image
       </CreateButton>

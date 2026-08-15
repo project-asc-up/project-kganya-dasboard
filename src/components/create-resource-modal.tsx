@@ -10,9 +10,10 @@ import { MutationForm } from '@/components/mutation-form';
 
 interface CreateResourceModalProps {
   faculties: Array<{ id: string; name: string; code: string }>;
+  className?: string;
 }
 
-export function CreateResourceModal({ faculties }: CreateResourceModalProps) {
+export function CreateResourceModal({ faculties, className }: CreateResourceModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -25,7 +26,7 @@ export function CreateResourceModal({ faculties }: CreateResourceModalProps) {
 
   return (
     <>
-      <CreateButton onClick={() => setIsOpen(true)}>
+      <CreateButton onClick={() => setIsOpen(true)} className={className}>
         Create Resource
       </CreateButton>
 

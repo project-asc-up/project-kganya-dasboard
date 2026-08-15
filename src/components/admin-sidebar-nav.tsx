@@ -138,7 +138,7 @@ export function AdminSidebarNav({
   const visibleNavItems = useVisibleAdminNavItems({ allowedTabs, canManageUsers });
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] lg:flex lg:flex-col">
+    <aside className="sticky top-0 h-screen hidden w-64 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-raised)] lg:flex lg:flex-col">
       <div className="border-b border-[var(--color-border)] px-5 py-5">
         <AdminBrandLink />
       </div>
