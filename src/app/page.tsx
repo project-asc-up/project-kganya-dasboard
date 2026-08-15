@@ -384,11 +384,11 @@ export default function Home() {
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#005baa]" />
-                <span>Disability Unit & Concessions</span>
+                <span>Development and Disability</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-[#005baa]" />
-                <span>Governance, ISFAP & SNAPP Funding</span>
+                <span>Governance & Leadership, ISFAP and SNAPP</span>
               </li>
             </ul>
           </div>
