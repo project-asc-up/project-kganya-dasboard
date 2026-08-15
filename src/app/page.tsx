@@ -24,12 +24,21 @@ import {
 export default function Home() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#f8fafc] text-[#0b1521] selection:bg-[#005baa]/20 selection:text-[#002855] font-sans antialiased">
-      {/* ─── Background Ambient Glows & Grid Lines ──────────────────────── */}
+      {/* ─── Background Ambient Motion, Video & Glows ──────────────────────── */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        {/* Ambient UP Blue Radial Glow Top Center */}
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-b from-[#005baa]/12 via-[#00457f]/5 to-transparent blur-3xl" />
-        {/* Secondary Ochre Accent Glow */}
-        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-[#b45309]/8 blur-3xl" />
+        {/* Animated Floating UP Blue Radial Mesh Top Center */}
+        <div className="absolute -top-40 left-1/2 animate-float-slow h-[700px] w-[1000px] rounded-full bg-gradient-to-b from-[#005baa]/20 via-[#00457f]/10 to-transparent blur-3xl" />
+        {/* Animated Secondary Ochre Glow Orb Right */}
+        <div className="absolute top-1/3 -right-40 animate-float-reverse h-[600px] w-[600px] rounded-full bg-[#b45309]/15 blur-3xl" />
+        {/* Looping Ambient Motion Video Overlay */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover opacity-20 mix-blend-multiply pointer-events-none"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_064122_c4750c0e-7476-4b44-94a2-a85a65c63bf2.mp4"
+        />
       </div>
 
       {/* Guide lines */}
