@@ -43,7 +43,7 @@ export default function Home() {
 
 
       {/* ─── Navigation Header ────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-900 backdrop-blur-2xl transition-all shadow-sm">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200 bg-white/95 text-slate-900 backdrop-blur-2xl transition-all shadow-md">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
@@ -111,7 +111,7 @@ export default function Home() {
       </header>
 
       {/* ─── Hero Section ─────────────────────────────────────────────── */}
-      <section className="relative z-10 pt-20 md:pt-28 pb-20 text-center flex flex-col items-center max-w-5xl mx-auto px-6">
+      <section className="relative z-10 pt-28 md:pt-36 pb-20 text-center flex flex-col items-center max-w-5xl mx-auto px-6">
         {/* Eyebrow Pill */}
         <div className="inline-flex items-center gap-2 rounded-full border border-[#005baa]/30 bg-[#005baa]/10 px-5 py-2 text-xs font-extrabold text-[#003d73] backdrop-blur-md mb-8 shadow-sm">
           <GraduationCap size={16} className="text-[#005baa]" />
