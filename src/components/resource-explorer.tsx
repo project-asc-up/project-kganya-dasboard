@@ -496,8 +496,8 @@ export function ResourceExplorer({
 
   const grouped = filtered.reduce<Map<string, ResourceRow[]>>((acc, resource) => {
     const key = resource.faculty
-      ? displayFacultyName(resource.faculty.name)
-      : "General";
+      ? resource.faculty.name
+      : "DSA";
     const list = acc.get(key) ?? [];
     list.push(resource);
     acc.set(key, list);
@@ -505,8 +505,8 @@ export function ResourceExplorer({
   }, new Map());
 
   const sections = Array.from(grouped.entries()).sort(([a], [b]) => {
-    if (a === "General") return -1;
-    if (b === "General") return 1;
+    if (a === "DSA") return -1;
+    if (b === "DSA") return 1;
     return a.localeCompare(b);
   });
 
@@ -557,7 +557,7 @@ export function ResourceExplorer({
             const count = resources.filter(
               (r) => r.faculty?.id === faculty.id
             ).length;
-            const label = displayFacultyName(faculty.name);
+            const label = faculty.name;
 
             return (
               <button

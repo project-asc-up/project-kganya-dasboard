@@ -206,13 +206,13 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                     )}
                   >
                     <div className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="font-medium text-left">{displayFacultyName(faculty.name)}</div>
-                        <Badge tone="neutral" outlined>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="font-semibold text-base text-left text-[var(--color-text)] truncate">{faculty.name}</div>
+                        <Badge tone="neutral" outlined className="shrink-0">
                           {faculty.code}
                         </Badge>
                       </div>
-                      <Badge tone={statusTone(faculty.codeStatus)} outlined>
+                      <Badge tone={statusTone(faculty.codeStatus)} outlined className="shrink-0">
                         {statusLabel(faculty.codeStatus)}
                       </Badge>
                     </div>
@@ -234,7 +234,7 @@ export function FacultyGallery({ faculties }: FacultyGalleryProps) {
                   {statusLabel(selectedFaculty.codeStatus)}
                 </Badge>
               </div>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight">{displayFacultyName(selectedFaculty.name)}</h3>
+              <h3 className="mt-4 text-2xl font-bold tracking-tight text-[var(--color-text)]">{selectedFaculty.name}</h3>
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                 Detail view for the selected faculty. Use this panel to understand the record at a glance before opening
                 the full editor.

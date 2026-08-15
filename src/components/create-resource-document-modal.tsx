@@ -86,18 +86,25 @@ export function CreateResourceDocumentModal({ faculties, className }: CreateReso
           onSuccess={handleSuccess}
         >
           <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Faculty">
+            <Field label="Resource">
               <Select name="facultyId" defaultValue="">
-                <option value="">General</option>
+                <option value="">DSA</option>
                 {faculties.map((faculty) => (
                   <option key={faculty.id} value={faculty.id}>
-                    {displayFacultyName(faculty.name)} ({faculty.code})
+                    {faculty.name} ({faculty.code})
                   </option>
                 ))}
               </Select>
             </Field>
             <Field label="Category" hint="*Required">
-              <TextInput name="category" required placeholder="Admissions guide" />
+              <Select name="category" required defaultValue="Student Counselling Unit">
+                <option value="Student Counselling Unit">Student Counselling Unit</option>
+                <option value="Student Development and Disability unit">Student Development and Disability unit</option>
+                <option value="Student health services unit">Student health services unit</option>
+                <option value="Student Governance and leadership unit">Student Governance and leadership unit</option>
+                <option value="ISFAP">ISFAP</option>
+                <option value="SNAPP">SNAPP</option>
+              </Select>
             </Field>
           </div>
 

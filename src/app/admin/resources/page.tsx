@@ -111,7 +111,7 @@ export default async function ResourcesPage() {
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                  General
+                  DSA
                 </p>
                 <p className="text-xl font-bold text-[var(--color-text)] sm:text-2xl">
                   {generalCount}
