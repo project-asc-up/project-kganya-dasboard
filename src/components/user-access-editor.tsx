@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
-import { ActionButton } from "@/components/admin-form";
+import { ActionButton, Select } from "@/components/admin-form";
 import { Button } from "@/components/ui/button";
 import {
   updateUserAccess,
@@ -212,18 +212,17 @@ export function UserAccessEditor({ user, roles, isSuperAdmin = false }: UserAcce
 
           <label className="block space-y-2">
             <span className="text-sm font-semibold text-[var(--color-text)]">Role</span>
-            <select
+            <Select
               name="role"
               defaultValue={user.role}
               disabled={disabled}
-              className="w-full rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] shadow-sm outline-none transition focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-ring)]/25 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {roles.map((role) => (
                 <option key={role.value} value={role.value}>
                   {role.label}
                 </option>
               ))}
-            </select>
+            </Select>
             <span className="block text-xs leading-5 text-[var(--color-text-muted)]">
               Role decides access. User is view only, Admin is view plus edit, and Super Admin can create users and manage everything.
             </span>

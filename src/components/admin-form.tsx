@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -84,8 +85,25 @@ export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return <textarea {...props} className={cn(inputClass, "min-h-32", props.className)} />;
 }
 
-export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className={cn(inputClass, props.className)} />;
+export function Select({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative w-full">
+      <select
+        {...props}
+        className={cn(
+          inputClass,
+          "appearance-none pr-10 cursor-pointer font-medium text-[color:var(--color-text)]",
+          className
+        )}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        size={18}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--color-text-muted)] shrink-0"
+      />
+    </div>
+  );
 }
 
 export function Checkbox({

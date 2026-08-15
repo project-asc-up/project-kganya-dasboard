@@ -10,9 +10,6 @@ import {
   ChevronsUpDown,
   ExternalLink,
   FileText,
-  LayoutGrid,
-  LayoutList,
-  MapPin,
 } from "lucide-react";
 
 import { Field, Select } from "@/components/admin-form";
@@ -42,16 +39,13 @@ type ResourceRow = {
 
 type SortKey = "title" | "faculty" | "description" | "date";
 type SortDir = "asc" | "desc";
-type ViewMode = "table" | "card";
 
 const ROWS_OPTIONS = [5, 10, 20, 50];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getFacultyLabel(resource: ResourceRow) {
-  return resource.faculty
-    ? resource.faculty.code
-    : "General";
+  return resource.faculty ? resource.faculty.code : "General";
 }
 
 function sortResources(
@@ -67,12 +61,8 @@ function sortResources(
     else if (key === "description")
       cmp = (a.description ?? "").localeCompare(b.description ?? "");
     else if (key === "date") {
-      const aDate = a.lastVerified
-        ? String(a.lastVerified)
-        : "";
-      const bDate = b.lastVerified
-        ? String(b.lastVerified)
-        : "";
+      const aDate = a.lastVerified ? String(a.lastVerified) : "";
+      const bDate = b.lastVerified ? String(b.lastVerified) : "";
       cmp = aDate.localeCompare(bDate);
     }
     return dir === "asc" ? cmp : -cmp;
@@ -119,14 +109,12 @@ function SortButton({
 }
 
 function FacultyBadge({ resource }: { resource: ResourceRow }) {
-  const label = resource.faculty
-    ? resource.faculty.code
-    : "GENERAL";
+  const label = resource.faculty ? resource.faculty.code : "GENERAL";
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[var(--radius-full)] px-2 py-0.5",
-        "text-[10px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap",
+        "inline-flex items-center rounded-[var(--radius-full)] px-2.5 py-0.5",
+        "text-[10px] font-bold uppercase tracking-[0.12em] whitespace-nowrap",
         resource.faculty
           ? "bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
           : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
@@ -154,7 +142,6 @@ function PaginationBar({
   const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
   const to = Math.min(page * rowsPerPage, total);
 
-  // Windowed page numbers
   const pages: (number | "…")[] = [];
   if (totalPages <= 6) {
     for (let i = 1; i <= totalPages; i++) pages.push(i);
@@ -173,7 +160,7 @@ function PaginationBar({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-t border-[var(--color-border)] text-sm text-[var(--color-text-muted)]">
-      <span className="text-[13px]">
+      <span className="text-[13px] font-medium text-[var(--color-text-muted)]">
         {total === 0
           ? "No resources"
           : `Showing ${from} to ${to} of ${total} resource${total === 1 ? "" : "s"}`}
@@ -204,10 +191,10 @@ function PaginationBar({
               aria-current={p === page ? "page" : undefined}
               onClick={() => onPage(p as number)}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border text-[13px] font-medium transition",
+                "flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border text-[13px] font-semibold transition",
                 p === page
-                  ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
-                  : "border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)]"
+                  ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)] hover:bg-[var(--color-surface-sunken)]"
               )}
             >
               {p}
@@ -229,7 +216,7 @@ function PaginationBar({
 
       {/* Rows per page */}
       <div className="flex items-center gap-2 text-[13px]">
-        <span className="text-[var(--color-text-muted)]">Rows per page</span>
+        <span className="text-[var(--color-text-muted)] font-medium">Rows per page</span>
         <div className="relative">
           <select
             value={rowsPerPage}
@@ -237,7 +224,7 @@ function PaginationBar({
               onRowsPerPage(Number(e.target.value));
               onPage(1);
             }}
-            className="h-8 appearance-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-0 pl-3 pr-7 text-[13px] text-[var(--color-text)] transition hover:border-[var(--color-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+            className="h-8 appearance-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-0 pl-3 pr-7 text-[13px] font-semibold text-[var(--color-text)] transition hover:border-[var(--color-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
           >
             {ROWS_OPTIONS.map((n) => (
               <option key={n} value={n}>
@@ -255,7 +242,7 @@ function PaginationBar({
   );
 }
 
-// ─── Table view ───────────────────────────────────────────────────────────────
+// ─── Table Section ────────────────────────────────────────────────────────────
 
 function TableSection({
   sectionName,
@@ -294,10 +281,10 @@ function TableSection({
       {/* Section header */}
       <div className="flex items-end justify-between gap-4 mb-3">
         <div>
-          <h3 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
+          <h3 className="text-xl font-bold tracking-tight text-[var(--color-text)]">
             {sectionName}
           </h3>
-          <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
+          <p className="mt-0.5 text-sm font-medium text-[var(--color-text-muted)]">
             {items.length} resource{items.length === 1 ? "" : "s"} in this
             collection.
           </p>
@@ -348,7 +335,7 @@ function TableSection({
                   />
                 </th>
                 <th className="py-3 pl-3 pr-4 text-right w-[12%]">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
                     Links
                   </span>
                 </th>
@@ -359,7 +346,7 @@ function TableSection({
                 <tr>
                   <td
                     colSpan={5}
-                    className="py-12 text-center text-sm text-[var(--color-text-muted)]"
+                    className="py-12 text-center text-sm font-medium text-[var(--color-text-muted)]"
                   >
                     No resources in this section.
                   </td>
@@ -377,7 +364,7 @@ function TableSection({
                           <FileText size={13} />
                         </span>
                         <span
-                          className="font-medium text-[var(--color-text)] truncate"
+                          className="font-bold text-[var(--color-text)] truncate"
                           title={resource.title}
                         >
                           {resource.title}
@@ -394,7 +381,7 @@ function TableSection({
                     <td className="py-3 px-3 align-middle">
                       {resource.description ? (
                         <span
-                          className="block text-[13px] text-[var(--color-text-muted)] leading-5 overflow-hidden"
+                          className="block text-[13px] text-[var(--color-text-muted)] leading-5 overflow-hidden font-normal"
                           style={{
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
@@ -413,7 +400,7 @@ function TableSection({
 
                     {/* Date */}
                     <td className="py-3 px-3 align-middle">
-                      <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--color-text-muted)] whitespace-nowrap">
                         <Calendar size={13} className="shrink-0 text-[var(--color-text-subtle)]" />
                         <span>{formatReadableDate(resource.lastVerified) || "—"}</span>
                       </div>
@@ -426,7 +413,7 @@ function TableSection({
                           asChild
                           variant="secondary"
                           size="sm"
-                          className="h-7 px-2.5 text-[12px] whitespace-nowrap"
+                          className="h-7 px-2.5 text-[12px] font-bold text-[var(--color-text)] border border-[var(--color-border-strong)] hover:bg-[var(--color-surface-sunken)] whitespace-nowrap"
                         >
                           <Link href={`/admin/resources/${resource.id}`}>
                             View / edit
@@ -436,7 +423,7 @@ function TableSection({
                           asChild
                           variant="primary"
                           size="sm"
-                          className="h-7 px-2.5 text-[12px] whitespace-nowrap"
+                          className="h-7 px-2.5 text-[12px] font-bold text-white bg-[var(--color-brand)] hover:bg-[var(--color-brand-strong)] whitespace-nowrap"
                         >
                           <a
                             href={resource.url}
@@ -472,80 +459,7 @@ function TableSection({
   );
 }
 
-// ─── Card view (preserved original) ──────────────────────────────────────────
-
-function CardSection({ items }: { items: ResourceRow[] }) {
-  return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
-      {items.map((resource) => (
-        <article
-          key={resource.id}
-          className="min-w-[19rem] max-w-[24rem] flex-1 rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <span className="rounded-full bg-[var(--color-surface-sunken)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              {resource.category}
-            </span>
-            <div className="flex flex-wrap justify-end gap-2">
-              {resource.resourceType === "document" ? (
-                <span className="rounded-full bg-[var(--color-brand)] px-3 py-1 text-xs font-semibold text-[var(--color-brand-foreground)]">
-                  Document
-                </span>
-              ) : null}
-              <span className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
-                {formatReadableDate(resource.lastVerified)}
-              </span>
-            </div>
-          </div>
-
-          <h4 className="mt-4 text-lg font-semibold tracking-tight text-[var(--color-text)]">
-            {resource.title}
-          </h4>
-
-          {resource.description ? (
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              {resource.description}
-            </p>
-          ) : null}
-
-          <div className="mt-4 space-y-2 text-sm text-[var(--color-text-muted)]">
-            {resource.resourceType === "document" ? (
-              <div className="flex items-center gap-2">
-                <FileText size={15} />
-                <span className="truncate">
-                  {resource.attachmentName ?? "Uploaded document"}
-                </span>
-              </div>
-            ) : null}
-            {resource.faculty ? (
-              <div className="flex items-center gap-2">
-                <MapPin size={15} />
-                <span>
-                  {resource.faculty.code} –{" "}
-                  {displayFacultyName(resource.faculty.name)}
-                </span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Button asChild variant="secondary" size="sm" rounded="full">
-              <Link href={`/admin/resources/${resource.id}`}>View / edit</Link>
-            </Button>
-            <Button asChild variant="primary" size="sm" rounded="full">
-              <a href={resource.url} target="_blank" rel="noreferrer">
-                Open
-                <ExternalLink size={14} />
-              </a>
-            </Button>
-          </div>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ResourceExplorer({
   resources,
@@ -553,7 +467,6 @@ export function ResourceExplorer({
   resources: ResourceRow[];
 }) {
   const [facultyFilter, setFacultyFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
 
   const facultyOptions = useMemo(
     () => buildResourceFacultyOptions(resources),
@@ -598,103 +511,18 @@ export function ResourceExplorer({
         </Select>
       </Field>
 
-      {/* Sections */}
+      {/* Table Sections */}
       <div className="space-y-10">
         {sections.map(([sectionName, items]) => (
-          <div key={sectionName}>
-            {/* Section header + view toggle */}
-            {viewMode === "card" && (
-              <div className="flex items-end justify-between gap-4 mb-3">
-                <div>
-                  <h3 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
-                    {sectionName}
-                  </h3>
-                  <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
-                    {items.length} resource{items.length === 1 ? "" : "s"} in
-                    this collection.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* View mode toggle — shown on the first section only when in table mode */}
-            {viewMode === "table" && sectionName === sections[0]?.[0] && (
-              <div className="flex items-end justify-between gap-4 mb-3">
-                <div>
-                  {/* spacer — TableSection renders its own heading */}
-                </div>
-                <ViewToggle value={viewMode} onChange={setViewMode} />
-              </div>
-            )}
-            {viewMode === "card" && sectionName === sections[0]?.[0] && (
-              <div className="flex justify-end mb-3">
-                <ViewToggle value={viewMode} onChange={setViewMode} />
-              </div>
-            )}
-
-            {viewMode === "table" ? (
-              <TableSection sectionName={sectionName} items={items} />
-            ) : (
-              <CardSection items={items} />
-            )}
-          </div>
+          <TableSection key={sectionName} sectionName={sectionName} items={items} />
         ))}
 
         {sections.length === 0 && (
-          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-16 text-center text-sm text-[var(--color-text-muted)]">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-16 text-center text-sm font-medium text-[var(--color-text-muted)]">
             No resources match the selected filter.
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─── View toggle ──────────────────────────────────────────────────────────────
-
-function ViewToggle({
-  value,
-  onChange,
-}: {
-  value: ViewMode;
-  onChange: (v: ViewMode) => void;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="View mode"
-      className="inline-flex rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-sunken)] p-0.5 gap-0.5"
-    >
-      <button
-        type="button"
-        onClick={() => onChange("card")}
-        aria-pressed={value === "card"}
-        title="Card view"
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-all",
-          value === "card"
-            ? "bg-[var(--color-surface-raised)] text-[var(--color-text)] shadow-[var(--shadow-xs)]"
-            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        )}
-      >
-        <LayoutGrid size={13} />
-        Card view
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange("table")}
-        aria-pressed={value === "table"}
-        title="Table view"
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-all",
-          value === "table"
-            ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)] shadow-[var(--shadow-xs)]"
-            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-        )}
-      >
-        <LayoutList size={13} />
-        Table view
-      </button>
     </div>
   );
 }

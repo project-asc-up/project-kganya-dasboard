@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const fieldBlock =
@@ -36,19 +37,23 @@ export const Select = React.forwardRef<
   React.SelectHTMLAttributes<HTMLSelectElement>
 >(function Select({ className, children, ...props }, ref) {
   return (
-    <select
-      ref={ref}
-      className={cn(
-        fieldBlock,
-        "appearance-none pr-9 bg-[length:16px] bg-no-repeat bg-[right_0.625rem_center]",
-        // Inline chevron as data-uri fallback — ring keeps the field usable.
-        "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')]",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </select>
+    <div className="relative w-full">
+      <select
+        ref={ref}
+        className={cn(
+          fieldBlock,
+          "appearance-none pr-9 cursor-pointer font-medium text-[var(--color-text)]",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </select>
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-subtle)] shrink-0"
+      />
+    </div>
   );
 });
 
