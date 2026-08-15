@@ -2,14 +2,28 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ExternalLink, FileText, MapPin } from "lucide-react";
+import {
+  Calendar,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  ExternalLink,
+  FileText,
+  LayoutGrid,
+  LayoutList,
+  MapPin,
+} from "lucide-react";
 
 import { Field, Select } from "@/components/admin-form";
-import { MetricCard, MetricGrid } from "@/components/metric-card";
 import { Button } from "@/components/ui/button";
 import { formatReadableDate, type DisplayDateValue } from "@/lib/date-display";
 import { displayFacultyName } from "@/lib/faculty-display";
-import { buildResourceFacultyOptions, filterResourcesByFaculty } from "@/lib/resource-filters";
+import {
+  buildResourceFacultyOptions,
+  filterResourcesByFaculty,
+} from "@/lib/resource-filters";
+import { cn } from "@/lib/cn";
 
 type ResourceRow = {
   id: string;
@@ -26,158 +40,661 @@ type ResourceRow = {
   faculty: { id: string; name: string; code: string } | null;
 };
 
-function getHostName(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "External link";
-  }
+type SortKey = "title" | "faculty" | "description" | "date";
+type SortDir = "asc" | "desc";
+type ViewMode = "table" | "card";
+
+const ROWS_OPTIONS = [5, 10, 20, 50];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getFacultyLabel(resource: ResourceRow) {
+  return resource.faculty
+    ? resource.faculty.code
+    : "General";
 }
 
-export function ResourceExplorer({ resources }: { resources: ResourceRow[] }) {
-  const [facultyFilter, setFacultyFilter] = useState("all");
+function sortResources(
+  items: ResourceRow[],
+  key: SortKey,
+  dir: SortDir
+): ResourceRow[] {
+  return [...items].sort((a, b) => {
+    let cmp = 0;
+    if (key === "title") cmp = a.title.localeCompare(b.title);
+    else if (key === "faculty")
+      cmp = getFacultyLabel(a).localeCompare(getFacultyLabel(b));
+    else if (key === "description")
+      cmp = (a.description ?? "").localeCompare(b.description ?? "");
+    else if (key === "date") {
+      const aDate = a.lastVerified
+        ? String(a.lastVerified)
+        : "";
+      const bDate = b.lastVerified
+        ? String(b.lastVerified)
+        : "";
+      cmp = aDate.localeCompare(bDate);
+    }
+    return dir === "asc" ? cmp : -cmp;
+  });
+}
 
-  const facultyOptions = useMemo(() => buildResourceFacultyOptions(resources), [resources]);
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-  const filteredResources = useMemo(
-    () => filterResourcesByFaculty(resources, facultyFilter),
-    [facultyFilter, resources],
+function SortButton({
+  label,
+  sortKey,
+  current,
+  dir,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  current: SortKey;
+  dir: SortDir;
+  onSort: (key: SortKey) => void;
+}) {
+  const active = current === sortKey;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(sortKey)}
+      className={cn(
+        "inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors",
+        active
+          ? "text-[var(--color-brand)]"
+          : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+      )}
+    >
+      {label}
+      <ChevronsUpDown
+        size={12}
+        className={cn(
+          "shrink-0 transition-opacity",
+          active ? "opacity-100" : "opacity-40"
+        )}
+      />
+    </button>
+  );
+}
+
+function FacultyBadge({ resource }: { resource: ResourceRow }) {
+  const label = resource.faculty
+    ? resource.faculty.code
+    : "GENERAL";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-[var(--radius-full)] px-2 py-0.5",
+        "text-[10px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap",
+        resource.faculty
+          ? "bg-[var(--color-brand-soft)] text-[var(--color-brand-soft-foreground)]"
+          : "bg-[var(--color-surface-sunken)] text-[var(--color-text-muted)] border border-[var(--color-border)]"
+      )}
+    >
+      {label}
+    </span>
+  );
+}
+
+function PaginationBar({
+  total,
+  page,
+  rowsPerPage,
+  onPage,
+  onRowsPerPage,
+}: {
+  total: number;
+  page: number;
+  rowsPerPage: number;
+  onPage: (p: number) => void;
+  onRowsPerPage: (n: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+  const from = total === 0 ? 0 : (page - 1) * rowsPerPage + 1;
+  const to = Math.min(page * rowsPerPage, total);
+
+  // Windowed page numbers
+  const pages: (number | "…")[] = [];
+  if (totalPages <= 6) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (page > 3) pages.push("…");
+    for (
+      let i = Math.max(2, page - 1);
+      i <= Math.min(totalPages - 1, page + 1);
+      i++
+    )
+      pages.push(i);
+    if (page < totalPages - 2) pages.push("…");
+    pages.push(totalPages);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-t border-[var(--color-border)] text-sm text-[var(--color-text-muted)]">
+      <span className="text-[13px]">
+        {total === 0
+          ? "No resources"
+          : `Showing ${from} to ${to} of ${total} resource${total === 1 ? "" : "s"}`}
+      </span>
+
+      <div className="flex items-center gap-1.5">
+        {/* Prev */}
+        <button
+          type="button"
+          aria-label="Previous page"
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronLeft size={14} />
+        </button>
+
+        {pages.map((p, i) =>
+          p === "…" ? (
+            <span key={`ellipsis-${i}`} className="px-1 text-[var(--color-text-muted)]">
+              …
+            </span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              aria-label={`Page ${p}`}
+              aria-current={p === page ? "page" : undefined}
+              onClick={() => onPage(p as number)}
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border text-[13px] font-medium transition",
+                p === page
+                  ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-brand-foreground)]"
+                  : "border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)]"
+              )}
+            >
+              {p}
+            </button>
+          )
+        )}
+
+        {/* Next */}
+        <button
+          type="button"
+          aria-label="Next page"
+          disabled={page >= totalPages}
+          onClick={() => onPage(page + 1)}
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] transition hover:bg-[var(--color-surface-sunken)] hover:text-[var(--color-text)] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      {/* Rows per page */}
+      <div className="flex items-center gap-2 text-[13px]">
+        <span className="text-[var(--color-text-muted)]">Rows per page</span>
+        <div className="relative">
+          <select
+            value={rowsPerPage}
+            onChange={(e) => {
+              onRowsPerPage(Number(e.target.value));
+              onPage(1);
+            }}
+            className="h-8 appearance-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-0 pl-3 pr-7 text-[13px] text-[var(--color-text)] transition hover:border-[var(--color-border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+          >
+            {ROWS_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            size={12}
+            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Table view ───────────────────────────────────────────────────────────────
+
+function TableSection({
+  sectionName,
+  items,
+}: {
+  sectionName: string;
+  items: ResourceRow[];
+}) {
+  const [sortKey, setSortKey] = useState<SortKey>("title");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+    setPage(1);
+  }
+
+  const sorted = useMemo(
+    () => sortResources(items, sortKey, sortDir),
+    [items, sortKey, sortDir]
   );
 
-  const grouped = filteredResources.reduce<Map<string, ResourceRow[]>>((acc, resource) => {
-    const key = resource.faculty ? displayFacultyName(resource.faculty.name) : "General";
+  const paginated = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    return sorted.slice(start, start + rowsPerPage);
+  }, [sorted, page, rowsPerPage]);
+
+  return (
+    <section aria-label={sectionName}>
+      {/* Section header */}
+      <div className="flex items-end justify-between gap-4 mb-3">
+        <div>
+          <h3 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
+            {sectionName}
+          </h3>
+          <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
+            {items.length} resource{items.length === 1 ? "" : "s"} in this
+            collection.
+          </p>
+        </div>
+      </div>
+
+      {/* Table container */}
+      <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] overflow-hidden shadow-[var(--shadow-xs)]">
+        {/* Column headers */}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-sunken)]">
+                <th className="py-3 pl-4 pr-3 text-left w-[32%]">
+                  <SortButton
+                    label="Title"
+                    sortKey="title"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="py-3 px-3 text-left w-[14%]">
+                  <SortButton
+                    label="Faculty / Unit"
+                    sortKey="faculty"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="py-3 px-3 text-left w-[28%]">
+                  <SortButton
+                    label="Description"
+                    sortKey="description"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="py-3 px-3 text-left w-[14%]">
+                  <SortButton
+                    label="Date"
+                    sortKey="date"
+                    current={sortKey}
+                    dir={sortDir}
+                    onSort={handleSort}
+                  />
+                </th>
+                <th className="py-3 pl-3 pr-4 text-right w-[12%]">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+                    Links
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {paginated.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="py-12 text-center text-sm text-[var(--color-text-muted)]"
+                  >
+                    No resources in this section.
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((resource) => (
+                  <tr
+                    key={resource.id}
+                    className="group bg-[var(--color-surface-raised)] transition-colors hover:bg-[var(--color-surface-sunken)]/50"
+                  >
+                    {/* Title */}
+                    <td className="py-3 pl-4 pr-3 align-middle">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-brand-soft)] text-[var(--color-brand)]">
+                          <FileText size={13} />
+                        </span>
+                        <span
+                          className="font-medium text-[var(--color-text)] truncate"
+                          title={resource.title}
+                        >
+                          {resource.title}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Faculty / Unit badge */}
+                    <td className="py-3 px-3 align-middle">
+                      <FacultyBadge resource={resource} />
+                    </td>
+
+                    {/* Description */}
+                    <td className="py-3 px-3 align-middle">
+                      {resource.description ? (
+                        <span
+                          className="block text-[13px] text-[var(--color-text-muted)] leading-5 overflow-hidden"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}
+                          title={resource.description}
+                        >
+                          {resource.description}
+                        </span>
+                      ) : (
+                        <span className="text-[13px] text-[var(--color-text-muted)] italic opacity-60">
+                          No description
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Date */}
+                    <td className="py-3 px-3 align-middle">
+                      <div className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-muted)] whitespace-nowrap">
+                        <Calendar size={13} className="shrink-0 text-[var(--color-text-subtle)]" />
+                        <span>{formatReadableDate(resource.lastVerified) || "—"}</span>
+                      </div>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 pl-3 pr-4 align-middle">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          asChild
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 px-2.5 text-[12px] whitespace-nowrap"
+                        >
+                          <Link href={`/admin/resources/${resource.id}`}>
+                            View / edit
+                          </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="primary"
+                          size="sm"
+                          className="h-7 px-2.5 text-[12px] whitespace-nowrap"
+                        >
+                          <a
+                            href={resource.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open
+                            <ExternalLink size={11} />
+                          </a>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <PaginationBar
+          total={sorted.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPage={setPage}
+          onRowsPerPage={(n) => {
+            setRowsPerPage(n);
+            setPage(1);
+          }}
+        />
+      </div>
+    </section>
+  );
+}
+
+// ─── Card view (preserved original) ──────────────────────────────────────────
+
+function CardSection({ items }: { items: ResourceRow[] }) {
+  return (
+    <div className="flex gap-4 overflow-x-auto pb-2">
+      {items.map((resource) => (
+        <article
+          key={resource.id}
+          className="min-w-[19rem] max-w-[24rem] flex-1 rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-[var(--shadow-xs)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <span className="rounded-full bg-[var(--color-surface-sunken)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              {resource.category}
+            </span>
+            <div className="flex flex-wrap justify-end gap-2">
+              {resource.resourceType === "document" ? (
+                <span className="rounded-full bg-[var(--color-brand)] px-3 py-1 text-xs font-semibold text-[var(--color-brand-foreground)]">
+                  Document
+                </span>
+              ) : null}
+              <span className="rounded-full border border-[var(--color-border)] px-3 py-1 text-xs font-medium text-[var(--color-text-muted)]">
+                {formatReadableDate(resource.lastVerified)}
+              </span>
+            </div>
+          </div>
+
+          <h4 className="mt-4 text-lg font-semibold tracking-tight text-[var(--color-text)]">
+            {resource.title}
+          </h4>
+
+          {resource.description ? (
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+              {resource.description}
+            </p>
+          ) : null}
+
+          <div className="mt-4 space-y-2 text-sm text-[var(--color-text-muted)]">
+            {resource.resourceType === "document" ? (
+              <div className="flex items-center gap-2">
+                <FileText size={15} />
+                <span className="truncate">
+                  {resource.attachmentName ?? "Uploaded document"}
+                </span>
+              </div>
+            ) : null}
+            {resource.faculty ? (
+              <div className="flex items-center gap-2">
+                <MapPin size={15} />
+                <span>
+                  {resource.faculty.code} –{" "}
+                  {displayFacultyName(resource.faculty.name)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Button asChild variant="secondary" size="sm" rounded="full">
+              <Link href={`/admin/resources/${resource.id}`}>View / edit</Link>
+            </Button>
+            <Button asChild variant="primary" size="sm" rounded="full">
+              <a href={resource.url} target="_blank" rel="noreferrer">
+                Open
+                <ExternalLink size={14} />
+              </a>
+            </Button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export function ResourceExplorer({
+  resources,
+}: {
+  resources: ResourceRow[];
+}) {
+  const [facultyFilter, setFacultyFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
+
+  const facultyOptions = useMemo(
+    () => buildResourceFacultyOptions(resources),
+    [resources]
+  );
+
+  const filtered = useMemo(
+    () => filterResourcesByFaculty(resources, facultyFilter),
+    [facultyFilter, resources]
+  );
+
+  const grouped = filtered.reduce<Map<string, ResourceRow[]>>((acc, resource) => {
+    const key = resource.faculty
+      ? displayFacultyName(resource.faculty.name)
+      : "General";
     const list = acc.get(key) ?? [];
     list.push(resource);
     acc.set(key, list);
     return acc;
   }, new Map());
 
-  const sections = Array.from(grouped.entries()).sort(([left], [right]) => {
-    if (left === "General") return -1;
-    if (right === "General") return 1;
-    return left.localeCompare(right);
+  const sections = Array.from(grouped.entries()).sort(([a], [b]) => {
+    if (a === "General") return -1;
+    if (b === "General") return 1;
+    return a.localeCompare(b);
   });
-
-  const generalCount = filteredResources.filter((resource) => !resource.faculty).length;
 
   return (
     <div className="space-y-6">
+      {/* Faculty filter */}
       <Field label="Faculty filter" hint="All or a specific faculty">
-        <Select value={facultyFilter} onChange={(event) => setFacultyFilter(event.target.value)}>
+        <Select
+          value={facultyFilter}
+          onChange={(e) => setFacultyFilter(e.target.value)}
+        >
           <option value="all">All faculties</option>
-          {facultyOptions.map((faculty) => (
-            <option key={faculty.id} value={faculty.id}>
-              {displayFacultyName(faculty.name)}
+          {facultyOptions.map((f) => (
+            <option key={f.id} value={f.id}>
+              {displayFacultyName(f.name)}
             </option>
           ))}
         </Select>
       </Field>
 
-
-
-      <div className="space-y-8">
-        {sections.map(([facultyName, items]) => (
-          <section key={facultyName} className="space-y-4">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-semibold tracking-tight text-[color:var(--color-primary-dark)]">
-                  {facultyName}
-                </h3>
-                <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
-                  {items.length} resource{items.length === 1 ? "" : "s"} in this collection.
-                </p>
+      {/* Sections */}
+      <div className="space-y-10">
+        {sections.map(([sectionName, items]) => (
+          <div key={sectionName}>
+            {/* Section header + view toggle */}
+            {viewMode === "card" && (
+              <div className="flex items-end justify-between gap-4 mb-3">
+                <div>
+                  <h3 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
+                    {sectionName}
+                  </h3>
+                  <p className="mt-0.5 text-sm text-[var(--color-text-muted)]">
+                    {items.length} resource{items.length === 1 ? "" : "s"} in
+                    this collection.
+                  </p>
+                </div>
               </div>
-              <div className="rounded-full border border-[color:var(--color-border)] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]">
-                Scrollable cards
+            )}
+
+            {/* View mode toggle — shown on the first section only when in table mode */}
+            {viewMode === "table" && sectionName === sections[0]?.[0] && (
+              <div className="flex items-end justify-between gap-4 mb-3">
+                <div>
+                  {/* spacer — TableSection renders its own heading */}
+                </div>
+                <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>
-            </div>
+            )}
+            {viewMode === "card" && sectionName === sections[0]?.[0] && (
+              <div className="flex justify-end mb-3">
+                <ViewToggle value={viewMode} onChange={setViewMode} />
+              </div>
+            )}
 
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {items.map((resource) => (
-                <article
-                  key={resource.id}
-                  className="min-w-[19rem] max-w-[24rem] flex-1 rounded-[1.5rem] border border-[color:var(--color-border)] bg-white p-5 shadow-[0_12px_40px_rgba(0,32,80,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(0,32,80,0.08)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="rounded-full bg-[color:var(--color-bg-light)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-primary-dark)]">
-                      {resource.category}
-                    </span>
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {resource.resourceType === "document" ? (
-                        <span className="rounded-full bg-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-white">
-                          Document
-                        </span>
-                      ) : null}
-                      <span className="rounded-full border border-[color:var(--color-border)] px-3 py-1 text-xs font-medium text-[color:var(--color-text-muted)]">
-                        {formatReadableDate(resource.lastVerified)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <h4 className="mt-4 text-lg font-semibold tracking-tight text-[color:var(--color-primary-dark)]">
-                    {resource.title}
-                  </h4>
-
-                  {resource.description ? (
-                    <p className="mt-2 text-sm leading-6 text-[color:var(--color-text-muted)]">
-                      {resource.description}
-                    </p>
-                  ) : null}
-
-                  <div className="mt-4 space-y-2 text-sm text-[color:var(--color-text-muted)]">
-                    {resource.resourceType === "document" ? (
-                      <div className="flex items-center gap-2">
-                        <FileText size={15} />
-                        <span className="truncate">{resource.attachmentName ?? "Uploaded document"}</span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <FileText size={15} />
-                      <span className="truncate">{getHostName(resource.url)}</span>
-                    </div>
-                    {resource.faculty ? (
-                      <div className="flex items-center gap-2">
-                        <MapPin size={15} />
-                        <span>
-                          {resource.faculty.code} - {displayFacultyName(resource.faculty.name)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Button
-                      asChild
-                      variant="secondary"
-                      size="sm"
-                      rounded="full"
-                    >
-                      <Link href={`/admin/resources/${resource.id}`}>
-                        View / edit
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="primary"
-                      size="sm"
-                      rounded="full"
-                    >
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open
-                        <ExternalLink size={14} className="ml-2" />
-                      </a>
-                    </Button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+            {viewMode === "table" ? (
+              <TableSection sectionName={sectionName} items={items} />
+            ) : (
+              <CardSection items={items} />
+            )}
+          </div>
         ))}
+
+        {sections.length === 0 && (
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-16 text-center text-sm text-[var(--color-text-muted)]">
+            No resources match the selected filter.
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─── View toggle ──────────────────────────────────────────────────────────────
+
+function ViewToggle({
+  value,
+  onChange,
+}: {
+  value: ViewMode;
+  onChange: (v: ViewMode) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="View mode"
+      className="inline-flex rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-sunken)] p-0.5 gap-0.5"
+    >
+      <button
+        type="button"
+        onClick={() => onChange("card")}
+        aria-pressed={value === "card"}
+        title="Card view"
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-all",
+          value === "card"
+            ? "bg-[var(--color-surface-raised)] text-[var(--color-text)] shadow-[var(--shadow-xs)]"
+            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        )}
+      >
+        <LayoutGrid size={13} />
+        Card view
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("table")}
+        aria-pressed={value === "table"}
+        title="Table view"
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-[calc(var(--radius-md)-2px)] px-3 py-1.5 text-xs font-medium transition-all",
+          value === "table"
+            ? "bg-[var(--color-brand)] text-[var(--color-brand-foreground)] shadow-[var(--shadow-xs)]"
+            : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        )}
+      >
+        <LayoutList size={13} />
+        Table view
+      </button>
     </div>
   );
 }
