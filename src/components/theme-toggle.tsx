@@ -54,65 +54,37 @@ function useSystemPrefersDark(): boolean {
   );
 }
 
-function applyTheme(resolved: "light" | "dark") {
+function applyTheme() {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  root.classList.toggle("dark", resolved === "dark");
-  root.style.colorScheme = resolved;
+  root.classList.remove("dark");
+  root.style.colorScheme = "light";
 }
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
 }: {
   children: React.ReactNode;
   defaultTheme?: Theme;
 }) {
-  // `theme` initialises to defaultTheme on the server and is reconciled
-  // to the persisted value on mount via useLayoutEffect — the resulting
-  // re-render is intentional and one-shot.
-  const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
-  const systemDark = useSystemPrefersDark();
+  const [theme, setThemeState] = React.useState<Theme>("light");
 
-  // Reconciliation runs exactly once after mount. We use useLayoutEffect
-  // so the persisted preference is applied to <html> before paint,
-  // preventing a flash. We deliberately call setThemeState here even
-  // though the lint rule prefers alternatives — there is no value to
-  // subscribe to otherwise, and we want the post-mount reconciliation
-  // to be explicit.
   React.useLayoutEffect(() => {
-    const persisted = readPersistedTheme();
-    if (persisted !== defaultTheme) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setThemeState(persisted);
-    }
-    const resolved =
-      persisted === "system"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-        : persisted;
-    applyTheme(resolved);
-  }, [defaultTheme]);
+    setStoredTheme("light");
+    applyTheme();
+  }, []);
 
-  const resolved: "light" | "dark" =
-    theme === "system" ? (systemDark ? "dark" : "light") : theme;
+  const resolved = "light";
 
-  const setTheme = React.useCallback((next: Theme) => {
-    setThemeState(next);
-    setStoredTheme(next);
-    const nextResolved =
-      next === "system"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-        : next;
-    applyTheme(nextResolved);
+  const setTheme = React.useCallback((_next: Theme) => {
+    setThemeState("light");
+    setStoredTheme("light");
+    applyTheme();
   }, []);
 
   const value = React.useMemo(
-    () => ({ theme, resolved, setTheme }),
-    [theme, resolved, setTheme]
+    () => ({ theme: "light" as Theme, resolved: "light" as const, setTheme }),
+    [setTheme]
   );
 
   return (

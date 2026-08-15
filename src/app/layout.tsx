@@ -14,14 +14,13 @@ export const metadata: Metadata = {
 // Validate deployment environment
 deploymentConfig.validateDeployment();
 
-// Pre-hydration dark mode script — avoids the flash of wrong theme.
+// Pre-hydration theme script — strictly forces light mode always.
 const themeScript = `
   (function () {
     try {
-      var stored = localStorage.getItem("theme");
-      var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var theme = stored || (prefersDark ? "dark" : "light");
-      if (theme === "dark") document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "light");
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "light";
     } catch (e) {}
   })();
 `;
