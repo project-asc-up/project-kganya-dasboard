@@ -41,9 +41,6 @@ export default function Home() {
         />
       </div>
 
-      {/* Guide lines */}
-      <div className="hidden md:block pointer-events-none fixed inset-y-0 left-1/2 -translate-x-[calc(50%+36rem)] w-px bg-slate-200/80 z-[5]" />
-      <div className="hidden md:block pointer-events-none fixed inset-y-0 left-1/2 translate-x-[calc(-50%+36rem)] w-px bg-slate-200/80 z-[5]" />
 
       {/* ─── Navigation Header ────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 text-slate-900 backdrop-blur-2xl transition-all shadow-sm">
